@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+	color-scheme: light;
+}
+
+html {
+	scroll-behavior: smooth;
+	overflow-x: hidden;
+	max-width: 100vw;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	overflow-x: hidden;
+	max-width: 100vw;
+	background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 35%, #f7f2ea 100%);
+	color: #222222;
+	font-family: 'Manrope', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+.brand-font {
+	font-family: 'Cormorant Garamond', serif;
+}
+
+::selection {
+	background: rgba(15, 118, 110, 0.16);
+	color: #111827;
+}
+
+a {
+	text-decoration: none;
+}
+
+button {
+	font: inherit;
+}
+
