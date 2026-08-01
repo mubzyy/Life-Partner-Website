@@ -1,27 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ShieldCheck, CheckCircle2, Heart, ChevronDown, Search } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, CheckCircle2, Heart, ChevronDown, Search, Mail, Lock, User, UserPlus, MapPin } from "lucide-react";
 import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
 
-const COUNTRIES = [
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "CA", name: "Canada", flag: "🇨🇦" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
-  { code: "AE", name: "United Arab Emirates", flag: "🇦🇪" },
-  { code: "SA", name: "Saudi Arabia", flag: "🇸🇦" },
-  { code: "PK", name: "Pakistan", flag: "🇵🇰" },
-  { code: "IN", name: "India", flag: "🇮🇳" },
-  { code: "BD", name: "Bangladesh", flag: "🇧🇩" },
-  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
-  { code: "TR", name: "Turkey", flag: "🇹🇷" },
-  { code: "ZA", name: "South Africa", flag: "🇿🇦" },
-  { code: "EG", name: "Egypt", flag: "🇪🇬" },
-  { code: "NG", name: "Nigeria", flag: "🇳🇬" },
-  { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-];
+
 
 const POOL = [
   "/images/couple1.jpg", "/images/couple2.jpg", "/images/couple3.jpg",
@@ -29,116 +11,111 @@ const POOL = [
   "/images/couple7.jpg", "/images/couple8.jpg"
 ];
 
-const SLOT_CONFIGS = [
-  // Left Side (Indices 0, 1, 2)
-  { width: "w-[120px] xl:w-[200px]", margins: "-mr-4 xl:-mr-8 -mb-8 xl:-mb-16", rotation: "-rotate-6", zIndex: "z-0", delay: "0s" },
-  { width: "w-[140px] xl:w-[240px]", margins: "mr-2 xl:mr-8", rotation: "rotate-3", zIndex: "z-10", delay: "2s" },
-  { width: "w-[110px] xl:w-[180px]", margins: "-mr-2 xl:-mr-4 -mt-8 xl:-mt-14", rotation: "-rotate-3", zIndex: "z-0", delay: "4s" },
-  // Right Side (Indices 3, 4, 5)
-  { width: "w-[130px] xl:w-[220px]", margins: "-ml-4 xl:-ml-6 -mb-8 xl:-mb-16", rotation: "rotate-6", zIndex: "z-0", delay: "1s" },
-  { width: "w-[150px] xl:w-[250px]", margins: "ml-4 xl:ml-10", rotation: "-rotate-3", zIndex: "z-10", delay: "3s" },
-  { width: "w-[120px] xl:w-[190px]", margins: "-ml-2 xl:-ml-4 -mt-8 xl:-mt-14", rotation: "rotate-4", zIndex: "z-0", delay: "5s" }
-];
-
 const BackgroundShowcase = () => {
-  const [displayed, setDisplayed] = useState(POOL.slice(0, 6));
-  const [fadeStatus, setFadeStatus] = useState(Array(6).fill('idle')); 
+  const [displayed, setDisplayed] = useState(POOL.slice(0, 6)); // 3 left, 3 right = 6 images
+  const [fadeStatus, setFadeStatus] = useState([false, false, false, false, false, false]);
 
   useEffect(() => {
+    // Preload all images
     POOL.forEach(src => { const img = new Image(); img.src = src; });
 
     const interval = setInterval(() => {
       const slot = Math.floor(Math.random() * 6);
       
-      setDisplayed(currentDisplayed => {
-        const available = POOL.filter(img => !currentDisplayed.includes(img));
-        const newImg = available[Math.floor(Math.random() * available.length)];
-        
-        setFadeStatus(prev => {
-           const next = [...prev];
-           next[slot] = 'out';
-           return next;
-        });
-
-        setTimeout(() => {
-          setDisplayed(prev => {
-            const next = [...prev];
-            next[slot] = newImg;
-            return next;
-          });
-          setFadeStatus(prev => {
-            const next = [...prev];
-            next[slot] = 'in';
-            return next;
-          });
-          
-          setTimeout(() => {
-            setFadeStatus(prev => {
-              const next = [...prev];
-              next[slot] = 'idle';
-              return next;
-            });
-          }, 1500);
-
-        }, 1500);
-
-        return currentDisplayed; 
+      setFadeStatus(prev => {
+        const next = [...prev];
+        next[slot] = true;
+        return next;
       });
 
-    }, 9000);
+      setTimeout(() => {
+        setDisplayed(prev => {
+          const available = POOL.filter(img => !prev.includes(img));
+          if (available.length === 0) return prev;
+          const newImg = available[Math.floor(Math.random() * available.length)];
+          const next = [...prev];
+          next[slot] = newImg;
+          return next;
+        });
+        
+        setFadeStatus(prev => {
+          const next = [...prev];
+          next[slot] = false;
+          return next;
+        });
+      }, 500); // Super fast 500ms fade out
+    }, 1800); // Change one image rapidly every 1.8 seconds
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="absolute inset-0 z-[-1] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-[-1] pointer-events-none overflow-hidden bg-[#faf9f6]">
       <style>{`
-        @keyframes floatAnim {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
+        @keyframes floatFast1 {
+          0%, 100% { transform: translateY(0) rotate(45deg); }
+          50% { transform: translateY(-16px) rotate(45deg); }
         }
-        @keyframes subtleRotate {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(1.5deg); }
+        @keyframes floatFast2 {
+          0%, 100% { transform: translateY(0) rotate(45deg); }
+          50% { transform: translateY(-24px) rotate(45deg); }
+        }
+        @keyframes floatFast3 {
+          0%, 100% { transform: translateY(0) rotate(45deg); }
+          50% { transform: translateY(-10px) rotate(45deg); }
         }
       `}</style>
       
-      {/* Decorative Background */}
-      <div className="absolute top-[-5%] left-[-5%] w-[40%] h-[50%] bg-[#0f5d52] rounded-full blur-[140px] opacity-[0.12]"></div>
-      <div className="absolute bottom-[-5%] right-[-5%] w-[45%] h-[45%] bg-[#d4af37] rounded-full blur-[140px] opacity-[0.08]"></div>
-      <div className="absolute top-[20%] right-[10%] w-[30%] h-[40%] bg-[#f0f7f5] rounded-full blur-[100px] opacity-60"></div>
-      <div className="absolute bottom-[20%] left-[10%] w-[35%] h-[35%] bg-gradient-to-tr from-[#1a7a6e]/10 to-transparent rounded-full blur-[80px]"></div>
-      
-      {/* Collage Left */}
-      <div className="hidden lg:flex absolute left-0 top-0 bottom-0 w-[calc(50%-340px)] flex-col justify-center items-end pr-4 xl:pr-10 gap-2 xl:gap-4">
-        {[0, 1, 2].map(i => (
-          <div key={i} className={`relative ${SLOT_CONFIGS[i].margins} ${SLOT_CONFIGS[i].zIndex}`} style={{ animation: `floatAnim 12s ease-in-out infinite ${SLOT_CONFIGS[i].delay}` }}>
-            <div className={`${SLOT_CONFIGS[i].rotation}`}>
-              <div 
-                className={`transition-opacity duration-[1500ms] ease-in-out ${fadeStatus[i] === 'out' ? 'opacity-0' : 'opacity-100'}`}
-                style={{ animation: `subtleRotate 14s ease-in-out infinite ${SLOT_CONFIGS[i].delay}` }}
-              >
-                <img src={displayed[i]} className={`object-cover ${SLOT_CONFIGS[i].width} aspect-[4/5] rounded-[20px] xl:rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.12)] border-[3px] border-white/90`} alt="" />
-              </div>
-            </div>
+      {/* Left Diamond Grid (3 items, inconsistent sizes) */}
+      <div className="hidden xl:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
+        
+        {/* Top: Medium, offset left */}
+        <div style={{ animation: 'floatFast1 8s ease-in-out infinite' }} className="ml-0">
+          <div className={`w-[180px] h-[180px] rounded-[24px] overflow-hidden border-[6px] border-white shadow-[0_15px_35px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[0] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[0]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
-        ))}
+        </div>
+
+        {/* Middle: Large, offset right */}
+        <div style={{ animation: 'floatFast2 11s ease-in-out infinite' }} className="ml-32">
+          <div className={`w-[250px] h-[250px] rounded-[32px] overflow-hidden border-[6px] border-white shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out ${fadeStatus[1] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[1]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
+          </div>
+        </div>
+
+        {/* Bottom: Small, offset left */}
+        <div style={{ animation: 'floatFast3 9s ease-in-out infinite' }} className="-ml-8">
+          <div className={`w-[140px] h-[140px] rounded-[20px] overflow-hidden border-[5px] border-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[2] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[2]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
+          </div>
+        </div>
+
       </div>
 
-      {/* Collage Right */}
-      <div className="hidden lg:flex absolute right-0 top-0 bottom-0 w-[calc(50%-340px)] flex-col justify-center items-start pl-4 xl:pl-10 gap-2 xl:gap-4">
-        {[3, 4, 5].map(i => (
-          <div key={i} className={`relative ${SLOT_CONFIGS[i].margins} ${SLOT_CONFIGS[i].zIndex}`} style={{ animation: `floatAnim 13s ease-in-out infinite ${SLOT_CONFIGS[i].delay}` }}>
-            <div className={`${SLOT_CONFIGS[i].rotation}`}>
-              <div 
-                className={`transition-opacity duration-[1500ms] ease-in-out ${fadeStatus[i] === 'out' ? 'opacity-0' : 'opacity-100'}`}
-                style={{ animation: `subtleRotate 15s ease-in-out infinite ${SLOT_CONFIGS[i].delay}` }}
-              >
-                <img src={displayed[i]} className={`object-cover ${SLOT_CONFIGS[i].width} aspect-[4/5] rounded-[20px] xl:rounded-[24px] shadow-[0_16px_40px_rgba(0,0,0,0.12)] border-[3px] border-white/90`} alt="" />
-              </div>
-            </div>
+      {/* Right Diamond Grid (3 items, mirrored sizes) */}
+      <div className="hidden xl:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
+        
+        {/* Top: Small, offset right */}
+        <div style={{ animation: 'floatFast3 10s ease-in-out infinite' }} className="-mr-8">
+          <div className={`w-[140px] h-[140px] rounded-[20px] overflow-hidden border-[5px] border-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[3] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[3]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
-        ))}
+        </div>
+
+        {/* Middle: Large, offset left */}
+        <div style={{ animation: 'floatFast2 12s ease-in-out infinite' }} className="mr-32">
+          <div className={`w-[250px] h-[250px] rounded-[32px] overflow-hidden border-[6px] border-white shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out ${fadeStatus[4] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[4]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
+          </div>
+        </div>
+
+        {/* Bottom: Medium, offset right */}
+        <div style={{ animation: 'floatFast1 9s ease-in-out infinite' }} className="mr-0">
+          <div className={`w-[180px] h-[180px] rounded-[24px] overflow-hidden border-[6px] border-white shadow-[0_15px_35px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[5] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+            <img src={displayed[5]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -151,7 +128,12 @@ const RegisterPage = () => {
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [country, setCountry] = useState("");
+  const [countries, setCountries] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   
@@ -162,6 +144,31 @@ const RegisterPage = () => {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
   const dropdownRef = useRef(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // OTP verification state
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/countries")
+      .then(res => res.json())
+      .then(data => {
+        setCountries(data);
+        if (!selectedCountry) {
+          const pk = data.find(c => c.name === "Pakistan");
+          if (pk) {
+            setSelectedCountry(pk);
+            setPhoneCode(pk.phone_code);
+          }
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -173,7 +180,7 @@ const RegisterPage = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredCountries = COUNTRIES.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
+  const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -185,13 +192,25 @@ const RegisterPage = () => {
     if (password.length < 6)
       return setError("Password must be at least 6 characters.");
 
-    if (!firstName || !lastName || !country)
+    if (!termsAccepted)
+      return setError("You must agree to the Terms of Service and Privacy Policy.");
+
+    if (!firstName.trim() || !lastName.trim() || !selectedCountry || !phoneNumber)
       return setError("Please fill in all required fields.");
+
+    if (firstName.trim().length < 2)
+      return setError("First name must be at least 2 characters.");
+
+    if (lastName.trim().length < 2)
+      return setError("Last name must be at least 2 characters.");
+
+    if (phoneNumber.length < 7)
+      return setError("Please enter a valid phone number (minimum 7 digits).");
 
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
+      const response = await fetch("http://localhost:5000/api/auth/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,7 +218,9 @@ const RegisterPage = () => {
           middle_name: middleName,
           last_name: lastName,
           email,
-          country,
+          country_id: selectedCountry.id,
+          phone_code: phoneCode,
+          phone_number: phoneNumber,
           password,
         }),
       });
@@ -207,14 +228,16 @@ const RegisterPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Registration failed. Please try again.");
+        setError(data.message || "Failed to send verification email.");
         setLoading(false);
         return;
       }
 
-      // Success — show message then redirect to login
-      alert("Account created successfully! Please sign in.");
-      navigate("/login");
+      // Show OTP modal
+      setOtpValue("");
+      setOtpError("");
+      setShowOtpModal(true);
+      startResendCooldown();
 
     } catch {
       setError("Unable to connect to the server. Please try again.");
@@ -223,230 +246,411 @@ const RegisterPage = () => {
     setLoading(false);
   };
 
+  const startResendCooldown = () => {
+    setResendCooldown(60);
+    const timer = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) { clearInterval(timer); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
-  const inputClasses = "w-full box-border px-4 py-3.5 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]";
+  const handleResendOtp = async () => {
+    setResendLoading(true);
+    setOtpError("");
+    try {
+      await fetch("http://localhost:5000/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: firstName, middle_name: middleName, last_name: lastName,
+          email, country_id: selectedCountry.id,
+          phone_code: phoneCode, phone_number: phoneNumber, password,
+        }),
+      });
+      startResendCooldown();
+    } catch {
+      setOtpError("Failed to resend code. Please try again.");
+    }
+    setResendLoading(false);
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return setOtpError("Please enter the full 6-digit code.");
+    setOtpLoading(true);
+    setOtpError("");
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/verify-and-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: otpValue }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setOtpError(data.message || "Verification failed.");
+        setOtpLoading(false);
+        return;
+      }
+      setShowOtpModal(false);
+      setShowSuccessModal(true);
+    } catch {
+      setOtpError("Connection error. Please try again.");
+    }
+    setOtpLoading(false);
+  };
+
+
+  const inputClasses = "w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]";
   const labelClasses = "block text-[13px] font-bold text-slate-700 mb-1.5";
+  const iconClasses = "absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]";
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden z-0" style={{ background: "linear-gradient(135deg, #f0f7f5 0%, #f7f4ee 50%, #eef5f2 100%)" }}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden z-0 bg-[#faf9f6]">
       
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-[24px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-[#edf7f5] text-[#0f5d52] rounded-full flex items-center justify-center mb-6">
+              <CheckCircle2 size={32} />
+            </div>
+            <h3 className="text-[22px] font-bold text-slate-800 mb-2">Account Created</h3>
+            <p className="text-[15px] text-slate-500 mb-8 leading-relaxed">
+              Your account has been created successfully. Welcome to Life Partner!
+            </p>
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_8px_24px_rgba(15,93,82,0.25)]"
+            >
+              Continue to Login
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-[28px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
+            {/* Icon */}
+            <div className="w-16 h-16 bg-[#edf7f5] rounded-full flex items-center justify-center mb-5">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f5d52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </div>
+
+            <h3 className="text-[22px] font-bold text-[#1a2e2b] mb-2">Check your email</h3>
+            <p className="text-[14px] text-slate-500 mb-1 leading-relaxed">
+              We've sent a 6-digit verification code to
+            </p>
+            <p className="text-[14px] font-bold text-[#0f5d52] mb-6">{email}</p>
+
+            {otpError && (
+              <div className="w-full bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-[13px] text-red-600 text-left">
+                {otpError}
+              </div>
+            )}
+
+            {/* OTP Input */}
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={otpValue}
+              onChange={e => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="Enter 6-digit code"
+              className="w-full text-center text-[28px] font-bold tracking-[12px] py-4 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] mb-5"
+            />
+
+            <button
+              onClick={handleVerifyOtp}
+              disabled={otpLoading || otpValue.length !== 6}
+              className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-4 ${
+                otpLoading || otpValue.length !== 6
+                  ? 'bg-slate-300 cursor-not-allowed'
+                  : 'bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'
+              }`}
+            >
+              {otpLoading ? "Verifying..." : "Verify & Create Account"}
+            </button>
+
+            <div className="flex items-center gap-1 text-[13px] text-slate-500">
+              <span>Didn't receive it?</span>
+              {resendCooldown > 0 ? (
+                <span className="text-slate-400 font-medium">Resend in {resendCooldown}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendLoading}
+                  className="text-[#0f5d52] font-bold hover:underline cursor-pointer bg-transparent border-none"
+                >
+                  {resendLoading ? "Sending..." : "Resend code"}
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowOtpModal(false)}
+              className="mt-4 text-[12px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer bg-transparent border-none"
+            >
+              ← Go back and edit details
+            </button>
+          </div>
+        </div>
+      )}
+
       <BackgroundShowcase />
 
-      {/* Header */}
-      <div className="px-6 py-6 md:px-10 lg:px-12 md:py-8">
+      {/* Header (Absolute top left) */}
+      <div className="absolute top-0 left-0 px-6 py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-3.5 no-underline transition-opacity hover:opacity-90">
-          <img src={logo} alt="Life Partner" className="h-[56px] w-[56px] object-contain drop-shadow-sm" />
+          <img src={logo} alt="Life Partner" className="h-[48px] w-[48px] object-contain drop-shadow-sm" />
           <div className="flex flex-col justify-center">
-            <div style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[26px] leading-none font-bold text-[#0f5d52] tracking-wide mb-1.5">Life Partner</div>
-            <div className="text-[12.5px] leading-none font-medium text-[#52706c] tracking-wide">Find your partner for life</div>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[22px] md:text-[26px] leading-none font-bold text-[#0f5d52] tracking-wide mb-1.5">Life Partner</div>
+            <div className="text-[11px] md:text-[12.5px] leading-none font-medium text-[#52706c] tracking-wide">Find your partner for life</div>
           </div>
         </Link>
       </div>
 
       {/* Form Container */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 z-10 relative">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-20 z-10 relative w-full">
         
-        <div className="w-full max-w-[660px]">
-          <div className="text-center mb-8">
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[32px] md:text-[36px] font-bold text-[#1a2e2b] m-0 mb-2">
-              Create your account
-            </h1>
-            <p className="text-[15px] text-[#6b8a86] m-0">Join thousands of verified Muslims looking for a halal life partner.</p>
-          </div>
-
-          <div className="bg-white rounded-[24px] border-[1.5px] border-[#e8ebe9] p-6 sm:p-8 md:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.04)] transition-all">
+        <div className="w-full max-w-3xl">
+          <div className="bg-white rounded-[32px] p-6 sm:p-10 md:p-12 shadow-[0_8px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
             
+            <div className="text-center mb-8 flex flex-col items-center">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-[#d4af37]"></div>
+                <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[32px] md:text-[40px] font-bold text-[#1a2e2b] m-0">
+                  Create your account
+                </h1>
+                <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-[#d4af37]"></div>
+              </div>
+              <p className="text-[15px] text-[#6b8a86] m-0">Join thousands of verified Muslims looking for a halal life partner.</p>
+            </div>
+
             {/* Privacy Notice Badge */}
-            <div className="flex items-start md:items-center gap-2.5 bg-[#edf7f5] text-[#0f5d52] rounded-lg py-2.5 px-4 mb-8 w-fit mx-auto border border-[#c8e6e0]">
-              <span className="text-[14px] leading-tight font-bold shrink-0">✔</span>
+            <div className="flex items-center gap-2.5 bg-[#edf7f5] text-[#0f5d52] rounded-xl py-3 px-4 mb-8 w-fit mx-auto border border-[#c8e6e0]">
+              <ShieldCheck size={18} className="shrink-0" />
               <p className="text-[13px] font-medium m-0 leading-tight">Your information remains private and is never shared without your permission.</p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-6 text-[13px] text-red-600">
-                {error}
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-[13px] text-red-600 flex items-center gap-2">
+                <span className="font-bold">Error:</span> {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               
               {/* Name Row */}
-              <div className="flex flex-col md:flex-row gap-4 md:gap-5">
-                <div className="flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div>
                   <label className={labelClasses}>First Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={firstName}
-                    onChange={e => setFirstName(e.target.value)}
-                    placeholder="First"
-                    className={inputClasses}
-                  />
+                  <div className="relative">
+                    <User className={iconClasses} />
+                    <input
+                      type="text"
+                      required
+                      value={firstName}
+                      onChange={e => setFirstName(e.target.value.replace(/[^a-zA-Z\s\-']/g, ''))}
+                      placeholder="First"
+                      maxLength={50}
+                      className={inputClasses}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className={labelClasses}>Middle Name <span className="font-normal text-slate-400">(Optional)</span></label>
-                  <input
-                    type="text"
-                    value={middleName}
-                    onChange={e => setMiddleName(e.target.value)}
-                    placeholder="Middle"
-                    className={inputClasses}
-                  />
+                <div>
+                  <label className={labelClasses}>Middle Name <span className="font-normal text-slate-400">(Opt)</span></label>
+                  <div className="relative">
+                    <User className={iconClasses} />
+                    <input
+                      type="text"
+                      value={middleName}
+                      onChange={e => setMiddleName(e.target.value.replace(/[^a-zA-Z\s\-']/g, ''))}
+                      placeholder="Middle"
+                      maxLength={50}
+                      className={inputClasses}
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
+                <div>
                   <label className={labelClasses}>Last Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={lastName}
-                    onChange={e => setLastName(e.target.value)}
-                    placeholder="Last"
-                    className={inputClasses}
-                  />
+                  <div className="relative">
+                    <User className={iconClasses} />
+                    <input
+                      type="text"
+                      required
+                      value={lastName}
+                      onChange={e => setLastName(e.target.value.replace(/[^a-zA-Z\s\-']/g, ''))}
+                      placeholder="Last"
+                      maxLength={50}
+                      className={inputClasses}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Email */}
               <div>
                 <label className={labelClasses}>Email Address *</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className={inputClasses}
-                />
-              </div>
-
-              {/* Country */}
-              <div className="relative" ref={dropdownRef}>
-                <label className={labelClasses}>Country *</label>
-                <div 
-                  className={`${inputClasses} flex items-center justify-between cursor-pointer select-none`}
-                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                >
-                  <span className={country ? "text-slate-800" : "text-slate-400"}>
-                    {country ? (
-                      <span className="flex items-center gap-2">
-                        <span>{COUNTRIES.find(c => c.name === country)?.flag}</span>
-                        {country}
-                      </span>
-                    ) : "Select your country"}
-                  </span>
-                  <ChevronDown size={16} className={`text-slate-400 transition-transform ${showCountryDropdown ? "rotate-180" : ""}`} />
-                </div>
-                
-                {showCountryDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] overflow-hidden">
-                    <div className="flex items-center gap-2 p-3 border-b border-slate-100 bg-slate-50">
-                      <Search size={16} className="text-slate-400 ml-1" />
-                      <input 
-                        type="text" 
-                        placeholder="Search countries..." 
-                        className="w-full text-[14px] p-1 bg-transparent outline-none text-slate-700"
-                        value={countrySearch}
-                        onChange={(e) => setCountrySearch(e.target.value)}
-                        autoFocus
-                      />
-                    </div>
-                    <div className="max-h-[220px] overflow-y-auto py-1">
-                      {filteredCountries.length > 0 ? (
-                        filteredCountries.map(c => (
-                          <div 
-                            key={c.code}
-                            className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer text-[14px] text-slate-700 transition-colors"
-                            onClick={() => {
-                              setCountry(c.name);
-                              setShowCountryDropdown(false);
-                              setCountrySearch("");
-                            }}
-                          >
-                            <span className="text-[16px]">{c.flag}</span>
-                            {c.name}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center text-slate-500 text-[13px]">No countries found</div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className={labelClasses}>Password *</label>
                 <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    className={`${inputClasses} pr-12`}
-                  />
-                  <button type="button" onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-slate-400 hover:text-[#0f5d52] transition-colors flex p-1">
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  <Mail className={iconClasses} />
+                  <input type="email" required value={email} name="email" onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className={inputClasses} />
                 </div>
               </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label className={labelClasses}>Confirm Password *</label>
-                <input
-                  type="password"
-                  required
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  placeholder="••••••••"
-                  className={inputClasses}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Country */}
+                <div className="relative" ref={dropdownRef}>
+                  <label className={labelClasses}>Country *</label>
+                  <div 
+                    className={`w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] flex items-center justify-between cursor-pointer select-none transition-all duration-200 hover:border-slate-300 ${showCountryDropdown ? 'border-[#0f5d52] shadow-[0_0_0_3px_rgba(15,93,82,0.1)]' : ''}`}
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                  >
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+                    <span className={selectedCountry ? "text-slate-800" : "text-slate-400"}>
+                      {selectedCountry ? selectedCountry.name : "Select country"}
+                    </span>
+                    <ChevronDown size={16} className={`text-slate-400 transition-transform ${showCountryDropdown ? "rotate-180" : ""}`} />
+                  </div>
+                  
+                  {showCountryDropdown && (
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] overflow-hidden">
+                      <div className="flex items-center gap-2 p-3 border-b border-slate-100 bg-slate-50">
+                        <Search size={16} className="text-slate-400 ml-1" />
+                        <input type="text" placeholder="Search countries..." className="w-full text-[14px] p-1 bg-transparent outline-none text-slate-700" value={countrySearch} onChange={(e) => setCountrySearch(e.target.value)} autoFocus />
+                      </div>
+                      <div className="max-h-[220px] overflow-y-auto py-1">
+                        {filteredCountries.length > 0 ? (
+                          filteredCountries.map(c => (
+                            <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer text-[14px] text-slate-700 transition-colors" onClick={() => { setSelectedCountry(c); setPhoneCode(c.phone_code); setShowCountryDropdown(false); setCountrySearch(""); }}>
+                              {c.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-4 text-center text-slate-500 text-[13px]">No countries found</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className={labelClasses}>Phone Number *</label>
+                  <div className="flex gap-2">
+                    <div className="relative w-[110px]">
+                      <select value={phoneCode} onChange={e => setPhoneCode(e.target.value)} className={`w-full box-border px-3 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] cursor-pointer appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_8px_center]`}>
+                        {countries.map(c => (
+                          <option key={c.id} value={c.phone_code}>{c.iso_code} {c.phone_code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      required
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="300 1234567"
+                      maxLength={15}
+                      className={`flex-1 min-w-0 box-border px-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]`}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-4 mt-2 rounded-xl text-white font-bold text-[15px] transition-all duration-300 
-                  ${loading 
-                    ? 'bg-slate-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-br from-[#0f5d52] to-[#1a7a6e] hover:from-[#0d4d44] hover:to-[#156359] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_8px_24px_rgba(15,93,82,0.25)] hover:shadow-[0_12px_28px_rgba(15,93,82,0.35)] cursor-pointer'
-                  }`}
-              >
-                {loading ? "Creating account..." : "Create Account"}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Password */}
+                <div>
+                  <label className={labelClasses}>Password *</label>
+                  <div className="relative">
+                    <Lock className={iconClasses} />
+                    <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a strong password" className={`${inputClasses} pr-10`} />
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0f5d52] transition-colors p-1">
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className={labelClasses}>Confirm Password *</label>
+                  <div className="relative">
+                    <Lock className={iconClasses} />
+                    <input type={showPassword ? "text" : "password"} required value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Confirm your password" className={`${inputClasses} pr-10`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className="flex items-center gap-3 mt-2">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  className="w-4 h-4 rounded border-slate-300 text-[#0f5d52] focus:ring-[#0f5d52] cursor-pointer accent-[#0f5d52]"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                />
+                <label htmlFor="terms" className="text-[13px] text-slate-600 cursor-pointer select-none">
+                  I agree to the <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Terms of Service</a> and <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Privacy Policy</a>
+                </label>
+              </div>
+
+              <button type="submit" disabled={loading} className={`w-full py-4 mt-2 rounded-[14px] text-white font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-[#0f5d52] hover:bg-[#0d4d44] hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(15,93,82,0.25)] hover:shadow-[0_12px_28px_rgba(15,93,82,0.35)] cursor-pointer'}`}>
+                {loading ? "Creating account..." : (
+                  <>
+                    <UserPlus size={20} />
+                    Create Account
+                  </>
+                )}
               </button>
             </form>
+            
+            {/* Social Logins */}
+            <div className="mt-8">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+                <div className="relative bg-white px-4 text-[13px] text-slate-400 font-medium">or sign up with</div>
+              </div>
 
-            <p className="text-center text-[12.5px] text-slate-500 mt-6 mb-0">
-              By creating an account you agree to our{" "}
-              <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Terms</a>
-              {" "}and{" "}
-              <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Privacy Policy</a>.
-            </p>
+              <div className="grid grid-cols-3 gap-3 mt-6">
+                <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-[14px] font-bold text-slate-700">
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  <span className="hidden sm:inline">Google</span>
+                </button>
+                <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-[14px] font-bold text-slate-700">
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="#1877F2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span className="hidden sm:inline">Facebook</span>
+                </button>
+                <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-[14px] font-bold text-slate-700">
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09.13.189.273.385.432.573 1.03 1.488 2.235 3.125 3.864 3.155 1.514.027 2.05-.905 3.873-.905 1.82 0 2.31.905 3.899.878 1.688-.027 2.73-1.488 3.755-2.98.54-.789 1.053-1.636 1.515-2.525-1.748-.684-2.883-2.404-2.835-4.321.053-2.32 1.859-3.666 1.93-3.712-1.085-1.584-2.766-1.815-3.376-1.867-2.062-.218-4.048 1.104-4.872 1.104-1.296 0-3.08-1.096-4.834-1.077h.051zm.55-1.579c.961-.131 2.203-.787 2.825-1.777-.552-.907-1.442-1.528-2.434-1.691-.976-.145-2.228.718-2.87 1.704.57.94 1.526 1.597 2.479 1.764z"/>
+                  </svg>
+                  <span className="hidden sm:inline">Apple</span>
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          <p className="text-center text-[14px] text-slate-600 mt-6">
+          <p className="text-center text-[14px] sm:text-[15px] text-slate-500 mt-8 font-medium">
             Already have an account?{" "}
             <Link to="/login" className="text-[#0f5d52] font-bold no-underline hover:underline">Sign In</Link>
           </p>
-
-          {/* Trust Indicators */}
-          <div className="flex items-center justify-center gap-6 md:gap-12 mt-10 opacity-80">
-            <div className="flex flex-col items-center gap-2">
-              <ShieldCheck size={22} className="text-[#0f5d52]" />
-              <span className="text-[12px] font-medium text-[#1a2e2b]">Verified Profiles</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <CheckCircle2 size={22} className="text-[#0f5d52]" />
-              <span className="text-[12px] font-medium text-[#1a2e2b]">Privacy First</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Heart size={22} className="text-[#0f5d52]" />
-              <span className="text-[12px] font-medium text-[#1a2e2b]">Trusted by Families</span>
-            </div>
-          </div>
 
         </div>
       </div>

@@ -43,18 +43,29 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error: { message: data.message || "Login failed." } };
       }
 
-      persistUser(data);
-      return { data: { user: data }, error: null };
+      // Check if profile is complete
+      let profileComplete = false;
+      try {
+        const profileRes = await fetch(`http://localhost:5000/api/profile/${data.id}`);
+        if (profileRes.ok) {
+          profileComplete = true;
+        }
+      } catch (e) {
+        // ignore error
+      }
+
+      const userData = { ...data, profileComplete };
+      persistUser(userData);
+      return { data: { user: userData }, error: null };
     } catch {
       return { data: null, error: { message: "Unable to connect to the server." } };
     }
   };
 
-  // Keep completeProfile for ProfileSetupPage compatibility
-  const completeProfile = (profile = {}) => {
+  const completeProfile = (profileFlags = {}) => {
     const nextUser = {
       ...(user ?? {}),
-      ...profile,
+      ...profileFlags,
       profileComplete: true,
     };
     persistUser(nextUser);

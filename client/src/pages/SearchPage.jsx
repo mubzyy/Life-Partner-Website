@@ -29,8 +29,8 @@ const SearchPage = () => {
   );
 
   return (
-    <div style={{ minHeight: "calc(100vh - 68px)", background: "#f8f6f2", padding: "28px 24px 40px" }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+    <div className="min-h-[calc(100vh-68px)] bg-[#f8f6f2] px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
+      <div className="w-full max-w-screen-2xl mx-auto">
 
         {/* ── Page header ── */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
@@ -215,7 +215,8 @@ const SearchPage = () => {
             )}
 
             {/* Profile grid — 4 columns */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 18 }} className="search-results-grid">
+            <div className="overflow-x-auto pb-4 w-full">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(240px, 1fr))", gap: 18 }} className="search-results-grid">
               {filteredProfiles.map((p, i) => (
                 <div key={p.id} style={{ background: "#fff", borderRadius: 18, border: "1.5px solid #e8ebe9", overflow: "hidden", transition: "all 0.2s" }}
                   onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 30px rgba(15,93,82,0.12)"; }}
@@ -284,6 +285,7 @@ const SearchPage = () => {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>

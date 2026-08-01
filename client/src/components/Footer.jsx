@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
+import Container from "./Container";
 
 const Footer = () => (
-  <footer id="contact" style={{ background: "#0b1f1c", color: "#fff", padding: "60px 24px 0" }}>
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+  <footer id="contact" style={{ background: "#0b1f1c", color: "#fff" }} className="pt-[60px] pb-4">
+    <Container>
 
       {/* 5 columns */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1.2fr 1.2fr 1.3fr", gap: 40, marginBottom: 40 }} className="footer-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 mb-10 footer-grid">
 
         {/* Logo + desc + socials */}
         <div>
@@ -83,19 +84,15 @@ const Footer = () => (
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "18px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-[18px] border-t border-white/10">
         <p style={{ fontSize: 12, color: "#5a7a76", margin: 0 }}>© 2024 Life Partner. All rights reserved.</p>
         <p style={{ fontSize: 12, color: "#5a7a76", margin: 0 }}>Made with ❤️ for the Muslim Ummah</p>
       </div>
-    </div>
+    </Container>
 
     <style>{`
-      @media (max-width: 900px) {
-        .footer-grid { grid-template-columns: 1fr 1fr !important; }
-      }
-      @media (max-width: 500px) {
-        .footer-grid { grid-template-columns: 1fr !important; }
+      @media (min-width: 1024px) {
+        .footer-grid { grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1.3fr !important; }
       }
     `}</style>
   </footer>

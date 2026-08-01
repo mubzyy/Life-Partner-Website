@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Container from "./Container";
 
 const profiles = [
   { name: "Ahmed",    age: 28, profession: "Software Engineer", city: "Lahore",     gender: "male"   },
@@ -21,15 +22,15 @@ const FeaturedProfiles = () => {
   const canNext = start + visible < profiles.length;
 
   return (
-    <section id="profiles" style={{ padding: "80px 24px", background: "#fff" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <section id="profiles" style={{ padding: "80px 0", background: "#fff" }} className="overflow-hidden">
+      <Container>
 
         <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em", color: "#d4a843", textTransform: "uppercase", marginBottom: 12 }}>
           FEATURED PROFILES
         </p>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 36 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 700, color: "#1a2e2b", margin: 0 }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, color: "#1a2e2b", margin: 0 }} className="text-3xl md:text-4xl lg:text-5xl">
             Meet Our Verified Members
           </h2>
           <button style={{
@@ -53,7 +54,7 @@ const FeaturedProfiles = () => {
             </button>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 16, overflow: "hidden" }} className="profiles-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-hidden">
             {profiles.slice(start, start + visible).map((p, i) => (
               <div key={p.name} style={{
                 borderRadius: 16,
@@ -116,16 +117,7 @@ const FeaturedProfiles = () => {
             </button>
           )}
         </div>
-      </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          .profiles-grid { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-        @media (max-width: 600px) {
-          .profiles-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-      `}</style>
+      </Container>
     </section>
   );
 };

@@ -24,11 +24,22 @@ const PublicOnlyRoute = ({ children }) => {
   return user ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// Redirect unauthenticated users to login
+// Redirect unauthenticated users to login, and incomplete profiles to setup
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
-  return user ? children : <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.profileComplete) return <Navigate to="/profile-setup" replace />;
+  return children;
+};
+
+// Route only for incomplete profiles
+const SetupRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.profileComplete) return <Navigate to="/dashboard" replace />;
+  return children;
 };
 
 // ── App Shell ──────────────────────────────────────────────────────────────
@@ -63,7 +74,14 @@ const AppRoutes = () => (
       />
 
       {/* Profile setup — accessible after register before login-wall */}
-      <Route path="/profile-setup" element={<ProfileSetupPage />} />
+      <Route 
+        path="/profile-setup" 
+        element={
+          <SetupRoute>
+            <ProfileSetupPage />
+          </SetupRoute>
+        } 
+      />
 
       {/* ── Protected routes — all share the persistent AppLayout navbar ── */}
       <Route

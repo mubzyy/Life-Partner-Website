@@ -59,8 +59,8 @@ const DashboardPage = () => {
   const pts = chartData.map((v, i) => `${(i / (chartData.length - 1)) * w},${h - (v / maxVal) * (h - 10) - 5}`).join(" ");
 
   return (
-    <div style={{ minHeight: "calc(100vh - 68px)", background: "#f8f6f2", padding: "28px 24px 40px" }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+    <div className="min-h-[calc(100vh-68px)] bg-[#f8f6f2] px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
+      <div className="w-full max-w-screen-2xl mx-auto">
 
         {/* ── Main 2-column layout ── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }} className="dash-layout">
@@ -94,7 +94,8 @@ const DashboardPage = () => {
             </div>
 
             {/* Stats row */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }} className="stats-grid">
+            <div className="overflow-x-auto pb-4 w-full">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(200px, 1fr))", gap: 16 }} className="stats-grid">
               {stats.map(s => (
                 <div key={s.label} style={{ background: "#fff", borderRadius: 16, padding: "18px 20px", border: "1.5px solid #e8ebe9" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -107,6 +108,7 @@ const DashboardPage = () => {
                   <div style={{ fontSize: 12, color: "#0f5d52", fontWeight: 600, marginTop: 6 }}>{s.sub}</div>
                 </div>
               ))}
+              </div>
             </div>
 
             {/* Recommended Matches */}
@@ -127,7 +129,8 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }} className="match-cards">
+              <div className="overflow-x-auto pb-4 w-full">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(240px, 1fr))", gap: 16 }} className="match-cards">
                 {matches.map((m, i) => (
                   <div key={m.id} style={{ borderRadius: 16, border: "1.5px solid #e8ebe9", overflow: "hidden", background: "#fff" }}>
                     {/* Photo */}
@@ -178,6 +181,7 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             </div>
 
@@ -185,7 +189,8 @@ const DashboardPage = () => {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: 20 }} className="bottom-grid">
 
               {/* Recent Messages */}
-              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }}>
+              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }} className="overflow-x-auto">
+                <div className="min-w-[300px]">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Recent Messages</h3>
                   <Link to="/messages" style={{ fontSize: 12, color: "#0f5d52", fontWeight: 700, textDecoration: "none" }}>View All</Link>
@@ -207,10 +212,12 @@ const DashboardPage = () => {
                     )}
                   </div>
                 ))}
-              </div>
+                  </div>
+                </div>
 
               {/* Profile Visitors */}
-              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }}>
+              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }} className="overflow-x-auto">
+                <div className="min-w-[300px]">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                   <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Profile Visitors</h3>
                   <Link to="/visitors" style={{ fontSize: 12, color: "#0f5d52", fontWeight: 700, textDecoration: "none" }}>View All</Link>
@@ -232,7 +239,8 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+                  </div>
+                </div>
 
               {/* Activity chart */}
               <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }}>

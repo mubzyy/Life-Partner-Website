@@ -19,6 +19,7 @@ import {
   Package,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Container from "./Container";
 
 // ── Nav items matching the design exactly ─────────────────────────────────
 const navItems = [
@@ -58,7 +59,7 @@ const AppLayout = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f6f2" }}>
+    <div style={{ minHeight: "100vh", background: "#f8f6f2" }} className="w-full overflow-x-hidden">
 
       {/* ══════════════════════════════════════════════════════════════════
           PERSISTENT TOP NAVBAR
@@ -70,11 +71,8 @@ const AppLayout = () => {
         background: "#fff",
         borderBottom: "1px solid #e8ebe9",
         boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-      }}>
-        <div style={{
-          maxWidth: 1400,
-          margin: "0 auto",
-          padding: "0 24px",
+      }} className="w-full">
+        <Container style={{
           height: 68,
           display: "flex",
           alignItems: "center",
@@ -220,7 +218,7 @@ const AppLayout = () => {
                   position: "absolute",
                   right: 0,
                   top: 50,
-                  width: 320,
+                  width: "min(320px, calc(100vw - 32px))",
                   background: "#fff",
                   borderRadius: 16,
                   border: "1px solid #e2e8f0",
@@ -350,7 +348,7 @@ const AppLayout = () => {
               {mobileOpen ? <X size={17} /> : <Menu size={17} />}
             </button>
           </div>
-        </div>
+        </Container>
 
         {/* Mobile menu */}
         {mobileOpen && (

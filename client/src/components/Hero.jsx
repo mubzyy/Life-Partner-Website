@@ -1,5 +1,6 @@
 import { Heart, Shield, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import Container from "./Container";
 
 const trustBadges = [
   { icon: Shield, label: "100%", sub: "Verified Profiles" },
@@ -11,34 +12,31 @@ const trustBadges = [
 const Hero = () => (
   <section
     id="home"
+    className="relative overflow-hidden"
     style={{
       background: "linear-gradient(135deg, #f7f5f0 0%, #eef6f4 50%, #f5f0e8 100%)",
-      padding: "80px 24px 60px",
-      overflow: "hidden",
-      position: "relative",
+      padding: "80px 0 60px",
     }}
   >
     {/* Decorative blobs */}
     <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "rgba(15,93,82,0.06)", pointerEvents: "none" }} />
     <div style={{ position: "absolute", bottom: -60, left: -60, width: 300, height: 300, borderRadius: "50%", background: "rgba(212,168,67,0.07)", pointerEvents: "none" }} />
 
-    <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }} className="hero-grid">
+    <Container className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center relative z-10">
 
       {/* ── Left column ── */}
       <div>
         <h1 style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: "clamp(48px, 6vw, 76px)",
-          fontWeight: 700,
           lineHeight: 1.08,
           color: "#1a2e2b",
           margin: "0 0 20px",
-        }}>
+        }} className="text-5xl sm:text-6xl md:text-7xl font-bold">
           Find Your<br />
           <span style={{ color: "#0f5d52" }}>Life Partner</span>
         </h1>
 
-        <p style={{ fontSize: 16, lineHeight: 1.7, color: "#4a6360", maxWidth: 440, margin: "0 0 32px" }}>
+        <p style={{ color: "#4a6360", maxWidth: 440, margin: "0 0 32px" }} className="text-base md:text-lg leading-relaxed">
           A trusted Muslim matrimonial platform where serious individuals connect with their perfect life partner, with the blessings of faith and family.
         </p>
 
@@ -69,7 +67,7 @@ const Hero = () => (
         </div>
 
         {/* Trust badges */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, auto)", gap: 24 }} className="trust-badges">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           {[
             { icon: "🛡️", label: "100%",    sub: "Verified Profiles"   },
             { icon: "🔒", label: "Privacy", sub: "Guaranteed"          },
@@ -86,7 +84,7 @@ const Hero = () => (
       </div>
 
       {/* ── Right column — hero image + Quran verse card ── */}
-      <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+      <div style={{ position: "relative", display: "flex", justifyContent: "center" }} className="w-full">
         <div style={{
           width: "100%",
           maxWidth: 500,
@@ -156,21 +154,14 @@ const Hero = () => (
           boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
           maxWidth: 220,
           border: "1px solid #e8ebe9",
-        }}>
+        }} className="hidden sm:block">
           <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#0f5d52", fontStyle: "italic", margin: "0 0 6px", lineHeight: 1.5 }}>
             "And We created you in pairs"
           </p>
           <p style={{ fontSize: 11, color: "#7a9490", fontWeight: 600, margin: 0 }}>— Qur'an 78:8 ✦</p>
         </div>
       </div>
-    </div>
-
-    <style>{`
-      @media (max-width: 768px) {
-        .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
-        .trust-badges { grid-template-columns: repeat(2, auto) !important; }
-      }
-    `}</style>
+    </Container>
   </section>
 );
 

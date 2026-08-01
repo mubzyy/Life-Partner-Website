@@ -8,7 +8,7 @@ import Pricing from "../components/Pricing";
 import Footer from "../components/Footer";
 
 const LandingPage = () => (
-  <div style={{ minHeight: "100vh", background: "#fff" }}>
+  <div className="min-h-screen bg-white overflow-x-hidden">
     <Navbar />
     <main>
       <Hero />

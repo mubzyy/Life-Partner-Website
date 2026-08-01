@@ -15,6 +15,7 @@ import {
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
+import Container from "./Container";
 
 const publicNavItems = [
   { to: "/#home", label: "Home" },
@@ -54,9 +55,9 @@ const SiteHeader = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e8e8e3] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1320px] items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-12">
+    <header className="sticky top-0 z-50 border-b border-[#e8e8e3] bg-white/95 backdrop-blur w-full">
+      <Container className="flex items-center justify-between py-4">
+        <div className="flex items-center gap-4 lg:gap-12">
           <Link to="/" className="flex items-center gap-3">
             <img
               src={logo}
@@ -174,26 +175,39 @@ const SiteHeader = () => {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="rounded-xl border border-[#ccd4d9] bg-white px-6 py-2.5 text-sm font-semibold text-[#2e3a43]"
+            <div className="hidden sm:flex items-center gap-3">
+              <Link
+                to="/login"
+                className="rounded-xl border border-[#ccd4d9] bg-white px-6 py-2.5 text-sm font-semibold text-[#2e3a43]"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-xl bg-[#0f5d52] px-6 py-2.5 text-sm font-semibold text-white"
+              >
+                Register
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 xl:hidden"
             >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-xl bg-[#0f5d52] px-6 py-2.5 text-sm font-semibold text-white"
-            >
-              Register
-            </Link>
+              {mobileMenuOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Menu className="h-4 w-4" />
+              )}
+            </button>
           </div>
         )}
-      </div>
+      </Container>
 
-      {authenticated && mobileMenuOpen && (
+      {mobileMenuOpen && (
         <div className="border-t border-slate-100 bg-white px-4 pb-4 pt-2 xl:hidden">
           <div className="grid gap-1">
-            {navItems.map((item) => (
+            {authenticated ? navItems.map((item) => (
               <NavLink
                 key={item.label}
                 to={item.to}
@@ -205,7 +219,22 @@ const SiteHeader = () => {
                 <item.icon className="h-4 w-4" />
                 {item.label}
               </NavLink>
+            )) : navItems.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block rounded-2xl px-4 py-3 text-sm font-semibold transition ${currentPath === item.to ? "bg-emerald-50 text-emerald-700" : "text-slate-700 hover:bg-slate-50"}`}
+              >
+                {item.label}
+              </Link>
             ))}
+            {!authenticated && (
+              <div className="grid grid-cols-2 gap-3 mt-4 px-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-xl border border-[#ccd4d9] bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#2e3a43]">Login</Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-xl bg-[#0f5d52] px-4 py-2.5 text-center text-sm font-semibold text-white">Register</Link>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -83,8 +83,8 @@ const ProfileViewPage = () => {
   const [isShortlisted, setIsShortlisted] = useState(false);
 
   return (
-    <div style={{ minHeight: "calc(100vh - 68px)", background: "#f8f6f2", padding: "24px 24px 48px" }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+    <div className="min-h-[calc(100vh-68px)] bg-[#f8f6f2] px-4 md:px-6 py-6 md:py-12 overflow-x-hidden">
+      <div className="w-full max-w-screen-2xl mx-auto">
 
         {/* Back button */}
         <button onClick={() => navigate(-1)}

@@ -1,3 +1,5 @@
+import Container from "./Container";
+
 const features = [
   {
     icon: "🛡️",
@@ -32,22 +34,22 @@ const features = [
 ];
 
 const FeatureGrid = () => (
-  <section id="why" style={{ padding: "80px 24px", background: "#fff" }}>
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+  <section id="why" style={{ padding: "80px 0", background: "#fff" }} className="overflow-hidden">
+    <Container>
       {/* Section label */}
       <p style={{ textAlign: "center", fontSize: 12, fontWeight: 800, letterSpacing: "0.15em", color: "#d4a843", textTransform: "uppercase", marginBottom: 12 }}>
         WHY CHOOSE US
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center", marginBottom: 60 }} className="feature-header-grid">
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 700, color: "#1a2e2b", margin: 0, lineHeight: 1.2 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mb-16">
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, color: "#1a2e2b", margin: 0, lineHeight: 1.2 }} className="text-3xl md:text-5xl text-center md:text-left">
           A Better Way to<br />Find Your Partner
         </h2>
         <div />
       </div>
 
       {/* 6 feature cards in a single row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 16 }} className="features-row">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {features.map(f => (
           <div key={f.title} style={{
             background: "#fff",
@@ -67,17 +69,7 @@ const FeatureGrid = () => (
           </div>
         ))}
       </div>
-    </div>
-
-    <style>{`
-      @media (max-width: 900px) {
-        .features-row { grid-template-columns: repeat(3, 1fr) !important; }
-        .feature-header-grid { grid-template-columns: 1fr !important; }
-      }
-      @media (max-width: 500px) {
-        .features-row { grid-template-columns: repeat(2, 1fr) !important; }
-      }
-    `}</style>
+    </Container>
   </section>
 );
 

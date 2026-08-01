@@ -2,6 +2,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
+import Container from "./Container";
 
 const publicLinks = [
   { label: "Home",            href: "#home"    },
@@ -17,16 +18,16 @@ const Navbar = () => {
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #e8ebe9" }}>
       {/* Top info bar */}
-      <div style={{ background: "#0f5d52", color: "#fff", fontSize: 12, fontWeight: 500, padding: "6px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>🛡️ Trusted by thousands of families worldwide</span>
-        <span style={{ display: "flex", gap: 24 }}>
+      <div style={{ background: "#0f5d52", color: "#fff", fontSize: 12, fontWeight: 500, padding: "6px 24px" }} className="hidden sm:flex justify-between items-center w-full">
+        <span className="hidden md:inline">🛡️ Trusted by thousands of families worldwide</span>
+        <span style={{ display: "flex", gap: 24, margin: "0 auto", maxWidth: "100%", justifyContent: "center" }}>
           <span>Need help? +92 300 1234567</span>
           <span>support@lifepartner.com</span>
         </span>
       </div>
 
       {/* Main navbar */}
-      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+      <Container style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
 
         {/* Logo */}
         <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
@@ -85,7 +86,7 @@ const Navbar = () => {
         >
           {menuOpen ? <X size={17} /> : <Menu size={17} />}
         </button>
-      </div>
+      </Container>
 
       {/* Mobile menu */}
       {menuOpen && (
