@@ -64,21 +64,8 @@ const AppLayout = () => {
       {/* ══════════════════════════════════════════════════════════════════
           PERSISTENT TOP NAVBAR
       ══════════════════════════════════════════════════════════════════ */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "#fff",
-        borderBottom: "1px solid #e8ebe9",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-      }} className="w-full">
-        <Container style={{
-          height: 68,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-        }}>
+      <header className="sticky top-0 z-50 bg-white border-b border-[#e8ebe9] shadow-[0_1px_4px_rgba(0,0,0,0.05)] w-full">
+        <Container className="h-[72px] flex items-center justify-between gap-4">
 
           {/* ── Logo ── */}
           <Link to="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>

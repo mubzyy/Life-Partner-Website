@@ -2,11 +2,8 @@ const { Pool } = require("pg");
 require("dotenv").config();
 
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
 });
 
 const countriesData = [
@@ -54,19 +51,24 @@ async function init() {
         }
 
         console.log("Updating users table...");
+        console.log("Creating users table...");
         await pool.query(`
-            ALTER TABLE users 
-            ADD COLUMN IF NOT EXISTS country_id INTEGER REFERENCES countries(id),
-            ADD COLUMN IF NOT EXISTS phone_code VARCHAR(10),
-            ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20),
-            ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false,
-            ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
-            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
-        `);
-
-        await pool.query(`
-            ALTER TABLE users DROP COLUMN IF EXISTS country;
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                first_name VARCHAR(100),
+                middle_name VARCHAR(100),
+                last_name VARCHAR(100),
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                country_id INTEGER REFERENCES countries(id),
+                phone_code VARCHAR(10),
+                phone_number VARCHAR(20),
+                email_verified BOOLEAN DEFAULT false,
+                is_active BOOLEAN DEFAULT true,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
         console.log("Creating user_profiles table...");

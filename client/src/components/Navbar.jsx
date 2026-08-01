@@ -27,7 +27,7 @@ const Navbar = () => {
       </div>
 
       {/* Main navbar */}
-      <Container style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+      <Container className="h-[72px] flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
