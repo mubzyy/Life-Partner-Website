@@ -265,10 +265,10 @@ const AppLayout = () => {
                   fontSize: 13,
                   flexShrink: 0,
                 }}>
-                  {user?.name?.[0] ?? "A"}
+                  {(user?.name || user?.first_name || "U")[0].toUpperCase()}
                 </div>
                 <div style={{ textAlign: "left", lineHeight: 1.3 }} className="user-name-desktop">
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{user?.name ?? "Imtiaz Ahmad"}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</div>
                   <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>View Profile</div>
                 </div>
                 <ChevronDown size={14} color="#94a3b8" style={{ transition: "transform 0.2s", transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
@@ -288,8 +288,8 @@ const AppLayout = () => {
                   zIndex: 100,
                 }}>
                   <div style={{ padding: "8px 12px 10px", borderBottom: "1px solid #f1f5f9", marginBottom: 4 }}>
-                    <p style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", margin: 0 }}>{user?.name ?? "Imtiaz Ahmad"}</p>
-                    <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{user?.email ?? "imtiaz@lifepartner.com"}</p>
+                    <p style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", margin: 0 }}>{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</p>
+                    <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{user?.email || "user@example.com"}</p>
                   </div>
                   {[
                     { to: "/profile/me", icon: UserRound, label: "My Profile" },

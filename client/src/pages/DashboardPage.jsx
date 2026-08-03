@@ -76,7 +76,7 @@ const DashboardPage = () => {
                 </div>
                 <div>
                   <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1a2e2b", margin: "0 0 4px" }}>
-                    Assalamualaikum, {user?.name?.split(" ")[0] ?? "Imtiaz"}! 👋
+                    Assalamualaikum, {user?.name?.split(" ")[0] || user?.first_name || "Guest"}! 👋
                   </h1>
                   <p style={{ fontSize: 13, color: "#6b8a86", margin: 0 }}>Welcome back! You have 12 new matches today.</p>
                 </div>

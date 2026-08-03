@@ -265,7 +265,7 @@ const LoginPage = () => {
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="imtiaz@lifepartner.com"
+                  placeholder="you@example.com"
                   className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
                 />
               </div>
