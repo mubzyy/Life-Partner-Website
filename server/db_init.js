@@ -71,6 +71,20 @@ async function init() {
             );
         `);
 
+        console.log("Creating notifications table...");
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                is_read BOOLEAN DEFAULT false,
+                action_url VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         console.log("Creating user_profiles table...");
         await pool.query(`
             CREATE TABLE IF NOT EXISTS user_profiles (

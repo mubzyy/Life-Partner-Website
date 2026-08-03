@@ -17,6 +17,8 @@ import {
   Bookmark,
   Eye,
   Package,
+  CheckCheck,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Container from "./Container";
@@ -40,6 +42,71 @@ const AppLayout = () => {
   const [notifOpen, setNotifOpen]       = useState(false);
   const dropdownRef = useRef(null);
   const notifRef    = useRef(null);
+
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
+  const markAsRead = async (id, actionUrl) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`, { method: "PATCH" }); } catch (e) {}
+    if (actionUrl) {
+      navigate(actionUrl);
+      setNotifOpen(false);
+    }
+  };
+
+  const markAllAsRead = async (e) => {
+    e.stopPropagation();
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/user/${user.id}/read-all`, { method: "PATCH" }); } catch (e) {}
+  };
+
+  const deleteNotification = async (e, id) => {
+    e.stopPropagation();
+    const notification = notifications.find(n => n.id === id);
+    if (!notification) return;
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    if (!notification.is_read) setUnreadCount(prev => Math.max(0, prev - 1));
+    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}`, { method: "DELETE" }); } catch (e) {}
+  };
+
+  const clearAllNotifications = async (e) => {
+    e.stopPropagation();
+    setNotifications([]);
+    setUnreadCount(0);
+    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/user/${user.id}`, { method: "DELETE" }); } catch (e) {}
+  };
+
+  const getRelativeTime = (dateStr) => {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 172800) return "Yesterday";
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -186,18 +253,20 @@ const AppLayout = () => {
                   border: "2px solid #fff",
                 }} />
                 {/* Badge */}
-                <span style={{
-                  position: "absolute",
-                  top: 2,
-                  right: 2,
-                  background: "#0f5d52",
-                  color: "#fff",
-                  borderRadius: 999,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  padding: "1px 4px",
-                  lineHeight: "14px",
-                }}>2</span>
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: 2,
+                    right: 2,
+                    background: "#0f5d52",
+                    color: "#fff",
+                    borderRadius: 999,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: "1px 4px",
+                    lineHeight: "14px",
+                  }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
               </button>
 
               {notifOpen && (
@@ -213,26 +282,44 @@ const AppLayout = () => {
                   padding: 16,
                   zIndex: 100,
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, alignItems: "center" }}>
                     <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Notifications</span>
-                    <span style={{ background: "#edf7f5", color: "#0f5d52", borderRadius: 999, fontSize: 11, fontWeight: 700, padding: "2px 8px" }}>2 new</span>
-                  </div>
-                  {[
-                    { text: "Ayesha Khan liked your profile", time: "2m ago", color: "#e11d48" },
-                    { text: "Your profile was verified", time: "1h ago", color: "#0f5d52" },
-                    { text: "3 new matches found for you", time: "3h ago", color: "#d97706" },
-                  ].map((n, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 6px", borderRadius: 10, cursor: "pointer" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                    >
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.color, marginTop: 5, flexShrink: 0 }} />
-                      <div>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: "#1e293b", margin: 0 }}>{n.text}</p>
-                        <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{n.time}</p>
-                      </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {unreadCount > 0 && <span style={{ background: "#edf7f5", color: "#0f5d52", borderRadius: 999, fontSize: 11, fontWeight: 700, padding: "2px 8px" }}>{unreadCount} new</span>}
+                      {notifications.length > 0 && (
+                        <>
+                          <button onClick={markAllAsRead} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#64748b" }} title="Mark all as read">
+                            <CheckCheck size={14} />
+                          </button>
+                          <button onClick={clearAllNotifications} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#64748b" }} title="Clear all">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
-                  ))}
+                  </div>
+                  <div style={{ maxHeight: 350, overflowY: "auto", margin: "0 -8px", padding: "0 8px" }}>
+                    {notifications.length === 0 ? (
+                      <p style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", padding: "20px 0", margin: 0 }}>No notifications yet</p>
+                    ) : (
+                      notifications.map((n) => (
+                        <div key={n.id} onClick={() => markAsRead(n.id, n.action_url)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 8px", borderRadius: 10, cursor: "pointer", background: n.is_read ? "transparent" : "#f8fafc", transition: "background 0.2s" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+                          onMouseLeave={e => e.currentTarget.style.background = n.is_read ? "transparent" : "#f8fafc"}
+                        >
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.is_read ? "#cbd5e1" : "#0f5d52", marginTop: 5, flexShrink: 0 }} />
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: 12, fontWeight: n.is_read ? 500 : 700, color: "#1e293b", margin: 0 }}>{n.title}</p>
+                            <p style={{ fontSize: 11, color: "#64748b", margin: "2px 0 4px", lineHeight: 1.4 }}>{n.message}</p>
+                            <p style={{ fontSize: 10, color: "#94a3b8", margin: 0 }}>{getRelativeTime(n.created_at)}</p>
+                          </div>
+                          <button onClick={(e) => deleteNotification(e, n.id)} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#cbd5e1", opacity: 0.7 }} title="Delete">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </div>

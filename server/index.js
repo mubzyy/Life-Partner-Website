@@ -5,6 +5,7 @@ require("dotenv").config();
 const authRoutes = require("./routes/auth");
 const countriesRoutes = require("./routes/countries");
 const profileRoutes = require("./routes/profile");
+const notificationsRoutes = require("./routes/notifications");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/countries", countriesRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
