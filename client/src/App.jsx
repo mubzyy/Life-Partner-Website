@@ -29,7 +29,8 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.profileComplete) return <Navigate to="/profile-setup" replace />;
+  // Temporarily allow navigation without requiring profile completion
+  // if (!user.profileComplete) return <Navigate to="/profile-setup" replace />;
   return children;
 };
 
