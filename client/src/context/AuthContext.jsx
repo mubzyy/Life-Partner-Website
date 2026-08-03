@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = "life-partner-session";
-const API_BASE = "http://localhost:5000/api/auth";
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       // Check if profile is complete
       let profileComplete = false;
       try {
-        const profileRes = await fetch(`http://localhost:5000/api/profile/${data.id}`);
+        const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/${data.id}`);
         if (profileRes.ok) {
           profileComplete = true;
         }

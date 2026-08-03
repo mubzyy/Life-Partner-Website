@@ -31,7 +31,7 @@ const ProfileSetupPage = () => {
   const [countries, setCountries] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/countries")
+    fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
       .then(res => res.json())
       .then(data => setCountries(data))
       .catch(console.error);
@@ -106,7 +106,7 @@ const ProfileSetupPage = () => {
       setLoading(true);
       setError("");
       try {
-        const response = await fetch("http://localhost:5000/api/profile", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -155,7 +155,7 @@ const RegisterPage = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/countries")
+    fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
       .then(res => res.json())
       .then(data => {
         setCountries(data);
@@ -210,7 +210,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/send-verification", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/send-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,7 +260,7 @@ const RegisterPage = () => {
     setResendLoading(true);
     setOtpError("");
     try {
-      await fetch("http://localhost:5000/api/auth/send-verification", {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/send-verification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -281,7 +281,7 @@ const RegisterPage = () => {
     setOtpLoading(true);
     setOtpError("");
     try {
-      const response = await fetch("http://localhost:5000/api/auth/verify-and-signup", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-and-signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otpValue }),
