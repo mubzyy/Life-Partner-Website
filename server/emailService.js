@@ -1,22 +1,6 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP Error:", error);
-  } else {
-    console.log("SMTP Server is ready.");
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Send a beautifully styled OTP email
@@ -92,12 +76,19 @@ const sendOtpEmail = async (to, otp, purpose = "verification") => {
     </html>
   `;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to,
+  const { data, error } = await resend.emails.send({
+    from: "Life Partner <onboarding@resend.dev>",
+    to: [to],
     subject,
     html,
   });
+
+  if (error) {
+    console.error("Resend API Error:", error);
+    throw new Error(error.message);
+  }
+
+  console.log("Email sent successfully via Resend API. ID:", data.id);
 };
 
 module.exports = { sendOtpEmail };
