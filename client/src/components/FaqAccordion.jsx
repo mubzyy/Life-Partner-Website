@@ -1,6 +1,5 @@
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import Container from "./Container";
 import SectionHeading from "./SectionHeading";
 import { faqItems } from "../data/siteContent";
 
@@ -9,7 +8,7 @@ const FaqAccordion = () => {
 
   return (
     <section id="faq" className="bg-white py-20 lg:py-28">
-      <Container>
+      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="FAQ"
           title="Straight answers for people who want clarity before they commit."
@@ -47,7 +46,7 @@ const FaqAccordion = () => {
             );
           })}
         </div>
-      </Container>
+      </div>
     </section>
   );
 };

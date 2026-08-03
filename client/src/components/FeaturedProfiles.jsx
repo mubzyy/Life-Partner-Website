@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Container from "./Container";
 
 const profiles = [
   { name: "Ahmed",    age: 28, profession: "Software Engineer", city: "Lahore",     gender: "male"   },
@@ -22,83 +21,53 @@ const FeaturedProfiles = () => {
   const canNext = start + visible < profiles.length;
 
   return (
-    <section id="profiles" style={{ padding: "80px 0", background: "#fff" }} className="overflow-hidden">
-      <Container>
+    <section id="profiles" className="py-[80px] bg-white overflow-hidden">
+      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em", color: "#d4a843", textTransform: "uppercase", marginBottom: 12 }}>
+        <p className="text-xs font-extrabold tracking-[0.15em] text-gold uppercase mb-3">
           FEATURED PROFILES
         </p>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, color: "#1a2e2b", margin: 0 }} className="text-3xl md:text-4xl lg:text-5xl">
+          <h2 className="font-serif font-bold text-[#1a2e2b] m-0 text-3xl md:text-4xl lg:text-5xl">
             Meet Our Verified Members
           </h2>
-          <button style={{
-            padding: "9px 18px", borderRadius: 8, border: "1.5px solid #c8d8d4",
-            fontSize: 13, fontWeight: 700, color: "#0f5d52", background: "#fff", cursor: "pointer"
-          }}>
+          <button className="py-2.5 px-4.5 rounded-lg border-[1.5px] border-[#c8d8d4] text-[13px] font-bold text-brand bg-white cursor-pointer">
             View All Profiles
           </button>
         </div>
 
         {/* Slider */}
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           {canPrev && (
-            <button onClick={() => setStart(s => s - 1)} style={{
-              position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)",
-              width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 2,
-            }}>
+            <button onClick={() => setStart(s => s - 1)} className="absolute -left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border-[1.5px] border-slate-200 bg-white cursor-pointer flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-10">
               <ChevronLeft size={18} color="#0f5d52" />
             </button>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-hidden">
             {profiles.slice(start, start + visible).map((p, i) => (
-              <div key={p.name} style={{
-                borderRadius: 16,
-                border: "1.5px solid #e8ebe9",
-                overflow: "hidden",
-                background: "#fff",
-                transition: "all 0.2s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 8px 30px rgba(15,93,82,0.12)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "translateY(0)"; }}
-              >
+              <div key={p.name} className="rounded-2xl border-[1.5px] border-[#e8ebe9] overflow-hidden bg-white transition-all duration-200 hover:shadow-[0_8px_30px_rgba(15,93,82,0.12)] hover:-translate-y-1">
                 {/* Photo placeholder */}
-                <div style={{
-                  height: 180,
-                  background: `linear-gradient(135deg, ${avatarColors[(start + i) % avatarColors.length]}22, ${avatarColors[(start + i) % avatarColors.length]}44)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  position: "relative",
-                }}>
+                <div 
+                  className={`h-[180px] flex items-center justify-center relative bg-gradient-to-br from-[${avatarColors[(start + i) % avatarColors.length]}22] to-[${avatarColors[(start + i) % avatarColors.length]}44]`}
+                >
                   {/* Avatar silhouette */}
-                  <div style={{
-                    width: 80, height: 80, borderRadius: "50%",
-                    background: avatarColors[(start + i) % avatarColors.length],
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 32, color: "#fff", fontWeight: 700,
-                  }}>
+                  <div 
+                    className={`w-20 h-20 rounded-full flex items-center justify-center text-[32px] text-white font-bold bg-[${avatarColors[(start + i) % avatarColors.length]}]`}
+                  >
                     {p.name[0]}
                   </div>
                   {/* Verified badge */}
-                  <div style={{
-                    position: "absolute", bottom: 10, left: 10,
-                    background: "#0f5d52", color: "#fff", borderRadius: 6,
-                    fontSize: 10, fontWeight: 700, padding: "3px 8px",
-                    display: "flex", alignItems: "center", gap: 4,
-                  }}>
+                  <div className="absolute bottom-2.5 left-2.5 bg-brand text-white rounded-md text-[10px] font-bold py-[3px] px-2 flex items-center gap-1">
                     ✓ Verified
                   </div>
                 </div>
 
-                <div style={{ padding: "14px 14px 16px" }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2e2b" }}>{p.name}, {p.age}</div>
-                  <div style={{ fontSize: 12, color: "#6b8a86", marginTop: 3 }}>{p.profession}</div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                <div className="pt-3.5 px-3.5 pb-4">
+                  <div className="font-bold text-sm text-[#1a2e2b]">{p.name}, {p.age}</div>
+                  <div className="text-xs text-[#6b8a86] mt-[3px]">{p.profession}</div>
+                  <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                     📍 {p.city}
                   </div>
                 </div>
@@ -107,17 +76,12 @@ const FeaturedProfiles = () => {
           </div>
 
           {canNext && (
-            <button onClick={() => setStart(s => s + 1)} style={{
-              position: "absolute", right: -20, top: "50%", transform: "translateY(-50%)",
-              width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 2,
-            }}>
+            <button onClick={() => setStart(s => s + 1)} className="absolute -right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border-[1.5px] border-slate-200 bg-white cursor-pointer flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] z-10">
               <ChevronRight size={18} color="#0f5d52" />
             </button>
           )}
         </div>
-      </Container>
+      </div>
     </section>
   );
 };

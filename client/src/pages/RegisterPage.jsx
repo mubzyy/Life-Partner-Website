@@ -70,21 +70,21 @@ const BackgroundShowcase = () => {
       <div className="hidden xl:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
         
         {/* Top: Medium, offset left */}
-        <div style={{ animation: 'floatFast1 8s ease-in-out infinite' }} className="ml-0">
+        <div className="animate-[floatFast1_8s_ease-in-out_infinite] ml-0">
           <div className={`w-[180px] h-[180px] rounded-[24px] overflow-hidden border-[6px] border-white shadow-[0_15px_35px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[0] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[0]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
         </div>
 
         {/* Middle: Large, offset right */}
-        <div style={{ animation: 'floatFast2 11s ease-in-out infinite' }} className="ml-32">
+        <div className="animate-[floatFast2_11s_ease-in-out_infinite] ml-32">
           <div className={`w-[250px] h-[250px] rounded-[32px] overflow-hidden border-[6px] border-white shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out ${fadeStatus[1] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[1]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
         </div>
 
         {/* Bottom: Small, offset left */}
-        <div style={{ animation: 'floatFast3 9s ease-in-out infinite' }} className="-ml-8">
+        <div className="animate-[floatFast3_9s_ease-in-out_infinite] -ml-8">
           <div className={`w-[140px] h-[140px] rounded-[20px] overflow-hidden border-[5px] border-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[2] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[2]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
@@ -96,21 +96,21 @@ const BackgroundShowcase = () => {
       <div className="hidden xl:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
         
         {/* Top: Small, offset right */}
-        <div style={{ animation: 'floatFast3 10s ease-in-out infinite' }} className="-mr-8">
+        <div className="animate-[floatFast3_10s_ease-in-out_infinite] -mr-8">
           <div className={`w-[140px] h-[140px] rounded-[20px] overflow-hidden border-[5px] border-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[3] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[3]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
         </div>
 
         {/* Middle: Large, offset left */}
-        <div style={{ animation: 'floatFast2 12s ease-in-out infinite' }} className="mr-32">
+        <div className="animate-[floatFast2_12s_ease-in-out_infinite] mr-32">
           <div className={`w-[250px] h-[250px] rounded-[32px] overflow-hidden border-[6px] border-white shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out ${fadeStatus[4] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[4]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
         </div>
 
         {/* Bottom: Medium, offset right */}
-        <div style={{ animation: 'floatFast1 9s ease-in-out infinite' }} className="mr-0">
+        <div className="animate-[floatFast1_9s_ease-in-out_infinite] mr-0">
           <div className={`w-[180px] h-[180px] rounded-[24px] overflow-hidden border-[6px] border-white shadow-[0_15px_35px_rgba(0,0,0,0.1)] transition-all duration-700 ease-in-out ${fadeStatus[5] ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
             <img src={displayed[5]} className="w-[150%] h-[150%] max-w-none object-cover transform -rotate-45 -translate-x-[17%] -translate-y-[17%]" alt="" />
           </div>
@@ -301,17 +301,17 @@ const RegisterPage = () => {
   };
 
 
-  const inputClasses = "w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]";
+  const inputClasses = "w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]";
   const labelClasses = "block text-[13px] font-bold text-slate-700 mb-1.5";
   const iconClasses = "absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]";
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden z-0 bg-[#faf9f6]">
+    <div className="flex items-center justify-center min-h-screen relative overflow-hidden z-0 bg-[#faf9f6]">
       
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-[24px] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-[#edf7f5] text-[#0f5d52] rounded-full flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-brand-light text-brand rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 size={32} />
             </div>
             <h3 className="text-[22px] font-bold text-slate-800 mb-2">Account Created</h3>
@@ -320,7 +320,7 @@ const RegisterPage = () => {
             </p>
             <button
               onClick={() => navigate("/login")}
-              className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_8px_24px_rgba(15,93,82,0.25)]"
+              className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all bg-brand hover:bg-[#0d4d44] shadow-[0_8px_24px_rgba(15,93,82,0.25)]"
             >
               Continue to Login
             </button>
@@ -333,7 +333,7 @@ const RegisterPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-[28px] p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
             {/* Icon */}
-            <div className="w-16 h-16 bg-[#edf7f5] rounded-full flex items-center justify-center mb-5">
+            <div className="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mb-5">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f5d52" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
@@ -343,7 +343,7 @@ const RegisterPage = () => {
             <p className="text-[14px] text-slate-500 mb-1 leading-relaxed">
               We've sent a 6-digit verification code to
             </p>
-            <p className="text-[14px] font-bold text-[#0f5d52] mb-6">{email}</p>
+            <p className="text-[14px] font-bold text-brand mb-6">{email}</p>
 
             {otpError && (
               <div className="w-full bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-[13px] text-red-600 text-left">
@@ -360,7 +360,7 @@ const RegisterPage = () => {
               value={otpValue}
               onChange={e => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
               placeholder="Enter 6-digit code"
-              className="w-full text-center text-[28px] font-bold tracking-[12px] py-4 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] mb-5"
+              className="w-full text-center text-[28px] font-bold tracking-[12px] py-4 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-brand focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] mb-5"
             />
 
             <button
@@ -369,7 +369,7 @@ const RegisterPage = () => {
               className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-4 ${
                 otpLoading || otpValue.length !== 6
                   ? 'bg-slate-300 cursor-not-allowed'
-                  : 'bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'
+                  : 'bg-brand hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'
               }`}
             >
               {otpLoading ? "Verifying..." : "Verify & Create Account"}
@@ -384,7 +384,7 @@ const RegisterPage = () => {
                   type="button"
                   onClick={handleResendOtp}
                   disabled={resendLoading}
-                  className="text-[#0f5d52] font-bold hover:underline cursor-pointer bg-transparent border-none"
+                  className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-none"
                 >
                   {resendLoading ? "Sending..." : "Resend code"}
                 </button>
@@ -409,14 +409,14 @@ const RegisterPage = () => {
         <Link to="/" className="inline-flex items-center gap-3.5 no-underline transition-opacity hover:opacity-90">
           <img src={logo} alt="Life Partner" className="h-[48px] w-[48px] object-contain drop-shadow-sm" />
           <div className="flex flex-col justify-center">
-            <div style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[22px] md:text-[26px] leading-none font-bold text-[#0f5d52] tracking-wide mb-1.5">Life Partner</div>
+            <div className="font-serif text-[22px] md:text-[26px] leading-none font-bold text-[#0f5d52] tracking-wide mb-1.5">Life Partner</div>
             <div className="text-[11px] md:text-[12.5px] leading-none font-medium text-[#52706c] tracking-wide">Find your partner for life</div>
           </div>
         </Link>
       </div>
 
       {/* Form Container */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 lg:py-12 z-10 relative w-full">
+      <div className="flex flex-col items-center justify-center px-4 py-8 lg:py-12 z-10 relative w-full">
         
         <div className="w-full max-w-3xl">
           <div className="bg-white rounded-[32px] p-6 sm:p-8 md:p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
@@ -424,7 +424,7 @@ const RegisterPage = () => {
             <div className="text-center mb-6 flex flex-col items-center">
               <div className="flex items-center gap-4 mb-2">
                 <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-[#d4af37]"></div>
-                <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[32px] md:text-[40px] font-bold text-[#1a2e2b] m-0">
+                <h1 className="font-serif text-[32px] md:text-[40px] font-bold text-[#1a2e2b] m-0">
                   Create your account
                 </h1>
                 <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-[#d4af37]"></div>
@@ -433,7 +433,7 @@ const RegisterPage = () => {
             </div>
 
             {/* Privacy Notice Badge */}
-            <div className="flex items-center gap-2.5 bg-[#edf7f5] text-[#0f5d52] rounded-xl py-3 px-4 mb-6 w-fit mx-auto border border-[#c8e6e0]">
+            <div className="flex items-center gap-2.5 bg-brand-light text-brand rounded-xl py-3 px-4 mb-6 w-fit mx-auto border border-[#c8e6e0]">
               <ShieldCheck size={18} className="shrink-0" />
               <p className="text-[13px] font-medium m-0 leading-tight">Your information remains private and is never shared without your permission.</p>
             </div>
@@ -508,7 +508,7 @@ const RegisterPage = () => {
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClasses}>Country *</label>
                   <div 
-                    className={`w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] flex items-center justify-between cursor-pointer select-none transition-all duration-200 hover:border-slate-300 ${showCountryDropdown ? 'border-[#0f5d52] shadow-[0_0_0_3px_rgba(15,93,82,0.1)]' : ''}`}
+                    className={`w-full box-border pl-10 pr-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] flex items-center justify-between cursor-pointer select-none transition-all duration-200 hover:border-slate-300 ${showCountryDropdown ? 'border-brand shadow-[0_0_0_3px_rgba(15,93,82,0.1)]' : ''}`}
                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
                   >
                     <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
@@ -544,7 +544,7 @@ const RegisterPage = () => {
                   <label className={labelClasses}>Phone Number *</label>
                   <div className="flex gap-2">
                     <div className="relative w-[110px]">
-                      <select value={phoneCode} onChange={e => setPhoneCode(e.target.value)} className={`w-full box-border px-3 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] cursor-pointer appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_8px_center]`}>
+                      <select value={phoneCode} onChange={e => setPhoneCode(e.target.value)} className={`w-full box-border px-3 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)] cursor-pointer appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_8px_center]`}>
                         {countries.map(c => (
                           <option key={c.id} value={c.phone_code}>{c.iso_code} {c.phone_code}</option>
                         ))}
@@ -560,7 +560,7 @@ const RegisterPage = () => {
                       onChange={e => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
                       placeholder="300 1234567"
                       maxLength={15}
-                      className={`flex-1 min-w-0 box-border px-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]`}
+                      className={`flex-1 min-w-0 box-border px-4 py-2.5 sm:py-3 rounded-[14px] border-[1.5px] border-slate-200 bg-white text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]`}
                     />
                   </div>
                 </div>
@@ -573,7 +573,7 @@ const RegisterPage = () => {
                   <div className="relative">
                     <Lock className={iconClasses} />
                     <input type={showPassword ? "text" : "password"} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Create a strong password" className={`${inputClasses} pr-10`} />
-                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0f5d52] transition-colors p-1">
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand transition-colors p-1">
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -594,16 +594,16 @@ const RegisterPage = () => {
                 <input 
                   type="checkbox" 
                   id="terms" 
-                  className="w-4 h-4 rounded border-slate-300 text-[#0f5d52] focus:ring-[#0f5d52] cursor-pointer accent-[#0f5d52]"
+                  className="w-4 h-4 rounded border-slate-300 text-brand focus:ring-brand cursor-pointer accent-brand"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
                 />
                 <label htmlFor="terms" className="text-[13px] text-slate-600 cursor-pointer select-none">
-                  I agree to the <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Terms of Service</a> and <a href="#" className="text-[#0f5d52] font-bold no-underline hover:underline">Privacy Policy</a>
+                  I agree to the <a href="#" className="text-brand font-bold no-underline hover:underline">Terms of Service</a> and <a href="#" className="text-brand font-bold no-underline hover:underline">Privacy Policy</a>
                 </label>
               </div>
 
-              <button type="submit" disabled={loading} className={`w-full py-4 mt-2 rounded-[14px] text-white font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-[#0f5d52] hover:bg-[#0d4d44] hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(15,93,82,0.25)] hover:shadow-[0_12px_28px_rgba(15,93,82,0.35)] cursor-pointer'}`}>
+              <button type="submit" disabled={loading} className={`w-full py-4 mt-2 rounded-[14px] text-white font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300 ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-brand hover:bg-[#0d4d44] hover:-translate-y-0.5 shadow-[0_8px_24px_rgba(15,93,82,0.25)] hover:shadow-[0_12px_28px_rgba(15,93,82,0.35)] cursor-pointer'}`}>
                 {loading ? "Creating account..." : (
                   <>
                     <UserPlus size={20} />
@@ -649,7 +649,7 @@ const RegisterPage = () => {
 
           <p className="text-center text-[14px] sm:text-[15px] text-slate-500 mt-8 font-medium">
             Already have an account?{" "}
-            <Link to="/login" className="text-[#0f5d52] font-bold no-underline hover:underline">Sign In</Link>
+            <Link to="/login" className="text-brand font-bold no-underline hover:underline">Sign In</Link>
           </p>
 
         </div>

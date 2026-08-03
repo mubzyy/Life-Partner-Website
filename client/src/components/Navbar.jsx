@@ -16,11 +16,11 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #e8ebe9" }}>
+    <header className="sticky top-0 z-50 bg-white border-b border-[#e8ebe9]">
       {/* Top info bar */}
-      <div style={{ background: "#0f5d52", color: "#fff", fontSize: 12, fontWeight: 500, padding: "6px 24px" }} className="hidden sm:flex justify-between items-center w-full">
+      <div className="bg-brand text-white text-[12px] font-medium px-6 py-[6px] hidden sm:flex justify-between items-center w-full">
         <span className="hidden md:inline">🛡️ Trusted by thousands of families worldwide</span>
-        <span style={{ display: "flex", gap: 24, margin: "0 auto", maxWidth: "100%", justifyContent: "center" }}>
+        <span className="flex gap-6 mx-auto max-w-full justify-center">
           <span>Need help? +92 300 1234567</span>
           <span>support@lifepartner.com</span>
         </span>
@@ -30,29 +30,27 @@ const Navbar = () => {
       <Container className="h-[72px] flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
+        <Link to="/" className="flex items-center gap-2 no-underline shrink-0">
           <img
             src={logo}
             alt="Life Partner"
-            style={{ height: 52, width: 52, objectFit: "contain", display: "block" }}
+            className="h-[52px] w-[52px] object-contain block"
           />
-          <div style={{ lineHeight: 1.2 }}>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 700, color: "#0f5d52" }}>
+          <div className="leading-[1.2]">
+            <div className="font-serif text-[22px] font-bold text-brand">
               Life Partner
             </div>
-            <div style={{ fontSize: 10, color: "#7a9490", fontWeight: 500 }}>Find your partner for life</div>
+            <div className="text-[10px] text-brand-muted font-medium">Find your partner for life</div>
           </div>
         </Link>
 
         {/* Desktop nav */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 8 }} className="landing-nav-desktop">
+        <nav className="hidden min-[901px]:flex items-center gap-2">
           {publicLinks.map(link => (
             <a
               key={link.href}
               href={link.href}
-              style={{ fontSize: 14, fontWeight: 600, color: "#334155", textDecoration: "none", padding: "4px 10px", borderRadius: 6, transition: "color 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.color = "#0f5d52"}
-              onMouseLeave={e => e.currentTarget.style.color = "#334155"}
+              className="text-[14px] font-semibold text-slate-700 no-underline px-[10px] py-1 rounded-md transition-colors duration-150 hover:text-brand"
             >
               {link.label}
             </a>
@@ -60,19 +58,11 @@ const Navbar = () => {
         </nav>
 
         {/* CTA buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }} className="landing-cta-desktop">
-          <Link to="/login" style={{
-            padding: "9px 22px", borderRadius: 8, border: "1.5px solid #c8d4d0",
-            fontSize: 13, fontWeight: 700, color: "#1e293b", textDecoration: "none", background: "#fff",
-          }}>
+        <div className="hidden min-[901px]:flex items-center gap-2.5">
+          <Link to="/login" className="px-[22px] py-[9px] rounded-lg border-[1.5px] border-[#c8d4d0] text-[13px] font-bold text-slate-800 no-underline bg-white">
             Login
           </Link>
-          <Link to="/register" style={{
-            padding: "9px 22px", borderRadius: 8,
-            background: "linear-gradient(135deg, #0f5d52, #1a7a6e)",
-            fontSize: 13, fontWeight: 700, color: "#fff", textDecoration: "none",
-            boxShadow: "0 4px 12px rgba(15,93,82,0.25)",
-          }}>
+          <Link to="/register" className="px-[22px] py-[9px] rounded-lg bg-gradient-to-br from-brand to-brand-mid text-[13px] font-bold text-white no-underline shadow-[0_4px_12px_rgba(15,93,82,0.25)]">
             Register
           </Link>
         </div>
@@ -80,8 +70,7 @@ const Navbar = () => {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMenuOpen(v => !v)}
-          style={{ width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #e2e8f0", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-          className="landing-mobile-btn"
+          className="min-[901px]:hidden w-10 h-10 rounded-full border-[1.5px] border-slate-200 bg-white flex items-center justify-center cursor-pointer"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
           {menuOpen ? <X size={17} /> : <Menu size={17} />}
@@ -90,28 +79,19 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ background: "#fff", borderTop: "1px solid #f1f5f9", padding: "12px 20px 16px" }}>
+        <div className="bg-white border-t border-slate-100 px-5 pt-3 pb-4 min-[901px]:hidden">
           {publicLinks.map(link => (
             <a key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
-              style={{ display: "block", padding: "10px 12px", borderRadius: 8, fontSize: 14, fontWeight: 600, color: "#334155", textDecoration: "none", marginBottom: 2 }}>
+              className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 no-underline mb-0.5">
               {link.label}
             </a>
           ))}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-            <Link to="/login" onClick={() => setMenuOpen(false)} style={{ padding: "10px", borderRadius: 8, border: "1.5px solid #e2e8f0", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#334155", textDecoration: "none" }}>Login</Link>
-            <Link to="/register" onClick={() => setMenuOpen(false)} style={{ padding: "10px", borderRadius: 8, background: "#0f5d52", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#fff", textDecoration: "none" }}>Register</Link>
+          <div className="grid grid-cols-2 gap-2.5 mt-3">
+            <Link to="/login" onClick={() => setMenuOpen(false)} className="p-2.5 rounded-lg border-[1.5px] border-slate-200 text-center text-[13px] font-bold text-slate-700 no-underline">Login</Link>
+            <Link to="/register" onClick={() => setMenuOpen(false)} className="p-2.5 rounded-lg bg-brand text-center text-[13px] font-bold text-white no-underline">Register</Link>
           </div>
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 900px) {
-          .landing-nav-desktop, .landing-cta-desktop { display: none !important; }
-        }
-        @media (min-width: 901px) {
-          .landing-mobile-btn { display: none !important; }
-        }
-      `}</style>
     </header>
   );
 };

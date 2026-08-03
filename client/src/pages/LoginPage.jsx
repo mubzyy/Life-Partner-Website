@@ -76,7 +76,7 @@ const ForgotPasswordModal = ({ onClose }) => {
     setLoading(false);
   };
 
-  const inputCls = "w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]";
+  const inputCls = "w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]";
   const labelCls = "block text-[13px] font-bold text-slate-700 mb-1.5";
 
   return (
@@ -86,12 +86,12 @@ const ForgotPasswordModal = ({ onClose }) => {
         {/* Step 3 — Success */}
         {step === 3 && (
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-[#edf7f5] text-[#0f5d52] rounded-full flex items-center justify-center mb-5">
+            <div className="w-16 h-16 bg-brand-light text-brand rounded-full flex items-center justify-center mb-5">
               <CheckCircle2 size={32} />
             </div>
             <h3 className="text-[22px] font-bold text-[#1a2e2b] mb-2">Password Reset!</h3>
             <p className="text-[14px] text-slate-500 mb-6">Your password has been updated successfully. You can now sign in with your new password.</p>
-            <button onClick={onClose} className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] bg-[#0f5d52] hover:bg-[#0d4d44] transition-all shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer">
+            <button onClick={onClose} className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] bg-brand hover:bg-[#0d4d44] transition-all shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer">
               Back to Sign In
             </button>
           </div>
@@ -119,7 +119,7 @@ const ForgotPasswordModal = ({ onClose }) => {
               />
             </div>
             <button onClick={handleSendCode} disabled={loading}
-              className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
+              className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
               {loading ? "Sending..." : "Send Reset Code"}
             </button>
           </>
@@ -133,7 +133,7 @@ const ForgotPasswordModal = ({ onClose }) => {
               <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-[20px] leading-none cursor-pointer bg-transparent border-none">×</button>
             </div>
             <p className="text-[13px] text-slate-500 mb-5">
-              Enter the 6-digit code sent to <span className="font-bold text-[#0f5d52]">{fpEmail}</span> along with your new password.
+              Enter the 6-digit code sent to <span className="font-bold text-brand">{fpEmail}</span> along with your new password.
             </p>
             {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-[13px] text-red-600">{error}</div>}
 
@@ -145,7 +145,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="000000"
-                  className="w-full text-center text-[26px] font-bold tracking-[10px] py-3.5 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]"
+                  className="w-full text-center text-[26px] font-bold tracking-[10px] py-3.5 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-brand focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]"
                 />
               </div>
               <div>
@@ -158,7 +158,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                     className={`${inputCls} pr-10`}
                   />
                   <button type="button" onClick={() => setShowNewPass(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0f5d52] transition-colors p-1 cursor-pointer">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand transition-colors p-1 cursor-pointer">
                     {showNewPass ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
@@ -175,7 +175,7 @@ const ForgotPasswordModal = ({ onClose }) => {
             </div>
 
             <button onClick={handleResetPassword} disabled={loading}
-              className={`w-full mt-5 py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-3 ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-[#0f5d52] hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
+              className={`w-full mt-5 py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-3 ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
               {loading ? "Resetting..." : "Reset Password"}
             </button>
 
@@ -185,7 +185,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                 <span className="text-slate-400">Resend in {resendCooldown}s</span>
               ) : (
                 <button type="button" onClick={handleResend} disabled={loading}
-                  className="text-[#0f5d52] font-bold hover:underline cursor-pointer bg-transparent border-none">
+                  className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-none">
                   Resend
                 </button>
               )}
@@ -225,26 +225,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ background: "linear-gradient(135deg, #f0f7f5 0%, #f7f4ee 50%, #eef5f2 100%)" }}>
+    <div className="flex min-h-screen items-center justify-center overflow-x-hidden bg-[linear-gradient(135deg,#f0f7f5_0%,#f7f4ee_50%,#eef5f2_100%)]">
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
 
       {/* Header */}
-      <div className="px-6 py-4 md:px-8 md:py-6">
+      <div className="absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-2 no-underline transition-opacity hover:opacity-90">
           <img src={logo} alt="Life Partner" className="h-[48px] w-[48px] md:h-[52px] md:w-[52px] object-contain drop-shadow-sm" />
           <div className="flex flex-col justify-center">
-            <div style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[20px] md:text-[22px] leading-none font-bold text-[#0f5d52] tracking-wide mb-1">Life Partner</div>
-            <div className="text-[10px] md:text-[11px] leading-none font-medium text-[#7a9490] tracking-wide">Find your partner for life</div>
+            <div className="font-serif text-[20px] md:text-[22px] leading-none font-bold text-brand tracking-wide mb-1">Life Partner</div>
+            <div className="text-[10px] md:text-[11px] leading-none font-medium text-brand-muted tracking-wide">Find your partner for life</div>
           </div>
         </Link>
       </div>
 
       {/* Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="flex w-full items-center justify-center px-4 py-8 z-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[32px] md:text-[36px] font-bold text-[#1a2e2b] m-0 mb-2">
+            <h1 className="font-serif text-[32px] md:text-[36px] font-bold text-[#1a2e2b] m-0 mb-2">
               Welcome Back
             </h1>
             <p className="text-[14px] md:text-[15px] text-[#6b8a86] m-0">Sign in to your Life Partner account</p>
@@ -266,7 +266,7 @@ const LoginPage = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
+                  className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
                 />
               </div>
 
@@ -276,7 +276,7 @@ const LoginPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
-                    className="text-[12.5px] font-semibold text-[#0f5d52] hover:text-[#0d4d44] hover:underline transition-colors cursor-pointer bg-transparent border-none"
+                    className="text-[12.5px] font-semibold text-brand hover:text-[#0d4d44] hover:underline transition-colors cursor-pointer bg-transparent border-none"
                   >
                     Forgot password?
                   </button>
@@ -288,10 +288,10 @@ const LoginPage = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full box-border px-4 py-3 pr-10 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-[#0f5d52] focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
+                    className="w-full box-border px-4 py-3 pr-10 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-slate-400 hover:text-[#0f5d52] transition-colors flex p-1">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-slate-400 hover:text-brand transition-colors flex p-1">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -303,7 +303,7 @@ const LoginPage = () => {
                 className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-[15px] transition-all duration-300 
                   ${loading 
                     ? 'bg-slate-400 cursor-not-allowed shadow-none' 
-                    : 'bg-gradient-to-br from-[#0f5d52] to-[#1a7a6e] hover:from-[#0d4d44] hover:to-[#156359] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_6px_20px_rgba(15,93,82,0.3)] hover:shadow-[0_10px_24px_rgba(15,93,82,0.4)] cursor-pointer'
+                    : 'bg-gradient-to-br from-brand to-brand-mid hover:from-[#0d4d44] hover:to-[#156359] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_6px_20px_rgba(15,93,82,0.3)] hover:shadow-[0_10px_24px_rgba(15,93,82,0.4)] cursor-pointer'
                   }`}
               >
                 {loading ? "Signing in..." : "Sign In"}
@@ -312,7 +312,7 @@ const LoginPage = () => {
 
             <p className="text-center text-[13px] text-slate-500 mt-5 mb-0">
               Don't have an account?{" "}
-              <Link to="/register" className="text-[#0f5d52] font-bold no-underline hover:underline">Create one</Link>
+              <Link to="/register" className="text-brand font-bold no-underline hover:underline">Create one</Link>
             </p>
           </div>
         </div>

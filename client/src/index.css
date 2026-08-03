@@ -1,46 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-:root {
-	color-scheme: light;
+/* ── Custom design tokens (Tailwind v4 @theme) ─────────────────────── */
+@theme {
+  --color-brand:        #0f5d52;
+  --color-brand-dark:   #0a3f38;
+  --color-brand-mid:    #1a7a6e;
+  --color-brand-teal:   #2d7a6e;
+  --color-brand-light:  #edf7f5;
+  --color-brand-muted:  #7a9490;
+  --color-gold:         #d4a843;
+  --color-gold-dark:    #c89832;
+
+  --font-sans: 'Manrope', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
 }
 
+/* ── Global resets ──────────────────────────────────────────────────── */
+:root { color-scheme: light; }
+
 html {
-	scroll-behavior: smooth;
-	overflow-x: hidden;
-	max-width: 100vw;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
-	margin: 0;
-	min-width: 320px;
-	overflow-x: hidden;
-	max-width: 100vw;
-	background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 35%, #f7f2ea 100%);
-	color: #222222;
-	font-family: 'Manrope', sans-serif;
-	-webkit-font-smoothing: antialiased;
-	text-rendering: optimizeLegibility;
+  margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
+  max-width: 100vw;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 35%, #f7f2ea 100%);
+  color: #222222;
+  font-family: 'Manrope', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-h1,
-h2,
-h3,
-h4,
-.brand-font {
-	font-family: 'Cormorant Garamond', serif;
+h1, h2, h3, h4, .brand-font {
+  font-family: 'Cormorant Garamond', serif;
 }
 
 ::selection {
-	background: rgba(15, 118, 110, 0.16);
-	color: #111827;
+  background: rgba(15, 118, 110, 0.16);
+  color: #111827;
 }
 
-a {
-	text-decoration: none;
-}
-
-button {
-	font: inherit;
-}
-
+a { text-decoration: none; }
+button { font: inherit; }

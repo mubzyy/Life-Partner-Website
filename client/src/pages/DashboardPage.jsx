@@ -41,7 +41,8 @@ const visitors = [
   { name: "Maryam Noor",  city: "Islamabad, Pakistan", time: "5 hours ago" },
 ];
 
-const avatarBg = ["#2d7a6e", "#6b4c8a", "#2d6e7e", "#7a6e2d", "#4c6e2d"];
+const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]"][i % 5];
+const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e33] to-[#2d7a6e66]", "bg-gradient-to-br from-[#6b4c8a33] to-[#6b4c8a66]", "bg-gradient-to-br from-[#2d6e7e33] to-[#2d6e7e66]", "bg-gradient-to-br from-[#7a6e2d33] to-[#7a6e2d66]", "bg-gradient-to-br from-[#4c6e2d33] to-[#4c6e2d66]"][i % 5];
 
 // Simple sparkline data for activity chart
 const chartData = [10, 18, 14, 22, 20, 30, 25, 35, 28, 38, 32, 40, 36, 23];
@@ -60,122 +61,112 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-[calc(100vh-68px)] bg-[#f8f6f2] px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
-      <div className="w-full max-w-screen-2xl mx-auto">
+      <div className="w-full max-w-[1400px] mx-auto">
 
         {/* ── Main 2-column layout ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 24, alignItems: "start" }} className="dash-layout">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
 
           {/* ── LEFT COLUMN ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
+          <div className="flex flex-col gap-6 min-w-0">
 
             {/* Welcome banner */}
-            <div style={{ background: "#fff", borderRadius: 20, padding: "24px 28px", border: "1.5px solid #e8ebe9", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "center" }} className="welcome-banner">
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ width: 54, height: 54, borderRadius: "50%", background: "linear-gradient(135deg, #0f5d52, #1a7a6e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+            <div className="bg-white rounded-[20px] px-7 py-6 border-[1.5px] border-[#e8ebe9] grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+              <div className="flex items-center gap-4">
+                <div className="w-[54px] h-[54px] rounded-full bg-gradient-to-br from-brand to-brand-mid flex items-center justify-center text-[22px] font-bold text-white shrink-0">
                   {user?.name?.[0] ?? "A"}
                 </div>
                 <div>
-                  <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1a2e2b", margin: "0 0 4px" }}>
+                  <h1 className="text-[20px] font-bold text-[#1a2e2b] mb-1">
                     Assalamualaikum, {user?.name?.split(" ")[0] || user?.first_name || "Guest"}! 👋
                   </h1>
-                  <p style={{ fontSize: 13, color: "#6b8a86", margin: 0 }}>Welcome back! You have 12 new matches today.</p>
+                  <p className="text-[13px] text-[#6b8a86] m-0">Welcome back! You have 12 new matches today.</p>
                 </div>
               </div>
               {/* Quran verse */}
-              <div style={{ background: "#f0f7f5", borderRadius: 16, padding: "16px 20px", textAlign: "center", borderLeft: "3px solid #0f5d52" }}>
-                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: "#1a2e2b", margin: "0 0 8px", fontStyle: "italic", direction: "rtl" }}>
+              <div className="bg-brand-light rounded-2xl py-4 px-5 text-center border-l-[3px] border-brand">
+                <p className="font-serif text-[15px] text-[#1a2e2b] mb-2 italic" dir="rtl">
                   وَخَلَقَ كُلَّ شَيْءٍ فَقَدَّرَهُ تَقْدِيرًا
                 </p>
-                <p style={{ fontSize: 11, color: "#6b8a86", margin: 0 }}>
+                <p className="text-[11px] text-[#6b8a86] m-0">
                   "And He created everything and determined it with precision."
                 </p>
-                <p style={{ fontSize: 11, color: "#0f5d52", fontWeight: 700, margin: "4px 0 0" }}>— Quran 25:2</p>
+                <p className="text-[11px] text-brand font-bold mt-1">— Quran 25:2</p>
               </div>
             </div>
 
             {/* Stats row */}
             <div className="overflow-x-auto pb-4 w-full">
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(200px, 1fr))", gap: 16 }} className="stats-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 min-w-[600px] md:min-w-0">
               {stats.map(s => (
-                <div key={s.label} style={{ background: "#fff", borderRadius: 16, padding: "18px 20px", border: "1.5px solid #e8ebe9" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "#edf7f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+                <div key={s.label} className="bg-white rounded-2xl py-[18px] px-5 border-[1.5px] border-[#e8ebe9]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-light flex items-center justify-center text-lg">
                       {s.icon}
                     </div>
-                    <div style={{ fontSize: 13, color: "#6b8a86", fontWeight: 600 }}>{s.label}</div>
+                    <div className="text-[13px] text-[#6b8a86] font-semibold">{s.label}</div>
                   </div>
-                  <div style={{ fontSize: 32, fontWeight: 800, color: "#1a2e2b", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: 12, color: "#0f5d52", fontWeight: 600, marginTop: 6 }}>{s.sub}</div>
+                  <div className="text-[32px] font-extrabold text-[#1a2e2b] leading-none">{s.value}</div>
+                  <div className="text-xs text-brand font-semibold mt-1.5">{s.sub}</div>
                 </div>
               ))}
               </div>
             </div>
 
             {/* Recommended Matches */}
-            <div style={{ background: "#fff", borderRadius: 20, padding: "24px", border: "1.5px solid #e8ebe9" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 18 }}>✨</span>
-                  <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Recommended Matches</h2>
+            <div className="bg-white rounded-[20px] p-6 border-[1.5px] border-[#e8ebe9]">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">✨</span>
+                  <h2 className="text-[17px] font-bold text-[#1a2e2b] m-0">Recommended Matches</h2>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Link to="/matches" style={{ fontSize: 13, fontWeight: 700, color: "#0f5d52", textDecoration: "none" }}>View All Matches</Link>
-                  <button style={{ width: 28, height: 28, borderRadius: "50%", border: "1.5px solid #e2e8f0", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ChevronLeft size={14} color="#64748b" />
+                <div className="flex items-center gap-2">
+                  <Link to="/matches" className="text-[13px] font-bold text-brand no-underline hover:text-brand-dark transition-colors">View All Matches</Link>
+                  <button className="w-7 h-7 rounded-full border-[1.5px] border-slate-200 bg-white cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
+                    <ChevronLeft size={14} className="text-slate-500" />
                   </button>
-                  <button style={{ width: 28, height: 28, borderRadius: "50%", border: "1.5px solid #e2e8f0", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ChevronRight size={14} color="#64748b" />
+                  <button className="w-7 h-7 rounded-full border-[1.5px] border-slate-200 bg-white cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
+                    <ChevronRight size={14} className="text-slate-500" />
                   </button>
                 </div>
               </div>
 
               <div className="overflow-x-auto pb-4 w-full">
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(240px, 1fr))", gap: 16 }} className="match-cards">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 min-w-[800px] md:min-w-0">
                 {matches.map((m, i) => (
-                  <div key={m.id} style={{ borderRadius: 16, border: "1.5px solid #e8ebe9", overflow: "hidden", background: "#fff" }}>
+                  <div key={m.id} className="rounded-2xl border-[1.5px] border-[#e8ebe9] overflow-hidden bg-white hover:shadow-[0_8px_30px_rgba(15,93,82,0.12)] hover:-translate-y-1 transition-all duration-200">
                     {/* Photo */}
-                    <div style={{
-                      height: 140,
-                      background: `linear-gradient(135deg, ${avatarBg[i % avatarBg.length]}33, ${avatarBg[i % avatarBg.length]}66)`,
-                      position: "relative",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <div style={{ width: 60, height: 60, borderRadius: "50%", background: avatarBg[i % avatarBg.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: "#fff", fontWeight: 700 }}>
+                    <div className={`h-[140px] relative flex items-center justify-center ${getAvatarGradient(i)}`}>
+                      <div className={`w-[60px] h-[60px] rounded-full flex items-center justify-center text-2xl text-white font-bold ${getAvatarBg(i)}`}>
                         {m.name[0]}
                       </div>
                       {/* Online dot */}
                       {m.online && (
-                        <div style={{ position: "absolute", top: 10, left: 10, background: "#22c55e", color: "#fff", borderRadius: 6, fontSize: 10, fontWeight: 700, padding: "2px 7px", display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff" }} />
+                        <div className="absolute top-2.5 left-2.5 bg-green-500 text-white rounded-md text-[10px] font-bold py-0.5 px-1.5 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
                           Online
                         </div>
                       )}
                       {/* Heart */}
                       <button onClick={() => toggleHeart(m.id)}
-                        style={{ position: "absolute", bottom: 10, right: 10, width: 30, height: 30, borderRadius: "50%", background: "#fff", border: "1.5px solid #e2e8f0", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Heart size={14} color={heartedCards[m.id] ? "#e11d48" : "#94a3b8"} fill={heartedCards[m.id] ? "#e11d48" : "none"} />
+                        className="absolute bottom-2.5 right-2.5 w-[30px] h-[30px] rounded-full bg-white border-[1.5px] border-slate-200 cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
+                        <Heart size={14} className={heartedCards[m.id] ? "text-rose-600" : "text-slate-400"} fill={heartedCards[m.id] ? "currentColor" : "none"} />
                       </button>
                     </div>
 
                     {/* Info */}
-                    <div style={{ padding: "12px 14px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: "#1a2e2b" }}>{m.name}, {m.age}</span>
-                        <span style={{ color: "#0f5d52", fontSize: 12 }}>✓</span>
+                    <div className="px-3.5 pt-3 pb-3.5">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <span className="font-bold text-[13px] text-[#1a2e2b]">{m.name}, {m.age}</span>
+                        <span className="text-brand text-xs">✓</span>
                       </div>
-                      <div style={{ fontSize: 12, color: "#6b8a86", marginBottom: 6 }}>{m.profession}</div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 3, marginBottom: 3 }}>
+                      <div className="text-xs text-[#6b8a86] mb-1.5">{m.profession}</div>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1 mb-1">
                         <MapPin size={10} /> {m.city}
                       </div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 3, marginBottom: 12 }}>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1 mb-3">
                         <GraduationCap size={10} /> {m.edu}
                       </div>
-                      <Link to={`/profile/${m.id}`} style={{
-                        display: "block", textAlign: "center",
-                        background: "linear-gradient(135deg, #0f5d52, #1a7a6e)",
-                        color: "#fff", textDecoration: "none",
-                        borderRadius: 8, padding: "7px 0", fontSize: 12, fontWeight: 700,
-                      }}>
+                      <Link to={`/profile/${m.id}`} className="block text-center bg-gradient-to-br from-brand to-brand-mid text-white no-underline rounded-lg py-1.5 text-xs font-bold hover:from-brand-mid hover:to-brand-teal transition-all">
                         View Profile
                       </Link>
                     </div>
@@ -186,29 +177,29 @@ const DashboardPage = () => {
             </div>
 
             {/* Bottom 3-column: Messages | Visitors | Chart */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: 20 }} className="bottom-grid">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
               {/* Recent Messages */}
-              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }} className="overflow-x-auto">
-                <div className="min-w-[300px]">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Recent Messages</h3>
-                  <Link to="/messages" style={{ fontSize: 12, color: "#0f5d52", fontWeight: 700, textDecoration: "none" }}>View All</Link>
+              <div className="bg-white rounded-[20px] p-5 border-[1.5px] border-[#e8ebe9] overflow-x-auto">
+                <div className="min-w-[300px] md:min-w-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-[15px] font-bold text-[#1a2e2b] m-0">Recent Messages</h3>
+                  <Link to="/messages" className="text-xs text-brand font-bold no-underline hover:text-brand-dark transition-colors">View All</Link>
                 </div>
                 {recentMessages.map((m, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: avatarBg[i % avatarBg.length], display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
+                  <div key={i} className="flex items-center gap-3 mb-3.5">
+                    <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${getAvatarBg(i)}`}>
                       {m.name[0]}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a2e2b" }}>{m.name}</span>
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>{m.time}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between">
+                        <span className="text-[13px] font-bold text-[#1a2e2b]">{m.name}</span>
+                        <span className="text-[10px] text-slate-400">{m.time}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#6b8a86", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.msg}</div>
+                      <div className="text-[11px] text-[#6b8a86] overflow-hidden text-ellipsis whitespace-nowrap">{m.msg}</div>
                     </div>
                     {m.unread > 0 && (
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#0f5d52", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{m.unread}</div>
+                      <div className="w-[18px] h-[18px] rounded-full bg-brand text-white text-[10px] font-bold flex items-center justify-center shrink-0">{m.unread}</div>
                     )}
                   </div>
                 ))}
@@ -216,26 +207,26 @@ const DashboardPage = () => {
                 </div>
 
               {/* Profile Visitors */}
-              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }} className="overflow-x-auto">
-                <div className="min-w-[300px]">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Profile Visitors</h3>
-                  <Link to="/visitors" style={{ fontSize: 12, color: "#0f5d52", fontWeight: 700, textDecoration: "none" }}>View All</Link>
+              <div className="bg-white rounded-[20px] p-5 border-[1.5px] border-[#e8ebe9] overflow-x-auto">
+                <div className="min-w-[300px] md:min-w-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-[15px] font-bold text-[#1a2e2b] m-0">Profile Visitors</h3>
+                  <Link to="/visitors" className="text-xs text-brand font-bold no-underline hover:text-brand-dark transition-colors">View All</Link>
                 </div>
                 {visitors.map((v, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 38, height: 38, borderRadius: "50%", background: avatarBg[(i + 2) % avatarBg.length], display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 700 }}>
+                  <div key={i} className="flex items-center justify-between gap-2.5 mb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${getAvatarBg(i + 2)}`}>
                         {v.name[0]}
                       </div>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a2e2b" }}>{v.name}</div>
-                        <div style={{ fontSize: 11, color: "#94a3b8" }}>{v.city}</div>
+                        <div className="text-[13px] font-bold text-[#1a2e2b]">{v.name}</div>
+                        <div className="text-[11px] text-slate-400">{v.city}</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 10, color: "#94a3b8" }}>{v.time}</div>
-                      <Eye size={14} color="#0f5d52" style={{ marginTop: 4 }} />
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-400">{v.time}</div>
+                      <Eye size={14} className="text-brand mt-1 ml-auto" />
                     </div>
                   </div>
                 ))}
@@ -243,10 +234,10 @@ const DashboardPage = () => {
                 </div>
 
               {/* Activity chart */}
-              <div style={{ background: "#fff", borderRadius: 20, padding: "20px", border: "1.5px solid #e8ebe9" }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: "0 0 4px" }}>Your Activity Overview</h3>
-                <div style={{ width: "100%", overflow: "hidden", marginTop: 16 }}>
-                  <svg viewBox={`0 0 ${w} ${h + 20}`} style={{ width: "100%", height: "auto" }}>
+              <div className="bg-white rounded-[20px] p-5 border-[1.5px] border-[#e8ebe9]">
+                <h3 className="text-[15px] font-bold text-[#1a2e2b] mb-1">Your Activity Overview</h3>
+                <div className="w-full overflow-hidden mt-4">
+                  <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full h-auto">
                     {/* Grid lines */}
                     {[0, 10, 20, 30, 40].map(v => (
                       <g key={v}>
@@ -267,16 +258,16 @@ const DashboardPage = () => {
                   </svg>
                 </div>
                 {/* Legend */}
-                <div style={{ display: "flex", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
+                <div className="flex gap-4 mt-2 flex-wrap">
                   {[
-                    { color: "#0f5d52", label: "23 Profile Views"  },
-                    { color: "#d4a843", label: "12 New Matches"     },
-                    { color: "#6b8a86", label: "8 Messages Sent"    },
-                    { color: "#e11d48", label: "17 Likes Received"  },
+                    { color: "bg-brand", label: "23 Profile Views"  },
+                    { color: "bg-gold", label: "12 New Matches"     },
+                    { color: "bg-[#6b8a86]", label: "8 Messages Sent"    },
+                    { color: "bg-rose-600", label: "17 Likes Received"  },
                   ].map(l => (
-                    <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: l.color }} />
-                      <span style={{ fontSize: 11, color: "#6b8a86" }}>{l.label}</span>
+                    <div key={l.label} className="flex items-center gap-1.5">
+                      <div className={`w-2 h-2 rounded-full ${l.color}`} />
+                      <span className="text-[11px] text-[#6b8a86]">{l.label}</span>
                     </div>
                   ))}
                 </div>
@@ -284,86 +275,75 @@ const DashboardPage = () => {
             </div>
 
             {/* Privacy banner */}
-            <div style={{ background: "#fff", borderRadius: 16, padding: "16px 20px", border: "1.5px solid #e8ebe9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "#edf7f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Shield size={18} color="#0f5d52" />
+            <div className="bg-white rounded-2xl py-4 px-5 border-[1.5px] border-[#e8ebe9] flex justify-between items-center flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-[38px] h-[38px] rounded-xl bg-brand-light flex items-center justify-center shrink-0">
+                  <Shield size={18} className="text-brand" />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#1a2e2b" }}>Your privacy and security are our top priority</div>
-                  <div style={{ fontSize: 12, color: "#6b8a86" }}>We verify every profile manually to ensure a safe and trusted community.</div>
+                  <div className="font-bold text-sm text-[#1a2e2b]">Your privacy and security are our top priority</div>
+                  <div className="text-xs text-[#6b8a86]">We verify every profile manually to ensure a safe and trusted community.</div>
                 </div>
               </div>
-              <Link to="/settings" style={{ fontSize: 13, fontWeight: 700, color: "#0f5d52", textDecoration: "none", whiteSpace: "nowrap" }}>Learn More →</Link>
+              <Link to="/settings" className="text-[13px] font-bold text-brand no-underline whitespace-nowrap hover:text-brand-dark transition-colors">Learn More →</Link>
             </div>
           </div>
 
           {/* ── RIGHT SIDEBAR ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+          <div className="flex flex-col gap-5 min-w-0">
 
             {/* Profile Completion */}
-            <div style={{ background: "#fff", borderRadius: 20, padding: "22px", border: "1.5px solid #e8ebe9" }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: "0 0 8px" }}>Profile Completion</h3>
-              <p style={{ fontSize: 12, color: "#6b8a86", margin: "0 0 16px" }}>Complete your profile to get better matches</p>
+            <div className="bg-white rounded-[20px] p-[22px] border-[1.5px] border-[#e8ebe9]">
+              <h3 className="text-[15px] font-bold text-[#1a2e2b] mb-2">Profile Completion</h3>
+              <p className="text-xs text-[#6b8a86] mb-4">Complete your profile to get better matches</p>
               {/* Ring */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-                <div style={{ position: "relative", width: 80, height: 80 }}>
-                  <svg viewBox="0 0 80 80" style={{ transform: "rotate(-90deg)" }}>
+              <div className="flex justify-center mb-4">
+                <div className="relative w-[80px] h-[80px]">
+                  <svg viewBox="0 0 80 80" className="-rotate-90">
                     <circle cx="40" cy="40" r="34" fill="none" stroke="#e8ebe9" strokeWidth="8" />
                     <circle cx="40" cy="40" r="34" fill="none" stroke="#0f5d52" strokeWidth="8" strokeDasharray={`${2 * Math.PI * 34 * 0.75} ${2 * Math.PI * 34}`} strokeLinecap="round" />
                   </svg>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: "#1a2e2b" }}>75%</div>
+                  <div className="absolute inset-0 flex items-center justify-center text-[15px] font-extrabold text-[#1a2e2b]">75%</div>
                 </div>
               </div>
-              <button style={{
-                width: "100%", padding: "11px", borderRadius: 10,
-                background: "linear-gradient(135deg, #0f5d52, #1a7a6e)",
-                color: "#fff", border: "none", cursor: "pointer",
-                fontSize: 13, fontWeight: 700,
-              }}>
+              <button className="w-full py-2.5 rounded-lg bg-gradient-to-br from-brand to-brand-mid text-white border-none cursor-pointer text-[13px] font-bold hover:from-brand-mid hover:to-brand-teal transition-colors">
                 Complete Profile
               </button>
             </div>
 
             {/* Recent Activity */}
-            <div style={{ background: "#fff", borderRadius: 20, padding: "22px", border: "1.5px solid #e8ebe9" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1a2e2b", margin: 0 }}>Recent Activity</h3>
-                <a href="#" style={{ fontSize: 12, color: "#0f5d52", fontWeight: 700, textDecoration: "none" }}>View All</a>
+            <div className="bg-white rounded-[20px] p-[22px] border-[1.5px] border-[#e8ebe9]">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[15px] font-bold text-[#1a2e2b] m-0">Recent Activity</h3>
+                <a href="#" className="text-xs text-brand font-bold no-underline hover:text-brand-dark transition-colors">View All</a>
               </div>
               {recentActivity.map((a, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  <div style={{ position: "relative", flexShrink: 0 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: avatarBg[i % avatarBg.length], display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700 }}>
+                <div key={i} className="flex items-center gap-2.5 mb-3.5">
+                  <div className="relative shrink-0">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold ${getAvatarBg(i)}`}>
                       {a.name[0]}
                     </div>
-                    {a.online && <div style={{ position: "absolute", bottom: 1, right: 1, width: 9, height: 9, borderRadius: "50%", background: "#22c55e", border: "2px solid #fff" }} />}
+                    {a.online && <div className="absolute bottom-[1px] right-[1px] w-[9px] h-[9px] rounded-full bg-green-500 border-2 border-white" />}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, color: "#1a2e2b" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-[#1a2e2b]">
                       <strong>{a.name}</strong> {a.action}
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>{a.time}</div>
+                    <div className="text-[11px] text-slate-400">{a.time}</div>
                   </div>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: a.online ? "#22c55e" : "#e2e8f0", flexShrink: 0 }} />
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${a.online ? "bg-green-500" : "bg-slate-200"}`} />
                 </div>
               ))}
             </div>
 
             {/* Upgrade to Premium */}
-            <div style={{
-              background: "linear-gradient(135deg, #0b3d35, #0f5d52)",
-              borderRadius: 20,
-              padding: "22px",
-              position: "relative",
-              overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: "rgba(212,168,67,0.1)" }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Crown size={18} color="#d4a843" />
-                <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Upgrade to Premium</span>
+            <div className="bg-gradient-to-br from-brand-dark to-brand rounded-[20px] p-[22px] relative overflow-hidden">
+              <div className="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full bg-gold/10" />
+              <div className="flex items-center gap-2 mb-2">
+                <Crown size={18} className="text-gold" />
+                <span className="text-[15px] font-bold text-white">Upgrade to Premium</span>
               </div>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", margin: "0 0 16px", lineHeight: 1.5 }}>
+              <p className="text-xs text-white/70 mb-4 leading-relaxed">
                 Unlock all features and get better matches.
               </p>
               {[
@@ -373,42 +353,20 @@ const DashboardPage = () => {
                 "Priority in recommendations",
                 "Hide your profile & browse privately",
               ].map(f => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#d4a843", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Check size={10} color="#fff" />
+                <div key={f} className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 rounded-full bg-gold flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-white" />
                   </div>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{f}</span>
+                  <span className="text-xs text-white/85">{f}</span>
                 </div>
               ))}
-              <Link to="/subscription" style={{
-                display: "block", textAlign: "center", marginTop: 16,
-                background: "linear-gradient(135deg, #d4a843, #c89832)",
-                color: "#fff", textDecoration: "none",
-                borderRadius: 10, padding: "12px 0",
-                fontSize: 13, fontWeight: 700,
-              }}>
+              <Link to="/subscription" className="block text-center mt-4 bg-gradient-to-br from-gold to-gold-dark text-white no-underline rounded-lg py-3 text-[13px] font-bold hover:from-gold-dark hover:to-amber-600 transition-colors">
                 Upgrade Now →
               </Link>
             </div>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 1100px) {
-          .dash-layout { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 800px) {
-          .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .match-cards { grid-template-columns: repeat(2, 1fr) !important; }
-          .bottom-grid { grid-template-columns: 1fr !important; }
-          .welcome-banner { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .stats-grid { grid-template-columns: 1fr !important; }
-          .match-cards { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { Heart, Shield, Users, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import Container from "./Container";
 
 const trustBadges = [
   { icon: Shield, label: "100%", sub: "Verified Profiles" },
@@ -12,56 +11,33 @@ const trustBadges = [
 const Hero = () => (
   <section
     id="home"
-    className="relative overflow-hidden"
-    style={{
-      background: "linear-gradient(135deg, #f7f5f0 0%, #eef6f4 50%, #f5f0e8 100%)",
-      padding: "80px 0 60px",
-    }}
+    className="relative overflow-hidden bg-[linear-gradient(135deg,#f7f5f0_0%,#eef6f4_50%,#f5f0e8_100%)] pt-[80px] pb-[60px]"
   >
     {/* Decorative blobs */}
-    <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "rgba(15,93,82,0.06)", pointerEvents: "none" }} />
-    <div style={{ position: "absolute", bottom: -60, left: -60, width: 300, height: 300, borderRadius: "50%", background: "rgba(212,168,67,0.07)", pointerEvents: "none" }} />
+    <div className="absolute -top-[80px] -right-[80px] w-[400px] h-[400px] rounded-full bg-brand/5 pointer-events-none" />
+    <div className="absolute -bottom-[60px] -left-[60px] w-[300px] h-[300px] rounded-full bg-gold/5 pointer-events-none" />
 
-    <Container className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center relative z-10">
+    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center relative z-10">
 
       {/* ── Left column ── */}
       <div>
-        <h1 style={{
-          fontFamily: "'Cormorant Garamond', serif",
-          lineHeight: 1.08,
-          color: "#1a2e2b",
-          margin: "0 0 20px",
-        }} className="text-5xl sm:text-6xl md:text-7xl font-bold">
+        <h1 className="font-serif leading-[1.08] text-[#1a2e2b] mb-5 text-5xl sm:text-6xl md:text-7xl font-bold">
           Find Your<br />
-          <span style={{ color: "#0f5d52" }}>Life Partner</span>
+          <span className="text-brand">Life Partner</span>
         </h1>
 
-        <p style={{ color: "#4a6360", maxWidth: 440, margin: "0 0 32px" }} className="text-base md:text-lg leading-relaxed">
+        <p className="text-[#4a6360] max-w-[440px] mb-8 text-base md:text-lg leading-relaxed">
           A trusted Muslim matrimonial platform where serious individuals connect with their perfect life partner, with the blessings of faith and family.
         </p>
 
         {/* CTA buttons */}
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 40 }}>
-          <Link to="/register" style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: "linear-gradient(135deg, #0f5d52, #1a7a6e)",
-            color: "#fff", textDecoration: "none",
-            padding: "14px 28px", borderRadius: 10,
-            fontSize: 15, fontWeight: 700,
-            boxShadow: "0 6px 20px rgba(15,93,82,0.3)",
-          }}>
+        <div className="flex gap-[14px] flex-wrap mb-10">
+          <Link to="/register" className="inline-flex items-center gap-2 bg-gradient-to-br from-brand to-brand-mid text-white no-underline px-7 py-3.5 rounded-[10px] text-[15px] font-bold shadow-[0_6px_20px_rgba(15,93,82,0.3)]">
             <Heart size={17} fill="white" />
             Find Your Life Partner
           </Link>
-          <Link to="/register" style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: "#fff", color: "#1e293b",
-            border: "1.5px solid #d0dcd8",
-            textDecoration: "none",
-            padding: "14px 28px", borderRadius: 10,
-            fontSize: 15, fontWeight: 700,
-          }}>
-            <span style={{ fontSize: 16 }}>👤</span>
+          <Link to="/register" className="inline-flex items-center gap-2 bg-white text-slate-800 border-[1.5px] border-[#d0dcd8] no-underline px-7 py-3.5 rounded-[10px] text-[15px] font-bold">
+            <span className="text-base">👤</span>
             Create Profile
           </Link>
         </div>
@@ -74,33 +50,21 @@ const Hero = () => (
             { icon: "💚", label: "50k+",    sub: "Successful Matches"  },
             { icon: "🕐", label: "24/7",    sub: "Support"             },
           ].map(b => (
-            <div key={b.label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 20, marginBottom: 4 }}>{b.icon}</div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: "#1a2e2b" }}>{b.label}</div>
-              <div style={{ fontSize: 11, color: "#6b8a86", fontWeight: 500 }}>{b.sub}</div>
+            <div key={b.label} className="text-center">
+              <div className="text-[20px] mb-1">{b.icon}</div>
+              <div className="font-extrabold text-[15px] text-[#1a2e2b]">{b.label}</div>
+              <div className="text-[11px] text-[#6b8a86] font-medium">{b.sub}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Right column — hero image + Quran verse card ── */}
-      <div style={{ position: "relative", display: "flex", justifyContent: "center" }} className="w-full">
-        <div style={{
-          width: "100%",
-          maxWidth: 500,
-          aspectRatio: "4/3.2",
-          borderRadius: 24,
-          overflow: "hidden",
-          background: "linear-gradient(135deg, #d4e8e3 0%, #e8d5b0 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          boxShadow: "0 20px 60px rgba(15,93,82,0.15)",
-        }}>
+      <div className="relative flex justify-center w-full">
+        <div className="w-full max-w-[500px] aspect-[4/3.2] rounded-[24px] overflow-hidden bg-[linear-gradient(135deg,#d4e8e3_0%,#e8d5b0_100%)] flex items-center justify-center relative shadow-[0_20px_60px_rgba(15,93,82,0.15)]">
           {/* Decorative mosque silhouette */}
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg viewBox="0 0 500 350" style={{ width: "100%", height: "100%", opacity: 0.15 }}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg viewBox="0 0 500 350" className="w-full h-full opacity-15">
               <path d="M200 350V200C200 160 230 130 250 120C270 130 300 160 300 200V350Z" fill="#0f5d52"/>
               <path d="M240 120C240 110 245 100 250 95C255 100 260 110 260 120H240Z" fill="#0f5d52"/>
               <path d="M100 350V250C100 220 120 200 150 200H200V350H100Z" fill="#0f5d52"/>
@@ -115,53 +79,33 @@ const Hero = () => (
           </div>
 
           {/* Couple silhouettes */}
-          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "flex-end", gap: 16, padding: "0 30px 40px" }}>
+          <div className="relative z-10 flex items-end gap-4 px-[30px] pb-[40px]">
             {/* Man */}
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                width: 90, height: 160,
-                background: "linear-gradient(180deg, #1a4a3a 0%, #0d2d22 100%)",
-                borderRadius: "50% 50% 0 0",
-                position: "relative",
-              }}>
-                <div style={{ position: "absolute", top: -22, left: "50%", transform: "translateX(-50%)", width: 44, height: 44, borderRadius: "50%", background: "#c4956a" }} />
+            <div className="text-center">
+              <div className="w-[90px] h-[160px] bg-[linear-gradient(180deg,#1a4a3a_0%,#0d2d22_100%)] rounded-[50%_50%_0_0] relative">
+                <div className="absolute -top-[22px] left-1/2 -translate-x-1/2 w-[44px] h-[44px] rounded-full bg-[#c4956a]" />
               </div>
             </div>
             {/* Woman */}
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                width: 80, height: 150,
-                background: "linear-gradient(180deg, #6b4c2a 0%, #4a3020 100%)",
-                borderRadius: "50% 50% 0 0",
-                position: "relative",
-              }}>
-                <div style={{ position: "absolute", top: -25, left: "50%", transform: "translateX(-50%)", width: 40, height: 40, borderRadius: "50%", background: "#c4956a" }} />
+            <div className="text-center">
+              <div className="w-[80px] h-[150px] bg-[linear-gradient(180deg,#6b4c2a_0%,#4a3020_100%)] rounded-[50%_50%_0_0] relative">
+                <div className="absolute -top-[25px] left-1/2 -translate-x-1/2 w-[40px] h-[40px] rounded-full bg-[#c4956a]" />
                 {/* Hijab */}
-                <div style={{ position: "absolute", top: -30, left: "50%", transform: "translateX(-50%)", width: 56, height: 56, borderRadius: "50% 50% 40% 40%", background: "#8b6914" }} />
+                <div className="absolute -top-[30px] left-1/2 -translate-x-1/2 w-[56px] h-[56px] rounded-[50%_50%_40%_40%] bg-[#8b6914]" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Quran verse card */}
-        <div style={{
-          position: "absolute",
-          bottom: -20,
-          left: -10,
-          background: "#fff",
-          borderRadius: 16,
-          padding: "16px 20px",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-          maxWidth: 220,
-          border: "1px solid #e8ebe9",
-        }} className="hidden sm:block">
-          <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "#0f5d52", fontStyle: "italic", margin: "0 0 6px", lineHeight: 1.5 }}>
+        <div className="absolute -bottom-5 -left-2.5 bg-white rounded-2xl py-4 px-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] max-w-[220px] border border-[#e8ebe9] hidden sm:block">
+          <p className="font-serif text-[14px] text-brand italic mb-1.5 leading-relaxed">
             "And We created you in pairs"
           </p>
-          <p style={{ fontSize: 11, color: "#7a9490", fontWeight: 600, margin: 0 }}>— Qur'an 78:8 ✦</p>
+          <p className="text-[11px] text-brand-muted font-semibold m-0">— Qur'an 78:8 ✦</p>
         </div>
       </div>
-    </Container>
+    </div>
   </section>
 );
 

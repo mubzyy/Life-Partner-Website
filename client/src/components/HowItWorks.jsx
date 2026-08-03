@@ -1,5 +1,3 @@
-import Container from "./Container";
-
 const steps = [
   { num: 1, title: "Register",         desc: "Create your profile in just a few minutes"       },
   { num: 2, title: "Complete Profile",  desc: "Add details about yourself and your preferences"  },
@@ -8,56 +6,44 @@ const steps = [
 ];
 
 const HowItWorks = () => (
-  <section id="how" style={{ padding: "80px 0", background: "#f7f5f0" }} className="overflow-hidden">
-    <Container>
+  <section id="how" className="py-[80px] bg-[#f7f5f0] overflow-hidden">
+    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center">
-        <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.15em", color: "#d4a843", textTransform: "uppercase", marginBottom: 12 }}>
+        <p className="text-xs font-extrabold tracking-[0.15em] text-gold uppercase mb-3">
           HOW IT WORKS
         </p>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, color: "#1a2e2b", margin: "0 0 60px" }} className="text-3xl md:text-5xl">
+        <h2 className="font-serif font-bold text-[#1a2e2b] m-0 mb-[60px] text-3xl md:text-5xl">
           Simple Steps to Find Your Life Partner
         </h2>
 
         {/* Steps with connecting lines */}
         <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {/* Connecting line */}
-          <div style={{
-            position: "absolute",
-            top: 28,
-            left: "12.5%",
-            right: "12.5%",
-            height: 2,
-            background: "linear-gradient(90deg, #0f5d52, #d4a843)",
-            zIndex: 0,
-          }} className="hidden md:block" />
+          <div className="absolute top-7 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-brand to-gold z-0 hidden md:block" />
 
           {steps.map((step, i) => (
-            <div key={step.num} style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+            <div key={step.num} className="relative z-10 text-center">
               {/* Number circle */}
-              <div style={{
-                width: 56, height: 56,
-                borderRadius: "50%",
-                background: i === 0 ? "linear-gradient(135deg, #0f5d52, #1a7a6e)" : "#fff",
-                border: i === 0 ? "none" : "2px solid #c8d8d4",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 20px",
-                boxShadow: i === 0 ? "0 6px 20px rgba(15,93,82,0.3)" : "0 2px 8px rgba(0,0,0,0.08)",
-              }}>
-                <span style={{ fontSize: 20 }}>
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${
+                i === 0 
+                  ? "bg-gradient-to-br from-brand to-brand-mid shadow-[0_6px_20px_rgba(15,93,82,0.3)] border-none" 
+                  : "bg-white border-2 border-[#c8d8d4] shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+              }`}>
+                <span className="text-[20px]">
                   {["📋", "✅", "🔍", "💬"][i]}
                 </span>
               </div>
-              <h3 style={{ fontWeight: 700, fontSize: 15, color: "#1a2e2b", margin: "0 0 8px" }}>
+              <h3 className="font-bold text-[15px] text-[#1a2e2b] m-0 mb-2">
                 {step.num}. {step.title}
               </h3>
-              <p style={{ fontSize: 13, color: "#6b8a86", lineHeight: 1.6, margin: 0 }}>
+              <p className="text-[13px] text-[#6b8a86] leading-relaxed m-0">
                 {step.desc}
               </p>
             </div>
           ))}
         </div>
       </div>
-    </Container>
+    </div>
   </section>
 );
 

@@ -21,7 +21,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import Container from "./Container";
 
 // ── Nav items matching the design exactly ─────────────────────────────────
 const navItems = [
@@ -126,68 +125,48 @@ const AppLayout = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f6f2" }} className="w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8f6f2] w-full overflow-x-hidden">
 
       {/* ══════════════════════════════════════════════════════════════════
           PERSISTENT TOP NAVBAR
       ══════════════════════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 bg-white border-b border-[#e8ebe9] shadow-[0_1px_4px_rgba(0,0,0,0.05)] w-full">
-        <Container className="h-[72px] flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-4">
 
           {/* ── Logo ── */}
-          <Link to="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}>
+          <Link to="/dashboard" className="flex items-center gap-2 no-underline shrink-0">
             <img
               src={logo}
               alt="Life Partner"
-              style={{ height: 52, width: 52, objectFit: "contain", display: "block" }}
+              className="h-[52px] w-[52px] object-contain block"
             />
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 700, color: "#0f5d52", letterSpacing: "0.01em" }}>
+            <div className="leading-[1.2]">
+              <div className="font-serif text-[20px] font-bold text-brand tracking-[0.01em]">
                 Life Partner
               </div>
-              <div style={{ fontSize: 10, color: "#7a9490", fontWeight: 500, letterSpacing: "0.02em" }}>
+              <div className="text-[10px] text-brand-muted font-medium tracking-[0.02em]">
                 Find your partner for life
               </div>
             </div>
           </Link>
 
           {/* ── Desktop nav tabs ── */}
-          <nav style={{ display: "flex", alignItems: "center", gap: 2, flex: 1, justifyContent: "center" }} className="app-nav-desktop">
+          <nav className="hidden xl:flex items-center gap-[2px] flex-1 justify-center">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                style={({ isActive }) => ({
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "6px 14px",
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  color: isActive ? "#0f5d52" : "#4a5568",
-                  background: isActive ? "#edf7f5" : "transparent",
-                  transition: "all 0.15s",
-                  position: "relative",
-                  whiteSpace: "nowrap",
-                })}
+                className={({ isActive }) =>
+                  `flex items-center gap-[5px] px-[14px] py-[6px] rounded-lg text-[14px] font-semibold no-underline transition-all duration-150 relative whitespace-nowrap ${
+                    isActive ? "text-brand bg-brand-light" : "text-slate-600 bg-transparent"
+                  }`
+                }
               >
                 {({ isActive }) => (
                   <>
                     {item.label}
                     {item.badge && (
-                      <span style={{
-                        background: isActive ? "#0f5d52" : "#2d7a6e",
-                        color: "#fff",
-                        borderRadius: 999,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: "1px 6px",
-                        lineHeight: "16px",
-                        minWidth: 18,
-                        textAlign: "center",
-                      }}>
+                      <span className={`text-white rounded-full text-[10px] font-bold py-[1px] px-[6px] leading-[16px] min-w-[18px] text-center ${isActive ? "bg-brand" : "bg-brand-teal"}`}>
                         {item.badge}
                       </span>
                     )}
@@ -198,122 +177,64 @@ const AppLayout = () => {
           </nav>
 
           {/* ── Right side actions ── */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          <div className="flex items-center gap-[10px] shrink-0">
 
             {/* Upgrade to Premium button */}
-            <button style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              background: "linear-gradient(135deg, #d4a843, #c89832)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "8px 16px",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(212,168,67,0.35)",
-              whiteSpace: "nowrap",
-            }}
-              className="upgrade-btn-desktop"
+            <button
+              className="hidden xl:flex items-center gap-[7px] bg-gradient-to-br from-gold to-gold-dark text-white border-none rounded-[10px] py-[8px] px-[16px] text-[13px] font-bold cursor-pointer shadow-[0_2px_8px_rgba(212,168,67,0.35)] whitespace-nowrap"
             >
               <Crown size={15} />
               Upgrade to Premium
             </button>
 
             {/* Notifications bell */}
-            <div style={{ position: "relative" }} ref={notifRef}>
+            <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen(v => !v)}
-                style={{
-                  position: "relative",
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  border: "1.5px solid #e2e8f0",
-                  background: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  color: "#64748b",
-                }}
+                className="relative w-[40px] h-[40px] rounded-full border-[1.5px] border-slate-200 bg-white flex items-center justify-center cursor-pointer text-slate-500"
                 aria-label="Notifications"
               >
                 <Bell size={17} />
-                <span style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "#22c55e",
-                  border: "2px solid #fff",
-                }} />
+                <span className="absolute top-[8px] right-[8px] w-[8px] h-[8px] rounded-full bg-green-500 border-2 border-white" />
                 {/* Badge */}
                 {unreadCount > 0 && (
-                  <span style={{
-                    position: "absolute",
-                    top: 2,
-                    right: 2,
-                    background: "#0f5d52",
-                    color: "#fff",
-                    borderRadius: 999,
-                    fontSize: 9,
-                    fontWeight: 700,
-                    padding: "1px 4px",
-                    lineHeight: "14px",
-                  }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  <span className="absolute top-[2px] right-[2px] bg-brand text-white rounded-full text-[9px] font-bold py-[1px] px-[4px] leading-[14px]">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
                 )}
               </button>
 
               {notifOpen && (
-                <div style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 50,
-                  width: "min(320px, calc(100vw - 32px))",
-                  background: "#fff",
-                  borderRadius: 16,
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
-                  padding: 16,
-                  zIndex: 100,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, alignItems: "center" }}>
-                    <span style={{ fontWeight: 700, fontSize: 14, color: "#0f172a" }}>Notifications</span>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      {unreadCount > 0 && <span style={{ background: "#edf7f5", color: "#0f5d52", borderRadius: 999, fontSize: 11, fontWeight: 700, padding: "2px 8px" }}>{unreadCount} new</span>}
+                <div className="absolute right-0 top-[50px] w-[min(320px,calc(100vw-32px))] bg-white rounded-[16px] border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.12)] p-4 z-[100]">
+                  <div className="flex justify-between mb-3 items-center">
+                    <span className="font-bold text-[14px] text-slate-950">Notifications</span>
+                    <div className="flex gap-2 items-center">
+                      {unreadCount > 0 && <span className="bg-brand-light text-brand rounded-full text-[11px] font-bold py-[2px] px-[8px]">{unreadCount} new</span>}
                       {notifications.length > 0 && (
                         <>
-                          <button onClick={markAllAsRead} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#64748b" }} title="Mark all as read">
+                          <button onClick={markAllAsRead} className="bg-transparent border-none p-1 cursor-pointer text-slate-500" title="Mark all as read">
                             <CheckCheck size={14} />
                           </button>
-                          <button onClick={clearAllNotifications} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#64748b" }} title="Clear all">
+                          <button onClick={clearAllNotifications} className="bg-transparent border-none p-1 cursor-pointer text-slate-500" title="Clear all">
                             <Trash2 size={14} />
                           </button>
                         </>
                       )}
                     </div>
                   </div>
-                  <div style={{ maxHeight: 350, overflowY: "auto", margin: "0 -8px", padding: "0 8px" }}>
+                  <div className="max-h-[350px] overflow-y-auto -mx-2 px-2">
                     {notifications.length === 0 ? (
-                      <p style={{ textAlign: "center", fontSize: 13, color: "#94a3b8", padding: "20px 0", margin: 0 }}>No notifications yet</p>
+                      <p className="text-center text-[13px] text-slate-400 py-[20px] m-0">No notifications yet</p>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} onClick={() => markAsRead(n.id, n.action_url)} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 8px", borderRadius: 10, cursor: "pointer", background: n.is_read ? "transparent" : "#f8fafc", transition: "background 0.2s" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
-                          onMouseLeave={e => e.currentTarget.style.background = n.is_read ? "transparent" : "#f8fafc"}
-                        >
-                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.is_read ? "#cbd5e1" : "#0f5d52", marginTop: 5, flexShrink: 0 }} />
-                          <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: 12, fontWeight: n.is_read ? 500 : 700, color: "#1e293b", margin: 0 }}>{n.title}</p>
-                            <p style={{ fontSize: 11, color: "#64748b", margin: "2px 0 4px", lineHeight: 1.4 }}>{n.message}</p>
-                            <p style={{ fontSize: 10, color: "#94a3b8", margin: 0 }}>{getRelativeTime(n.created_at)}</p>
+                        <div key={n.id} onClick={() => markAsRead(n.id, n.action_url)} className={`flex items-start gap-[10px] p-[10px_8px] rounded-[10px] cursor-pointer transition-colors duration-200 hover:bg-slate-100 ${n.is_read ? 'bg-transparent' : 'bg-slate-50'}`}>
+                          <div className={`w-2 h-2 rounded-full mt-[5px] shrink-0 ${n.is_read ? 'bg-slate-300' : 'bg-brand'}`} />
+                          <div className="flex-1">
+                            <p className={`text-[12px] text-slate-800 m-0 ${n.is_read ? 'font-medium' : 'font-bold'}`}>{n.title}</p>
+                            <p className="text-[11px] text-slate-500 m-[2px_0_4px] leading-[1.4]">{n.message}</p>
+                            <p className="text-[10px] text-slate-400 m-0">{getRelativeTime(n.created_at)}</p>
                           </div>
-                          <button onClick={(e) => deleteNotification(e, n.id)} style={{ background: "none", border: "none", padding: 4, cursor: "pointer", color: "#cbd5e1", opacity: 0.7 }} title="Delete">
+                          <button onClick={(e) => deleteNotification(e, n.id)} className="bg-transparent border-none p-1 cursor-pointer text-slate-300 opacity-70 hover:opacity-100" title="Delete">
                             <X size={12} />
                           </button>
                         </div>
@@ -325,77 +246,41 @@ const AppLayout = () => {
             </div>
 
             {/* User avatar + name dropdown */}
-            <div style={{ position: "relative" }} ref={dropdownRef}>
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(v => !v)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "#fff",
-                  border: "1.5px solid #e2e8f0",
-                  borderRadius: 40,
-                  padding: "5px 12px 5px 5px",
-                  cursor: "pointer",
-                }}
+                className="flex items-center gap-2 bg-white border-[1.5px] border-slate-200 rounded-[40px] p-[5px_12px_5px_5px] cursor-pointer"
               >
-                <div style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #0f5d52, #1a7a6e)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  flexShrink: 0,
-                }}>
+                <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-brand to-brand-mid flex items-center justify-center text-white font-bold text-[13px] shrink-0">
                   {(user?.name || user?.first_name || "U")[0].toUpperCase()}
                 </div>
-                <div style={{ textAlign: "left", lineHeight: 1.3 }} className="user-name-desktop">
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</div>
-                  <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>View Profile</div>
+                <div className="text-left leading-[1.3] hidden xl:block">
+                  <div className="text-[13px] font-bold text-slate-800">{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</div>
+                  <div className="text-[10px] text-slate-400 font-medium">View Profile</div>
                 </div>
-                <ChevronDown size={14} color="#94a3b8" style={{ transition: "transform 0.2s", transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
+                <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </button>
 
               {dropdownOpen && (
-                <div style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 52,
-                  width: 220,
-                  background: "#fff",
-                  borderRadius: 16,
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
-                  padding: 8,
-                  zIndex: 100,
-                }}>
-                  <div style={{ padding: "8px 12px 10px", borderBottom: "1px solid #f1f5f9", marginBottom: 4 }}>
-                    <p style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", margin: 0 }}>{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</p>
-                    <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 0" }}>{user?.email || "user@example.com"}</p>
+                <div className="absolute right-0 top-[52px] w-[220px] bg-white rounded-[16px] border border-slate-200 shadow-[0_12px_40px_rgba(0,0,0,0.12)] p-2 z-[100]">
+                  <div className="p-[8px_12px_10px] border-b border-slate-100 mb-1">
+                    <p className="font-bold text-[13px] text-slate-950 m-0">{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</p>
+                    <p className="text-[11px] text-slate-400 m-[2px_0_0]">{user?.email || "user@example.com"}</p>
                   </div>
                   {[
                     { to: "/profile/me", icon: UserRound, label: "My Profile" },
                     { to: "/settings",   icon: Settings,   label: "Settings"   },
                   ].map(item => (
                     <Link key={item.to} to={item.to} onClick={() => setDropdownOpen(false)}
-                      style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, color: "#334155", textDecoration: "none" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      className="flex items-center gap-[10px] p-[9px_12px] rounded-[10px] text-[13px] font-semibold text-slate-700 no-underline hover:bg-slate-50"
                     >
                       <item.icon size={15} color="#94a3b8" />
                       {item.label}
                     </Link>
                   ))}
-                  <div style={{ height: 1, background: "#f1f5f9", margin: "4px 0" }} />
+                  <div className="h-[1px] bg-slate-100 my-1" />
                   <button onClick={handleLogout}
-                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, fontSize: 13, fontWeight: 600, color: "#dc2626", background: "none", border: "none", cursor: "pointer", width: "100%" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    className="flex items-center gap-[10px] p-[9px_12px] rounded-[10px] text-[13px] font-semibold text-red-600 bg-transparent border-none cursor-pointer w-full hover:bg-red-50"
                   >
                     <LogOut size={15} />
                     Sign Out
@@ -407,48 +292,31 @@ const AppLayout = () => {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              style={{
-                width: 40, height: 40,
-                borderRadius: "50%",
-                border: "1.5px solid #e2e8f0",
-                background: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                color: "#64748b",
-              }}
-              className="mobile-menu-btn"
+              className="xl:hidden w-[40px] h-[40px] rounded-full border-[1.5px] border-slate-200 bg-white flex items-center justify-center cursor-pointer text-slate-500"
               aria-label="Menu"
             >
               {mobileOpen ? <X size={17} /> : <Menu size={17} />}
             </button>
           </div>
-        </Container>
+        </div>
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div style={{ borderTop: "1px solid #f1f5f9", background: "#fff", padding: "12px 20px 16px" }}>
+          <div className="border-t border-slate-100 bg-white p-[12px_20px_16px]">
             {navItems.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                style={({ isActive }) => ({
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  color: isActive ? "#0f5d52" : "#334155",
-                  background: isActive ? "#edf7f5" : "transparent",
-                  marginBottom: 2,
-                })}
+                className={({ isActive }) =>
+                  `flex items-center justify-between p-[10px_12px] rounded-[10px] text-[14px] font-semibold no-underline mb-[2px] ${
+                    isActive ? "text-brand bg-brand-light" : "text-slate-700 bg-transparent"
+                  }`
+                }
               >
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span style={{ background: "#0f5d52", color: "#fff", borderRadius: 999, fontSize: 10, fontWeight: 700, padding: "1px 7px" }}>
+                  <span className="bg-brand text-white rounded-full text-[10px] font-bold py-[1px] px-[7px]">
                     {item.badge}
                   </span>
                 )}
@@ -462,17 +330,6 @@ const AppLayout = () => {
       <main>
         <Outlet />
       </main>
-
-      <style>{`
-        @media (max-width: 1280px) {
-          .app-nav-desktop { display: none !important; }
-          .upgrade-btn-desktop { display: none !important; }
-          .user-name-desktop { display: none !important; }
-        }
-        @media (min-width: 1281px) {
-          .mobile-menu-btn { display: none !important; }
-        }
-      `}</style>
     </div>
   );
 };

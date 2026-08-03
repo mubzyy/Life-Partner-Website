@@ -65,10 +65,10 @@ const SiteHeader = () => {
               className="h-12 w-12 rounded-full object-cover"
             />
             <div>
-              <p className="brand-font text-[40px] leading-none text-[#154a43]">
+              <p className="brand-font text-[40px] leading-none text-brand-dark">
                 Life Partner
               </p>
-              <p className="text-xs text-[#819099]">
+              <p className="text-xs text-slate-500">
                 Find your partner for life
               </p>
             </div>
@@ -81,7 +81,7 @@ const SiteHeader = () => {
                     key={item.label}
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 text-[15px] font-medium ${isActive ? "border-b-2 border-[#0e6254] pb-2 text-[#0e6254]" : "text-[#44535d]"}`
+                      `flex items-center gap-2 text-[15px] font-medium ${isActive ? "border-b-2 border-brand pb-2 text-brand" : "text-slate-600"}`
                     }
                   >
                     <item.icon className="h-4 w-4" />
@@ -92,7 +92,7 @@ const SiteHeader = () => {
                   <Link
                     key={item.label}
                     to={item.to}
-                    className={`text-[15px] font-medium text-[#44535d] ${currentPath === item.to ? "border-b-2 border-[#0e6254] pb-2 text-[#0e6254]" : ""}`}
+                    className={`text-[15px] font-medium text-slate-600 ${currentPath === item.to ? "border-b-2 border-brand pb-2 text-brand" : ""}`}
                   >
                     {item.label}
                   </Link>
@@ -102,7 +102,7 @@ const SiteHeader = () => {
 
         {authenticated ? (
           <div className="flex items-center gap-4">
-            <button className="inline-flex items-center gap-2 rounded-xl bg-[#d8a847] px-5 py-2.5 text-sm font-semibold text-white shadow-sm">
+            <button className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-white shadow-sm">
               <Crown className="h-4 w-4" />
               Upgrade to Premium
             </button>
@@ -118,7 +118,7 @@ const SiteHeader = () => {
                 onClick={() => setDropdownOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-full border border-[#e1e6ea] px-2 py-1.5"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0f6255] to-[#d8b57a] text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand to-gold text-white">
                   <UserRound className="h-4 w-4" />
                 </div>
                 <div className="text-left">
@@ -178,13 +178,13 @@ const SiteHeader = () => {
             <div className="hidden sm:flex items-center gap-3">
               <Link
                 to="/login"
-                className="rounded-xl border border-[#ccd4d9] bg-white px-6 py-2.5 text-sm font-semibold text-[#2e3a43]"
+                className="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-800"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="rounded-xl bg-[#0f5d52] px-6 py-2.5 text-sm font-semibold text-white"
+                className="rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white"
               >
                 Register
               </Link>
@@ -231,8 +231,8 @@ const SiteHeader = () => {
             ))}
             {!authenticated && (
               <div className="grid grid-cols-2 gap-3 mt-4 px-2">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-xl border border-[#ccd4d9] bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#2e3a43]">Login</Link>
-                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-xl bg-[#0f5d52] px-4 py-2.5 text-center text-sm font-semibold text-white">Register</Link>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800">Login</Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-xl bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white">Register</Link>
               </div>
             )}
           </div>
