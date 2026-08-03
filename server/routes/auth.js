@@ -48,7 +48,7 @@ router.post("/send-verification", async (req, res) => {
     res.status(200).json({ message: "Verification code sent to your email." });
   } catch (err) {
     console.error("send-verification error:", err);
-    res.status(500).json({ message: "Failed to send verification email. Please try again." });
+    res.status(500).json({ message: "Failed to send verification email.", error: err.message });
   }
 });
 

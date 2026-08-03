@@ -94,7 +94,7 @@ const sendOtpEmail = async (to, otp, purpose = "verification") => {
   `;
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to,
     subject,
     html,

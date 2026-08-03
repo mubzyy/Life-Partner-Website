@@ -228,7 +228,7 @@ const RegisterPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Failed to send verification email.");
+        setError(data.error ? `${data.message} (${data.error})` : data.message || "Failed to send verification email.");
         setLoading(false);
         return;
       }
