@@ -11,9 +11,12 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://YOUR-VERCEL-PROJECT.vercel.app",
+      "https://life-partner-website-in8u.vercel.app",
+      "http://localhost:5173",
     ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    optionsSuccessStatus: 200,
   })
 );
 app.use(express.json());
