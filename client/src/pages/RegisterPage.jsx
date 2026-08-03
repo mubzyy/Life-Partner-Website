@@ -404,7 +404,7 @@ const RegisterPage = () => {
       <BackgroundShowcase />
 
       {/* Header (Absolute top left) */}
-      <div className="absolute top-0 left-0 px-6 py-6 z-20">
+      <div className="hidden xl:block absolute top-0 left-0 px-6 py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-3.5 no-underline transition-opacity hover:opacity-90">
           <BrandMark />
         </Link>
@@ -427,11 +427,7 @@ const RegisterPage = () => {
               <p className="text-[15px] text-text-secondary m-0">Join thousands of verified Muslims looking for a halal life partner.</p>
             </div>
 
-            {/* Privacy Notice Badge */}
-            <div className="flex items-center gap-2.5 bg-primary-very-light text-primary rounded-xl py-3 px-4 mb-6 w-fit mx-auto border border-primary-light">
-              <ShieldCheck size={18} className="shrink-0" />
-              <p className="text-[13px] font-medium m-0 leading-tight">Your information remains private and is never shared without your permission.</p>
-            </div>
+
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-[13px] text-red-600 flex items-center gap-2">
