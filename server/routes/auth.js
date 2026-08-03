@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const pool = require("../db");
 const { sendOtpEmail } = require("../emailService");
 
@@ -198,7 +199,14 @@ router.post("/login", async (req, res) => {
       [user.id]
     );
 
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     res.status(200).json({
+      token,
       id: user.id,
       first_name: user.first_name,
       last_name: user.last_name,
