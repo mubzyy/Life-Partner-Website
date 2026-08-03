@@ -416,12 +416,12 @@ const RegisterPage = () => {
       </div>
 
       {/* Form Container */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-20 z-10 relative w-full">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 lg:py-12 z-10 relative w-full">
         
         <div className="w-full max-w-3xl">
-          <div className="bg-white rounded-[32px] p-6 sm:p-10 md:p-12 shadow-[0_8px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
+          <div className="bg-white rounded-[32px] p-6 sm:p-8 md:p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)] relative overflow-hidden">
             
-            <div className="text-center mb-8 flex flex-col items-center">
+            <div className="text-center mb-6 flex flex-col items-center">
               <div className="flex items-center gap-4 mb-2">
                 <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-[#d4af37]"></div>
                 <h1 style={{ fontFamily: "'Cormorant Garamond', serif" }} className="text-[32px] md:text-[40px] font-bold text-[#1a2e2b] m-0">
@@ -433,21 +433,21 @@ const RegisterPage = () => {
             </div>
 
             {/* Privacy Notice Badge */}
-            <div className="flex items-center gap-2.5 bg-[#edf7f5] text-[#0f5d52] rounded-xl py-3 px-4 mb-8 w-fit mx-auto border border-[#c8e6e0]">
+            <div className="flex items-center gap-2.5 bg-[#edf7f5] text-[#0f5d52] rounded-xl py-3 px-4 mb-6 w-fit mx-auto border border-[#c8e6e0]">
               <ShieldCheck size={18} className="shrink-0" />
               <p className="text-[13px] font-medium m-0 leading-tight">Your information remains private and is never shared without your permission.</p>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-[13px] text-red-600 flex items-center gap-2">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-[13px] text-red-600 flex items-center gap-2">
                 <span className="font-bold">Error:</span> {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               
               {/* Name Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className={labelClasses}>First Name *</label>
                   <div className="relative">
@@ -503,7 +503,7 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Country */}
                 <div className="relative" ref={dropdownRef}>
                   <label className={labelClasses}>Country *</label>
@@ -566,7 +566,7 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Password */}
                 <div>
                   <label className={labelClasses}>Password *</label>
