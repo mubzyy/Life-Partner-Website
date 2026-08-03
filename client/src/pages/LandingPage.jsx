@@ -8,7 +8,7 @@ import Pricing from "../components/Pricing";
 import Footer from "../components/Footer";
 
 const LandingPage = () => (
-  <div className="min-h-screen bg-white overflow-x-hidden">
+  <div className="min-h-screen bg-background overflow-x-hidden">
     <Navbar />
     <main>
       <Hero />

@@ -25,22 +25,22 @@ const features = [
     desc: "Enterprise-grade security for your peace of mind",
   },
   {
-    icon: "❤️",
+    icon: "🤍",
     title: "Trusted by Families",
     desc: "Thousands of families trust us worldwide",
   },
 ];
 
 const FeatureGrid = () => (
-  <section id="why" className="py-[80px] bg-white overflow-hidden">
+  <section id="why" className="py-[80px] bg-background overflow-hidden">
     <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
       {/* Section label */}
-      <p className="text-center text-xs font-extrabold tracking-[0.15em] text-gold uppercase mb-3">
+      <p className="text-center text-xs font-bold tracking-[0.15em] text-primary uppercase mb-3">
         WHY CHOOSE US
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mb-16">
-        <h2 className="font-serif font-bold text-[#1a2e2b] m-0 leading-tight text-3xl md:text-5xl text-center md:text-left">
+        <h2 className="font-serif font-bold text-text-primary m-0 leading-tight text-3xl md:text-5xl text-center md:text-left">
           A Better Way to<br />Find Your Partner
         </h2>
         <div />
@@ -49,10 +49,10 @@ const FeatureGrid = () => (
       {/* 6 feature cards in a single row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {features.map(f => (
-          <div key={f.title} className="bg-white border-[1.5px] border-[#e8ebe9] rounded-2xl py-6 px-4 text-center transition-all duration-200 cursor-default hover:shadow-[0_8px_30px_rgba(15,93,82,0.12)] hover:-translate-y-1">
+          <div key={f.title} className="bg-card border border-border-light shadow-sm rounded-2xl py-6 px-4 text-center transition-all duration-200 cursor-default hover:shadow-md hover:-translate-y-1">
             <div className="text-[32px] mb-3">{f.icon}</div>
-            <div className="font-bold text-[13px] text-[#1a2e2b] mb-2">{f.title}</div>
-            <div className="text-[11px] text-[#6b8a86] leading-relaxed">{f.desc}</div>
+            <div className="font-bold text-[13px] text-text-primary mb-2">{f.title}</div>
+            <div className="text-[11px] text-text-secondary font-medium leading-relaxed">{f.desc}</div>
           </div>
         ))}
       </div>

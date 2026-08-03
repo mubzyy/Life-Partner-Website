@@ -7,7 +7,7 @@ const FaqAccordion = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <section id="faq" className="bg-white py-20 lg:py-28">
+    <section id="faq" className="bg-background py-20 lg:py-28">
       <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="FAQ"
@@ -22,7 +22,7 @@ const FaqAccordion = () => {
             return (
               <article
                 key={item.question}
-                className="rounded-[1.5rem] border border-slate-200 bg-slate-50 shadow-sm"
+                className="rounded-2xl border border-border-light bg-card shadow-sm"
               >
                 <button
                   type="button"
@@ -30,15 +30,15 @@ const FaqAccordion = () => {
                   className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
                   aria-expanded={open}
                 >
-                  <span className="text-lg font-semibold text-slate-900">
+                  <span className="text-lg font-bold text-text-primary">
                     {item.question}
                   </span>
                   <ChevronDown
-                    className={`h-5 w-5 shrink-0 text-slate-500 transition ${open ? "rotate-180" : ""}`}
+                    className={`h-5 w-5 shrink-0 transition ${open ? "rotate-180 text-primary" : "text-text-muted"}`}
                   />
                 </button>
                 {open && (
-                  <div className="px-6 pb-6 text-base leading-7 text-slate-600">
+                  <div className="px-6 pb-6 text-base font-medium leading-7 text-text-secondary">
                     {item.answer}
                   </div>
                 )}

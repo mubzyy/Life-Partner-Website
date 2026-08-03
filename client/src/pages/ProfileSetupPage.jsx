@@ -163,10 +163,10 @@ const ProfileSetupPage = () => {
     }
   };
 
-  const inputClass = "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100";
+  const inputClass = "w-full rounded-2xl border border-border-light bg-background px-4 py-3 text-sm text-text-primary placeholder-slate-400 outline-none transition focus:ring-2 focus:ring-primary-light focus:border-primary transition-colors focus:bg-card";
   const selectClass = `${inputClass} cursor-pointer appearance-none bg-no-repeat bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221.5%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_12px_center]`;
-  const labelClass = "mb-1.5 block text-sm font-semibold text-slate-700";
-  const sectionTitleClass = "text-xl font-bold text-slate-800 mb-6 pb-2 border-b border-slate-100";
+  const labelClass = "mb-1.5 block text-sm font-semibold text-text-primary";
+  const sectionTitleClass = "text-xl font-bold text-text-primary mb-6 pb-2 border-b border-slate-100";
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.08),_transparent_40%),linear-gradient(180deg,_#ffffff_0%,_#fcfaf7_100%)] flex flex-col overflow-x-hidden">
@@ -176,10 +176,10 @@ const ProfileSetupPage = () => {
         <div className="w-full max-w-[1400px] mx-auto">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+            <h1 className="text-4xl font-semibold tracking-tight text-text-primary">
               Complete your profile
             </h1>
-            <p className="mt-3 text-base text-slate-500">
+            <p className="mt-3 text-base text-text-secondary">
               Tell us about yourself to find the perfect match
             </p>
           </div>
@@ -192,10 +192,10 @@ const ProfileSetupPage = () => {
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                       step > s.id
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "border-primary bg-primary text-white"
                         : step === s.id
-                          ? "border-emerald-600 bg-white text-emerald-700 shadow-md scale-110"
-                          : "border-slate-200 bg-white text-slate-400"
+                          ? "border-primary bg-card text-primary shadow-md scale-110"
+                          : "border-border-light bg-card text-text-muted"
                     }`}
                   >
                     {step > s.id ? (
@@ -204,12 +204,12 @@ const ProfileSetupPage = () => {
                       <s.icon className="h-4 w-4" />
                     )}
                   </div>
-                  <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight ${step === s.id ? "text-emerald-700" : "text-slate-400"}`}>
+                  <span className={`text-[11px] sm:text-xs font-semibold text-center leading-tight ${step === s.id ? "text-primary" : "text-text-muted"}`}>
                     {s.label}
                   </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`mb-6 h-px w-6 sm:w-12 transition ${step > s.id ? "bg-emerald-400" : "bg-slate-200"}`} />
+                  <div className={`mb-6 h-px w-6 sm:w-12 transition ${step > s.id ? "bg-primary-light" : "bg-slate-200"}`} />
                 )}
               </div>
             ))}
@@ -222,7 +222,7 @@ const ProfileSetupPage = () => {
           )}
 
           {/* Form card */}
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">
+          <div className="rounded-[1.75rem] border border-border-light bg-card p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">
             
             {/* Step 1 — Personal */}
             {step === 1 && (
@@ -230,14 +230,14 @@ const ProfileSetupPage = () => {
                 <h2 className={sectionTitleClass}>Personal Information</h2>
                 
                 <div className="flex flex-col items-center mb-8">
-                  <div className="w-24 h-24 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mb-3 overflow-hidden">
+                  <div className="w-24 h-24 rounded-full bg-slate-100 border border-border-light flex items-center justify-center mb-3 overflow-hidden">
                     {form.profilePhotoUrl ? (
                       <img src={form.profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={32} className="text-slate-400" />
+                      <User size={32} className="text-text-muted" />
                     )}
                   </div>
-                  <label className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition">
+                  <label className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary transition">
                     <Upload size={16} />
                     Upload Photo
                     <input type="file" className="hidden" onChange={(e) => {
@@ -518,7 +518,7 @@ const ProfileSetupPage = () => {
                   </div>
                   <div className="md:col-span-2 lg:col-span-3 xl:col-span-4">
                     <label className={labelClass}>Preferred Countries</label>
-                    <div className="mt-2 flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-slate-200 rounded-xl bg-slate-50">
+                    <div className="mt-2 flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-border-light rounded-xl bg-background">
                       {countries.map((c) => (
                         <button
                           key={c.id}
@@ -526,8 +526,8 @@ const ProfileSetupPage = () => {
                           onClick={() => togglePartnerCountry(c.id)}
                           className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                             form.partnerCountries.includes(c.id)
-                              ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                              ? "border-primary-light bg-primary-very-light text-primary"
+                              : "border-border-light bg-card text-text-secondary hover:border-slate-300"
                           }`}
                         >
                           {c.flag_emoji} {c.name}
@@ -549,7 +549,7 @@ const ProfileSetupPage = () => {
                 <button
                   type="button"
                   onClick={() => setStep((s) => s - 1)}
-                  className="flex items-center gap-2 rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className="flex items-center gap-2 rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-text-primary transition hover:border-slate-400 hover:bg-background"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back
@@ -564,7 +564,7 @@ const ProfileSetupPage = () => {
                 className={`flex items-center gap-2 rounded-full px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition ${
                   loading 
                     ? "bg-slate-400 cursor-not-allowed" 
-                    : "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-emerald-700/20"
+                    : "bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all"
                 }`}
               >
                 {loading ? "Saving..." : step === steps.length ? "Complete Profile" : "Continue"}
@@ -573,7 +573,7 @@ const ProfileSetupPage = () => {
             </div>
           </div>
 
-          <p className="mt-5 text-center text-xs font-medium text-slate-400">
+          <p className="mt-5 text-center text-xs font-medium text-text-muted">
             Step {step} of {steps.length} — You can always update this later from your profile
           </p>
         </div>

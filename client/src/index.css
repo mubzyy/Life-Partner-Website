@@ -1,19 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ── Custom design tokens (Tailwind v4 @theme) ─────────────────────── */
 @theme {
-  --color-brand:        #0f5d52;
-  --color-brand-dark:   #0a3f38;
-  --color-brand-mid:    #1a7a6e;
-  --color-brand-teal:   #2d7a6e;
-  --color-brand-light:  #edf7f5;
-  --color-brand-muted:  #7a9490;
-  --color-gold:         #d4a843;
-  --color-gold-dark:    #c89832;
+  --color-primary: #E91E63;
+  --color-primary-hover: #D81B60;
+  --color-primary-light: #FCE4EC;
+  --color-primary-very-light: #FFF5F8;
+  --color-success: #22C55E;
+  --color-background: #FAFAFA;
+  --color-card: #FFFFFF;
+  --color-border-light: #ECECEC;
+  --color-text-primary: #222222;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
 
   --font-sans: 'Manrope', sans-serif;
-  --font-serif: 'Cormorant Garamond', serif;
+  --font-serif: 'Manrope', sans-serif;
 }
 
 /* ── Global resets ──────────────────────────────────────────────────── */
@@ -30,7 +33,7 @@ body {
   min-width: 320px;
   overflow-x: hidden;
   max-width: 100vw;
-  background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 35%, #f7f2ea 100%);
+  background: #FAFAFA;
   color: #222222;
   font-family: 'Manrope', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -38,7 +41,7 @@ body {
 }
 
 h1, h2, h3, h4, .brand-font {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 ::selection {

@@ -2,11 +2,11 @@ import { HeartHandshake } from "lucide-react";
 
 const BrandMark = ({ compact = false, className = "" }) => (
   <div className={`flex items-center gap-3 ${className}`}>
-    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20">
+    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white shadow-sm">
       <HeartHandshake className="h-5 w-5" />
     </div>
     <div className="leading-tight">
-      <div className="brand-font text-2xl font-semibold tracking-wide text-slate-900">
+      <div className="font-bold text-2xl tracking-wide text-text-primary">
         Life Partner
       </div>
       {!compact && (

@@ -13,6 +13,7 @@ import AppLayout from "./components/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import SearchPage from "./pages/SearchPage";
 import ProfileViewPage from "./pages/ProfileViewPage";
+import MyProfilePage from "./pages/MyProfilePage";
 import PlaceholderPage from "./components/PlaceholderPage";
 
 // ── Guards ─────────────────────────────────────────────────────────────────
@@ -99,7 +100,7 @@ const AppRoutes = () => (
         <Route path="/shortlisted" element={<PlaceholderPage title="Shortlisted" description="Profiles you've shortlisted." />} />
         <Route path="/visitors" element={<PlaceholderPage title="Visitors" description="People who viewed your profile." />} />
         <Route path="/subscription" element={<PlaceholderPage title="Packages" description="Upgrade your membership plan." />} />
-        <Route path="/profile/me" element={<PlaceholderPage title="My Profile" description="View and edit your profile." />} />
+        <Route path="/profile/me" element={<MyProfilePage />} />
         <Route path="/profile/:id" element={<ProfileViewPage />} />
         <Route path="/settings" element={<PlaceholderPage title="Settings" description="Manage your account and privacy." />} />
       </Route>

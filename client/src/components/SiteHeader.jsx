@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
+import BrandMark from "./BrandMark";
 import Container from "./Container";
 
 const publicNavItems = [
@@ -55,23 +55,11 @@ const SiteHeader = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e8e8e3] bg-white/95 backdrop-blur w-full">
+    <header className="sticky top-0 z-50 border-b border-border-light bg-background/95 backdrop-blur w-full">
       <Container className="flex items-center justify-between py-4">
         <div className="flex items-center gap-4 lg:gap-12">
-          <Link to="/" className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="Life Partner"
-              className="h-12 w-12 rounded-full object-cover"
-            />
-            <div>
-              <p className="brand-font text-[40px] leading-none text-brand-dark">
-                Life Partner
-              </p>
-              <p className="text-xs text-slate-500">
-                Find your partner for life
-              </p>
-            </div>
+          <Link to="/" className="no-underline shrink-0">
+            <BrandMark compact={true} />
           </Link>
 
           <nav className="hidden items-center gap-8 xl:flex">
@@ -81,7 +69,7 @@ const SiteHeader = () => {
                     key={item.label}
                     to={item.to}
                     className={({ isActive }) =>
-                      `flex items-center gap-2 text-[15px] font-medium ${isActive ? "border-b-2 border-brand pb-2 text-brand" : "text-slate-600"}`
+                      `flex items-center gap-2 text-[15px] font-medium transition-colors ${isActive ? "border-b-2 border-primary pb-2 text-primary" : "text-text-secondary hover:text-primary"}`
                     }
                   >
                     <item.icon className="h-4 w-4" />
@@ -92,7 +80,7 @@ const SiteHeader = () => {
                   <Link
                     key={item.label}
                     to={item.to}
-                    className={`text-[15px] font-medium text-slate-600 ${currentPath === item.to ? "border-b-2 border-brand pb-2 text-brand" : ""}`}
+                    className={`text-[15px] font-medium transition-colors ${currentPath === item.to ? "border-b-2 border-primary pb-2 text-primary" : "text-text-secondary hover:text-primary"}`}
                   >
                     {item.label}
                   </Link>
@@ -102,12 +90,12 @@ const SiteHeader = () => {
 
         {authenticated ? (
           <div className="flex items-center gap-4">
-            <button className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-white shadow-sm">
-              <Crown className="h-4 w-4" />
-              Upgrade to Premium
+            <button className="hidden sm:inline-flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all px-[12px] py-[6px] text-xs font-semibold border-none cursor-pointer whitespace-nowrap">
+              <Crown className="h-[14px] w-[14px]" />
+              Premium
             </button>
             <button
-              className="rounded-full border border-[#d7dde2] p-2.5 text-[#6b7983]"
+              className="rounded-full border border-border-light p-2.5 text-text-secondary hover:text-primary transition-colors cursor-pointer bg-white"
               aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
@@ -116,43 +104,43 @@ const SiteHeader = () => {
               <button
                 type="button"
                 onClick={() => setDropdownOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-[#e1e6ea] px-2 py-1.5"
+                className="flex items-center gap-2 rounded-full border border-border-light px-2 py-1.5 cursor-pointer bg-white"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand to-gold text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
                   <UserRound className="h-4 w-4" />
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-[#233139]">
+                <div className="text-left hidden sm:block">
+                  <p className="text-sm font-semibold text-text-primary">
                     {user?.name ?? "Mubashir Mustafa"}
                   </p>
-                  <p className="text-xs text-[#73828d]">Profile</p>
+                  <p className="text-xs text-text-secondary">Profile</p>
                 </div>
-                <ChevronDown className="h-4 w-4 text-[#88949d]" />
+                <ChevronDown className="h-4 w-4 text-text-muted" />
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-14 z-50 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
+                <div className="absolute right-0 top-14 z-50 w-52 rounded-2xl bg-card border border-border-light shadow-sm p-2">
                   <Link
                     to="/profile/me"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-secondary transition hover:bg-slate-50"
                   >
-                    <UserRound className="h-4 w-4 text-slate-400" />
+                    <UserRound className="h-4 w-4 text-text-muted" />
                     View Profile
                   </Link>
                   <Link
                     to="/settings"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-secondary transition hover:bg-slate-50"
                   >
-                    <Settings className="h-4 w-4 text-slate-400" />
+                    <Settings className="h-4 w-4 text-text-muted" />
                     Settings
                   </Link>
-                  <div className="my-1 border-t border-slate-100" />
+                  <div className="my-1 border-t border-border-light" />
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50 bg-transparent border-none cursor-pointer"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out
@@ -164,7 +152,7 @@ const SiteHeader = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((v) => !v)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 xl:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border-light bg-white text-text-secondary xl:hidden cursor-pointer"
             >
               {mobileMenuOpen ? (
                 <X className="h-4 w-4" />
@@ -178,13 +166,13 @@ const SiteHeader = () => {
             <div className="hidden sm:flex items-center gap-3">
               <Link
                 to="/login"
-                className="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-sm font-semibold text-slate-800"
+                className="rounded-xl border border-border-light bg-white px-6 py-2.5 text-sm font-semibold text-text-primary hover:bg-slate-50 transition-colors"
               >
                 Login
               </Link>
               <Link
                 to="/register"
-                className="rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white"
+                className="rounded-xl bg-primary hover:bg-primary-hover text-white shadow-sm hover:scale-105 transition-all px-6 py-2.5 text-sm font-semibold"
               >
                 Register
               </Link>
@@ -192,7 +180,7 @@ const SiteHeader = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((v) => !v)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 xl:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border-light bg-white text-text-secondary xl:hidden cursor-pointer"
             >
               {mobileMenuOpen ? (
                 <X className="h-4 w-4" />
@@ -205,7 +193,7 @@ const SiteHeader = () => {
       </Container>
 
       {mobileMenuOpen && (
-        <div className="border-t border-slate-100 bg-white px-4 pb-4 pt-2 xl:hidden">
+        <div className="border-t border-border-light bg-card px-4 pb-4 pt-2 xl:hidden">
           <div className="grid gap-1">
             {authenticated ? navItems.map((item) => (
               <NavLink
@@ -213,7 +201,7 @@ const SiteHeader = () => {
                 to={item.to}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${isActive ? "bg-emerald-50 text-emerald-700" : "text-slate-700 hover:bg-slate-50"}`
+                  `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition ${isActive ? "bg-primary-light text-primary" : "text-text-secondary hover:bg-slate-50"}`
                 }
               >
                 <item.icon className="h-4 w-4" />
@@ -224,15 +212,15 @@ const SiteHeader = () => {
                 key={item.label}
                 to={item.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block rounded-2xl px-4 py-3 text-sm font-semibold transition ${currentPath === item.to ? "bg-emerald-50 text-emerald-700" : "text-slate-700 hover:bg-slate-50"}`}
+                className={`block rounded-2xl px-4 py-3 text-sm font-semibold transition ${currentPath === item.to ? "bg-primary-light text-primary" : "text-text-secondary hover:bg-slate-50"}`}
               >
                 {item.label}
               </Link>
             ))}
             {!authenticated && (
               <div className="grid grid-cols-2 gap-3 mt-4 px-2">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800">Login</Link>
-                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-xl bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white">Register</Link>
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-xl border border-border-light bg-white px-4 py-2.5 text-center text-sm font-semibold text-text-primary hover:bg-slate-50">Login</Link>
+                <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white">Register</Link>
               </div>
             )}
           </div>

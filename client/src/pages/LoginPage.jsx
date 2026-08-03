@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
-import logo from "../assets/ChatGPT Image Jul 27, 2026, 03_32_07 AM.png";
+import BrandMark from "../components/BrandMark";
 
 // ─── Forgot Password Modal ────────────────────────────────────────────────────
 const ForgotPasswordModal = ({ onClose }) => {
@@ -76,22 +76,22 @@ const ForgotPasswordModal = ({ onClose }) => {
     setLoading(false);
   };
 
-  const inputCls = "w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]";
-  const labelCls = "block text-[13px] font-bold text-slate-700 mb-1.5";
+  const inputCls = "w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-border-light bg-background text-[14px] text-text-primary outline-none transition-all hover:border-slate-300 focus:border-primary focus:bg-card focus:shadow-sm";
+  const labelCls = "block text-[13px] font-bold text-text-primary mb-1.5";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-[28px] p-8 max-w-md w-full shadow-2xl">
+      <div className="bg-card rounded-[28px] p-8 max-w-md w-full shadow-2xl">
 
         {/* Step 3 — Success */}
         {step === 3 && (
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 bg-brand-light text-brand rounded-full flex items-center justify-center mb-5">
+            <div className="w-16 h-16 bg-primary-very-light text-primary rounded-full flex items-center justify-center mb-5">
               <CheckCircle2 size={32} />
             </div>
-            <h3 className="text-[22px] font-bold text-[#1a2e2b] mb-2">Password Reset!</h3>
-            <p className="text-[14px] text-slate-500 mb-6">Your password has been updated successfully. You can now sign in with your new password.</p>
-            <button onClick={onClose} className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] bg-brand hover:bg-[#0d4d44] transition-all shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer">
+            <h3 className="text-[22px] font-bold text-text-primary mb-2">Password Reset!</h3>
+            <p className="text-[14px] text-text-secondary mb-6">Your password has been updated successfully. You can now sign in with your new password.</p>
+            <button onClick={onClose} className="w-full py-3.5 rounded-xl text-white font-bold text-[15px] bg-primary hover:bg-primary-hover transition-all shadow-sm cursor-pointer">
               Back to Sign In
             </button>
           </div>
@@ -101,10 +101,10 @@ const ForgotPasswordModal = ({ onClose }) => {
         {step === 1 && (
           <>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[20px] font-bold text-[#1a2e2b]">Forgot Password?</h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-[20px] leading-none cursor-pointer bg-transparent border-none">×</button>
+              <h3 className="text-[20px] font-bold text-text-primary">Forgot Password?</h3>
+              <button onClick={onClose} className="text-text-muted hover:text-text-secondary text-[20px] leading-none cursor-pointer bg-transparent border-none">×</button>
             </div>
-            <p className="text-[14px] text-slate-500 mb-6 leading-relaxed">
+            <p className="text-[14px] text-text-secondary mb-6 leading-relaxed">
               Enter the email address associated with your account and we'll send you a reset code.
             </p>
             {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-[13px] text-red-600">{error}</div>}
@@ -119,7 +119,7 @@ const ForgotPasswordModal = ({ onClose }) => {
               />
             </div>
             <button onClick={handleSendCode} disabled={loading}
-              className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
+              className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all cursor-pointer'}`}>
               {loading ? "Sending..." : "Send Reset Code"}
             </button>
           </>
@@ -129,11 +129,11 @@ const ForgotPasswordModal = ({ onClose }) => {
         {step === 2 && (
           <>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[20px] font-bold text-[#1a2e2b]">Reset Password</h3>
-              <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-[20px] leading-none cursor-pointer bg-transparent border-none">×</button>
+              <h3 className="text-[20px] font-bold text-text-primary">Reset Password</h3>
+              <button onClick={onClose} className="text-text-muted hover:text-text-secondary text-[20px] leading-none cursor-pointer bg-transparent border-none">×</button>
             </div>
-            <p className="text-[13px] text-slate-500 mb-5">
-              Enter the 6-digit code sent to <span className="font-bold text-brand">{fpEmail}</span> along with your new password.
+            <p className="text-[13px] text-text-secondary mb-5">
+              Enter the 6-digit code sent to <span className="font-bold text-primary">{fpEmail}</span> along with your new password.
             </p>
             {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 text-[13px] text-red-600">{error}</div>}
 
@@ -145,7 +145,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="000000"
-                  className="w-full text-center text-[26px] font-bold tracking-[10px] py-3.5 px-4 rounded-xl border-[2px] border-slate-200 bg-slate-50 text-[#1a2e2b] outline-none transition-all focus:border-brand focus:bg-white focus:shadow-[0_0_0_3px_rgba(15,93,82,0.1)]"
+                  className="w-full text-center text-[26px] font-bold tracking-[10px] py-3.5 px-4 rounded-xl border-[2px] border-border-light bg-background text-text-primary outline-none transition-all focus:border-primary focus:bg-card focus:shadow-sm"
                 />
               </div>
               <div>
@@ -158,7 +158,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                     className={`${inputCls} pr-10`}
                   />
                   <button type="button" onClick={() => setShowNewPass(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand transition-colors p-1 cursor-pointer">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors p-1 cursor-pointer">
                     {showNewPass ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
@@ -175,23 +175,23 @@ const ForgotPasswordModal = ({ onClose }) => {
             </div>
 
             <button onClick={handleResetPassword} disabled={loading}
-              className={`w-full mt-5 py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-3 ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-brand hover:bg-[#0d4d44] shadow-[0_6px_20px_rgba(15,93,82,0.25)] cursor-pointer'}`}>
+              className={`w-full mt-5 py-3.5 rounded-xl text-white font-bold text-[15px] transition-all mb-3 ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all cursor-pointer'}`}>
               {loading ? "Resetting..." : "Reset Password"}
             </button>
 
-            <div className="flex items-center justify-center gap-1 text-[13px] text-slate-500">
+            <div className="flex items-center justify-center gap-1 text-[13px] text-text-secondary">
               <span>Didn't get the code?</span>
               {resendCooldown > 0 ? (
-                <span className="text-slate-400">Resend in {resendCooldown}s</span>
+                <span className="text-text-muted">Resend in {resendCooldown}s</span>
               ) : (
                 <button type="button" onClick={handleResend} disabled={loading}
-                  className="text-brand font-bold hover:underline cursor-pointer bg-transparent border-none">
+                  className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-none">
                   Resend
                 </button>
               )}
             </div>
             <button type="button" onClick={() => { setStep(1); setError(""); }}
-              className="w-full mt-2 text-[12px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer bg-transparent border-none">
+              className="w-full mt-2 text-[12px] text-text-muted hover:text-text-secondary transition-colors cursor-pointer bg-transparent border-none">
               ← Change email address
             </button>
           </>
@@ -225,18 +225,14 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center overflow-x-hidden bg-[linear-gradient(135deg,#f0f7f5_0%,#f7f4ee_50%,#eef5f2_100%)]">
+    <div className="flex min-h-screen items-center justify-center overflow-x-hidden bg-background">
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
 
       {/* Header */}
       <div className="absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-2 no-underline transition-opacity hover:opacity-90">
-          <img src={logo} alt="Life Partner" className="h-[48px] w-[48px] md:h-[52px] md:w-[52px] object-contain drop-shadow-sm" />
-          <div className="flex flex-col justify-center">
-            <div className="font-serif text-[20px] md:text-[22px] leading-none font-bold text-brand tracking-wide mb-1">Life Partner</div>
-            <div className="text-[10px] md:text-[11px] leading-none font-medium text-brand-muted tracking-wide">Find your partner for life</div>
-          </div>
+          <BrandMark />
         </Link>
       </div>
 
@@ -244,13 +240,13 @@ const LoginPage = () => {
       <div className="flex w-full items-center justify-center px-4 py-8 z-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="font-serif text-[32px] md:text-[36px] font-bold text-[#1a2e2b] m-0 mb-2">
+            <h1 className="font-serif text-[32px] md:text-[36px] font-bold text-text-primary font-bold m-0 mb-2">
               Welcome Back
             </h1>
-            <p className="text-[14px] md:text-[15px] text-[#6b8a86] m-0">Sign in to your Life Partner account</p>
+            <p className="text-[14px] md:text-[15px] text-text-secondary m-0">Sign in to your Life Partner account</p>
           </div>
 
-          <div className="bg-white rounded-[24px] border-[1.5px] border-[#e8ebe9] p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <div className="bg-card rounded-[24px] border-[1.5px] border-border-light p-6 sm:p-8 shadow-sm">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5 mb-5 text-[13px] text-red-600">
                 {error}
@@ -259,24 +255,24 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
               <div>
-                <label className="block text-[13px] font-bold text-slate-700 mb-1.5">Email address</label>
+                <label className="block text-[13px] font-bold text-text-primary mb-1.5">Email address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
+                  className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-border-light bg-background text-[14px] text-text-primary outline-none transition-all duration-200 hover:border-slate-300 focus:border-primary focus:bg-card focus:shadow-sm"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-[13px] font-bold text-slate-700">Password</label>
+                  <label className="block text-[13px] font-bold text-text-primary">Password</label>
                   <button
                     type="button"
                     onClick={() => setShowForgotModal(true)}
-                    className="text-[12.5px] font-semibold text-brand hover:text-[#0d4d44] hover:underline transition-colors cursor-pointer bg-transparent border-none"
+                    className="text-[12.5px] font-semibold text-primary hover:text-primary-hover hover:underline transition-colors cursor-pointer bg-transparent border-none"
                   >
                     Forgot password?
                   </button>
@@ -288,10 +284,10 @@ const LoginPage = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full box-border px-4 py-3 pr-10 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-brand focus:bg-white focus:shadow-[0_0_0_2px_rgba(15,93,82,0.1)]"
+                    className="w-full box-border px-4 py-3 pr-10 rounded-xl border-[1.5px] border-border-light bg-background text-[14px] text-text-primary outline-none transition-all duration-200 hover:border-slate-300 focus:border-primary focus:bg-card focus:shadow-sm"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-slate-400 hover:text-brand transition-colors flex p-1">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-text-muted hover:text-primary transition-colors flex p-1">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -303,16 +299,16 @@ const LoginPage = () => {
                 className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-[15px] transition-all duration-300 
                   ${loading 
                     ? 'bg-slate-400 cursor-not-allowed shadow-none' 
-                    : 'bg-gradient-to-br from-brand to-brand-mid hover:from-[#0d4d44] hover:to-[#156359] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_6px_20px_rgba(15,93,82,0.3)] hover:shadow-[0_10px_24px_rgba(15,93,82,0.4)] cursor-pointer'
+                    : 'bg-primary hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow-sm cursor-pointer'
                   }`}
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
             </form>
 
-            <p className="text-center text-[13px] text-slate-500 mt-5 mb-0">
+            <p className="text-center text-[13px] text-text-secondary mt-5 mb-0">
               Don't have an account?{" "}
-              <Link to="/register" className="text-brand font-bold no-underline hover:underline">Create one</Link>
+              <Link to="/register" className="text-primary font-bold no-underline hover:underline">Create one</Link>
             </p>
           </div>
         </div>
