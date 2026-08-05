@@ -31,7 +31,7 @@ const recentActivity = [
   { name: "Ayesha Khan",  action: "viewed your profile",  time: "2 minutes ago",  online: true,  image: "/images/profile_f1.jpg" },
   { name: "Fatima Ali",   action: "sent you a message",   time: "15 minutes ago", online: true,  image: "/images/profile_f2.jpg" },
   { name: "Zainab Malik", action: "liked your profile",   time: "1 hour ago",     online: false, image: "/images/profile_f3.jpg" },
-  { name: "Hira Ahmed",   action: "shortlisted you",      time: "2 hours ago",    online: false, image: "/images/profile_f4.jpg" },
+  { name: "Hira Ahmed",   action: "favorited you",      time: "2 hours ago",    online: false, image: "/images/profile_f4.jpg" },
   { name: "Sarah Batool", action: "viewed your profile",  time: "3 hours ago",    online: false, image: "/images/profile_f5.jpg" },
 ];
 

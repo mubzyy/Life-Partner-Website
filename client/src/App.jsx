@@ -97,7 +97,7 @@ const AppRoutes = () => (
         <Route path="/search" element={<SearchPage />} />
         <Route path="/matches" element={<PlaceholderPage title="Matches" description="Your curated compatibility matches." />} />
         <Route path="/messages" element={<PlaceholderPage title="Messages" description="Your conversations and connection requests." />} />
-        <Route path="/shortlisted" element={<PlaceholderPage title="Shortlisted" description="Profiles you've shortlisted." />} />
+        <Route path="/favorites" element={<PlaceholderPage title="Favorites" description="Profiles you've favorited." />} />
         <Route path="/visitors" element={<PlaceholderPage title="Visitors" description="People who viewed your profile." />} />
         <Route path="/subscription" element={<PlaceholderPage title="Packages" description="Upgrade your membership plan." />} />
         <Route path="/profile/me" element={<MyProfilePage />} />

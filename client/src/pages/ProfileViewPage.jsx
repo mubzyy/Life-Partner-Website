@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, MapPin, Lock, MessageCircle, ChevronLeft, ChevronRight, Shield, Eye } from "lucide-react";
 
 const profile = {
@@ -56,8 +56,19 @@ const similarProfiles = [
   { id: 4,  name: "Hira Ahmed",    age: 23, profession: "Pharmacist",        city: "Karachi" },
   { id: 6,  name: "Sana Batool",   age: 27, profession: "Business Analyst",  city: "Faisalabad" },
   { id: 7,  name: "Iqra Saleem",   age: 25, profession: "Dentist",           city: "Multan" },
-  { id: 8,  name: "Maryam Noor",   age: 26, profession: "Graphic Designer",  city: "Lahore" },
+  { id: 8,  name: "Areeba Hassan", age: 26, profession: "Interior Designer", city: "Islamabad" },
 ];
+
+const userDetails = {
+  1: { name: "Ayesha Khan", age: 25, profession: "Doctor", city: "Lahore, Pakistan" },
+  2: { name: "Fatima Ali", age: 26, profession: "Software Engineer", city: "Islamabad, Pakistan" },
+  3: { name: "Zainab Malik", age: 24, profession: "Teacher", city: "Rawalpindi, Pakistan" },
+  4: { name: "Hira Ahmed", age: 23, profession: "Pharmacist", city: "Karachi, Pakistan" },
+  5: { name: "Maryam Noor", age: 25, profession: "Graphic Designer", city: "Lahore, Pakistan" },
+  6: { name: "Sana Batool", age: 27, profession: "Business Analyst", city: "Faisalabad, Pakistan" },
+  7: { name: "Iqra Saleem", age: 24, profession: "Dentist", city: "Multan, Pakistan" },
+  8: { name: "Areeba Hassan", age: 26, profession: "Interior Designer", city: "Islamabad, Pakistan" },
+};
 
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]", "bg-[#7e2d2d]"][i % 6];
 const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e30] to-[#2d7a6e60]", "bg-gradient-to-br from-[#6b4c8a30] to-[#6b4c8a60]", "bg-gradient-to-br from-[#2d6e7e30] to-[#2d6e7e60]", "bg-gradient-to-br from-[#7a6e2d30] to-[#7a6e2d60]", "bg-gradient-to-br from-[#4c6e2d30] to-[#4c6e2d60]", "bg-gradient-to-br from-[#7e2d2d30] to-[#7e2d2d60]"][i % 6];
@@ -80,8 +91,13 @@ const InfoSection = ({ title, icon, data }) => (
 
 const ProfileViewPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState("About");
-  const [isShortlisted, setIsShortlisted] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const currentDetails = userDetails[id] || userDetails[1];
+  const displayProfile = { ...profile, ...currentDetails };
+  const imageSrc = id && id >= 1 && id <= 8 ? `/images/profile_f${id}.jpg` : "/images/profile_f1.jpg";
 
   return (
     <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-12 overflow-x-hidden">
@@ -104,8 +120,8 @@ const ProfileViewPage = () => {
               <div className="bg-gradient-to-br from-[#2d7a6e44] to-[#6b8a8622] p-7 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center md:items-start text-center md:text-left justify-items-center md:justify-items-start">
                 {/* Profile photo */}
                 <div className="relative">
-                  <div className="w-[160px] h-[200px] rounded-2xl bg-gradient-to-br from-primary to-[#1a5a50] flex items-center justify-center text-[56px] text-white font-bold shadow-sm">
-                    A
+                  <div className="w-[160px] h-[200px] rounded-2xl overflow-hidden shadow-sm bg-primary-very-light">
+                    <img src={imageSrc} alt={displayProfile.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="absolute bottom-2.5 left-2.5 bg-primary text-white rounded-lg text-[11px] font-bold py-1 px-2.5 flex items-center gap-1">
                     <Shield size={11} /> Verified Profile
@@ -115,13 +131,13 @@ const ProfileViewPage = () => {
                 {/* Name + info */}
                 <div className="flex flex-col md:block items-center">
                   <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex items-center gap-2">
-                    {profile.name}, {profile.age}
+                    {displayProfile.name}, {displayProfile.age}
                     <span className="text-primary text-xl">✓</span>
                   </h1>
-                  <p className="text-[15px] text-text-secondary mb-2.5">{profile.profession}</p>
+                  <p className="text-[15px] text-text-secondary mb-2.5">{displayProfile.profession}</p>
                   <div className="flex items-center gap-4 mb-4">
                     <span className="flex items-center gap-1 text-[13px] text-text-secondary">
-                      <MapPin size={14} /> {profile.city}
+                      <MapPin size={14} /> {displayProfile.city}
                     </span>
                     <span className="flex items-center gap-1 text-[13px] text-green-500 font-semibold">
                       <span className="w-[7px] h-[7px] rounded-full bg-green-500" /> {profile.lastSeen}
@@ -130,16 +146,16 @@ const ProfileViewPage = () => {
 
                   {/* Attribute chips */}
                   <div className="flex gap-2 flex-wrap mb-5 justify-center md:justify-start">
-                    {profile.attributes.map(a => (
+                    {displayProfile.attributes.map(a => (
                       <span key={a} className="bg-card/80 rounded-lg py-1 px-3 text-xs font-semibold text-text-primary border border-border-light">{a}</span>
                     ))}
                   </div>
 
                   {/* Action buttons */}
                   <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <button onClick={() => setIsShortlisted(v => !v)} className={`flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] ${isShortlisted ? "border-rose-600 text-rose-600" : "border-border-light text-text-primary hover:bg-background"}`}>
-                      <Heart size={15} fill={isShortlisted ? "currentColor" : "none"} />
-                      {isShortlisted ? "Shortlisted" : "Shortlist"}
+                    <button onClick={() => setIsFavorited(v => !v)} className={`flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] ${isFavorited ? "border-rose-600 text-rose-600" : "border-border-light text-text-primary hover:bg-background"}`}>
+                      <Heart size={15} fill={isFavorited ? "currentColor" : "none"} />
+                      {isFavorited ? "Favorited" : "Favorite"}
                     </button>
                     <button className="flex items-center gap-1.5 bg-primary border-none rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer text-white hover:from-primary-hover hover:to-primary-light transition-colors">
                       <MessageCircle size={15} />
@@ -169,19 +185,19 @@ const ProfileViewPage = () => {
                 <h3 className="flex items-center gap-2 text-[15px] font-bold text-text-primary mb-3">
                   <span className="text-lg">💬</span> About Me
                 </h3>
-                <p className="text-sm leading-relaxed text-text-secondary m-0">{profile.about}</p>
+                <p className="text-sm leading-relaxed text-text-secondary m-0">{displayProfile.about}</p>
               </div>
 
               {/* Education & Career + Religious (2 cols) */}
               <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
-                <InfoSection title="Education & Career" icon="🎓" data={profile.education} />
-                <InfoSection title="Religious Information" icon="🕌" data={profile.religious} />
+                <InfoSection title="Education & Career" icon="🎓" data={displayProfile.education} />
+                <InfoSection title="Religious Information" icon="🕌" data={displayProfile.religious} />
               </div>
 
               {/* Family Details + Lifestyle (2 cols) */}
               <div className="flex flex-col md:grid md:grid-cols-2 gap-4">
-                <InfoSection title="Family Details" icon="👨‍👩‍👧" data={profile.family} />
-                <InfoSection title="Lifestyle" icon="💚" data={profile.lifestyle} />
+                <InfoSection title="Family Details" icon="👨‍👩‍👧" data={displayProfile.family} />
+                <InfoSection title="Lifestyle" icon="💚" data={displayProfile.lifestyle} />
               </div>
             </div>
 
@@ -204,10 +220,8 @@ const ProfileViewPage = () => {
                 {similarProfiles.map((p, i) => (
                   <Link to={`/profile/${p.id}`} key={p.id} className="no-underline">
                     <div className="rounded-xl overflow-hidden border-[1.5px] border-border-light transition-all duration-200 hover:-translate-y-[3px] hover:shadow-sm">
-                      <div className={`h-[80px] flex items-center justify-center relative ${getAvatarGradient(i)}`}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold ${getAvatarBg(i)}`}>
-                          {p.name[0]}
-                        </div>
+                      <div className={`h-[80px] flex items-center justify-center relative bg-primary-very-light overflow-hidden`}>
+                        <img src={`/images/profile_f${p.id}.jpg`} alt={p.name} className="w-full h-full object-cover" />
                         <div className="absolute bottom-1 left-1 bg-green-500 text-white rounded text-[8px] font-bold py-0.5 px-1">Online</div>
                       </div>
                       <div className="pt-2 px-2.5 pb-2.5">
@@ -231,7 +245,7 @@ const ProfileViewPage = () => {
             <div className="bg-card rounded-[20px] p-[22px] border-[1.5px] border-border-light">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">👑</span>
-                <h3 className="text-[15px] font-bold text-text-primary m-0">Interested in Ayesha?</h3>
+                <h3 className="text-[15px] font-bold text-text-primary m-0">Interested in {displayProfile.name.split(" ")[0]}?</h3>
               </div>
               <p className="text-[13px] text-text-secondary mb-4 leading-relaxed">
                 Upgrade to Premium to view contact details and start a conversation.
@@ -277,7 +291,7 @@ const ProfileViewPage = () => {
                 </div>
                 <h3 className="text-sm font-bold text-text-primary m-0">Looking for something serious</h3>
               </div>
-              <p className="text-[13px] text-text-secondary m-0 leading-relaxed">{profile.lookingFor}</p>
+              <p className="text-[13px] text-text-secondary m-0 leading-relaxed">{displayProfile.lookingFor}</p>
             </div>
           </div>
         </div>

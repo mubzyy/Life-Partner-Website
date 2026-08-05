@@ -28,7 +28,7 @@ const navItems = [
   { to: "/search",       label: "Search"     },
   { to: "/matches",      label: "Matches"    },
   { to: "/messages",     label: "Messages",  badge: 3  },
-  { to: "/shortlisted",  label: "Shortlisted", badge: 5 },
+  { to: "/favorites",  label: "Favorites", badge: 5 },
   { to: "/visitors",     label: "Visitors",  badge: 12 },
   { to: "/subscription", label: "Packages"  },
 ];
