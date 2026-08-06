@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, MapPin, Lock, MessageCircle, ChevronLeft, ChevronRight, Shield, Eye } from "lucide-react";
 
@@ -95,6 +95,33 @@ const ProfileViewPage = () => {
   const [activeTab, setActiveTab] = useState("About");
   const [isFavorited, setIsFavorited] = useState(false);
 
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/favorites`, { credentials: "omit" })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const found = data.find(f => String(f.target_profile_id) === String(id));
+          setIsFavorited(!!found);
+        }
+      })
+      .catch(console.error);
+  }, [id]);
+
+  const toggleFavorite = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_profile_id: parseInt(id) || 1 }) // fallback for dummy data
+      });
+      if (res.ok) {
+        setIsFavorited(v => !v);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const currentDetails = userDetails[id] || userDetails[1];
   const displayProfile = { ...profile, ...currentDetails };
   const imageSrc = id && id >= 1 && id <= 8 ? `/images/profile_f${id}.jpg` : "/images/profile_f1.jpg";
@@ -153,7 +180,7 @@ const ProfileViewPage = () => {
 
                   {/* Action buttons */}
                   <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <button onClick={() => setIsFavorited(v => !v)} className={`flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] ${isFavorited ? "border-rose-600 text-rose-600" : "border-border-light text-text-primary hover:bg-background"}`}>
+                    <button onClick={toggleFavorite} className={`flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] ${isFavorited ? "border-rose-600 text-rose-600" : "border-border-light text-text-primary hover:bg-background"}`}>
                       <Heart size={15} fill={isFavorited ? "currentColor" : "none"} />
                       {isFavorited ? "Favorited" : "Favorite"}
                     </button>

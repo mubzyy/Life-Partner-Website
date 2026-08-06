@@ -133,6 +133,44 @@ async function init() {
             );
         `);
 
+        console.log("Creating nationalities table...");
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS nationalities (
+                id SERIAL PRIMARY KEY,
+                country_id INTEGER REFERENCES countries(id) ON DELETE CASCADE,
+                nationality VARCHAR(100) NOT NULL
+            );
+        `);
+
+        console.log("Seeding nationalities...");
+        const natRes = await pool.query(`SELECT COUNT(*) FROM nationalities`);
+        if (parseInt(natRes.rows[0].count) === 0) {
+            const nationalityMap = {
+                "US": "American", "GB": "British", "CA": "Canadian", "AU": "Australian",
+                "AE": "Emirati", "SA": "Saudi", "PK": "Pakistani", "IN": "Indian",
+                "BD": "Bangladeshi", "MY": "Malaysian", "ID": "Indonesian", "TR": "Turkish",
+                "ZA": "South African", "EG": "Egyptian", "NG": "Nigerian", "FR": "French", "DE": "German"
+            };
+            const allCountries = await pool.query(`SELECT id, iso_code FROM countries`);
+            for (let row of allCountries.rows) {
+                const nat = nationalityMap[row.iso_code];
+                if (nat) {
+                    await pool.query(`INSERT INTO nationalities (country_id, nationality) VALUES ($1, $2)`, [row.id, nat]);
+                }
+            }
+        }
+
+        console.log("Creating favorites table...");
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS favorites (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+                target_profile_id INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, target_profile_id)
+            );
+        `);
+
         console.log("Database initialized successfully!");
     } catch (e) {
         console.error("Error initializing DB:", e);

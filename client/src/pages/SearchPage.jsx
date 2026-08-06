@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, SlidersHorizontal } from "lucide-react";
 
-const allProfiles = [
+export const allProfiles = [
   { id: 1,  name: "Ayesha Khan",   age: 25, profession: "Doctor",            city: "Lahore, Pakistan",    edu: "MBBS · King Edward Medical University",  online: true,  image: "/images/profile_f1.jpg" },
   { id: 2,  name: "Fatima Ali",    age: 26, profession: "Software Engineer",  city: "Islamabad, Pakistan", edu: "BS Computer Science · FAST",              online: true,  image: "/images/profile_f2.jpg" },
   { id: 3,  name: "Zainab Malik",  age: 24, profession: "Teacher",            city: "Rawalpindi, Pakistan",edu: "MA English · Punjab University",          online: true,  image: "/images/profile_f3.jpg" },
@@ -16,13 +16,43 @@ const allProfiles = [
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]", "bg-[#7e2d2d]", "bg-[#2d4c7e]", "bg-[#6e2d7a]"][i % 8];
 const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e25] to-[#2d7a6e50]", "bg-gradient-to-br from-[#6b4c8a25] to-[#6b4c8a50]", "bg-gradient-to-br from-[#2d6e7e25] to-[#2d6e7e50]", "bg-gradient-to-br from-[#7a6e2d25] to-[#7a6e2d50]", "bg-gradient-to-br from-[#4c6e2d25] to-[#4c6e2d50]", "bg-gradient-to-br from-[#7e2d2d25] to-[#7e2d2d50]", "bg-gradient-to-br from-[#2d4c7e25] to-[#2d4c7e50]", "bg-gradient-to-br from-[#6e2d7a25] to-[#6e2d7a50]"][i % 8];
 
+
+
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [heartedCards, setHeartedCards] = useState({});
   const [activeFilters, setActiveFilters] = useState(["Female", "22 - 32 years", "Lahore", "Never Married", "Sunni"]);
   const [showPremiumBanner, setShowPremiumBanner] = useState(true);
 
-  const toggleHeart = id => setHeartedCards(h => ({ ...h, [id]: !h[id] }));
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/favorites`, { credentials: "omit" /* Replace omit with include when auth is fully hooked */ })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const map = {};
+          data.forEach(item => {
+            map[item.target_profile_id] = true;
+          });
+          setHeartedCards(map);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const toggleHeart = async (id) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_profile_id: id })
+      });
+      if (res.ok) {
+        setHeartedCards(h => ({ ...h, [id]: !h[id] }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const removeFilter = f => setActiveFilters(arr => arr.filter(a => a !== f));
 
   const filteredProfiles = allProfiles.filter(p =>

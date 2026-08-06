@@ -6,6 +6,8 @@ const authRoutes = require("./routes/auth");
 const countriesRoutes = require("./routes/countries");
 const profileRoutes = require("./routes/profile");
 const notificationsRoutes = require("./routes/notifications");
+const nationalitiesRoutes = require("./routes/nationalities");
+const favoritesRoutes = require("./routes/favorites");
 
 const app = express();
 
@@ -26,6 +28,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/countries", countriesRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/nationalities", nationalitiesRoutes);
+app.use("/api/favorites", favoritesRoutes);
 
 const PORT = process.env.PORT || 5000;
 

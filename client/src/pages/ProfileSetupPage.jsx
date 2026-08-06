@@ -29,11 +29,17 @@ const ProfileSetupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [countries, setCountries] = useState([]);
+  const [nationalities, setNationalities] = useState([]);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
       .then(res => res.json())
       .then(data => setCountries(data))
+      .catch(console.error);
+
+    fetch(`${import.meta.env.VITE_API_URL}/api/nationalities`)
+      .then(res => res.json())
+      .then(data => setNationalities(data))
       .catch(console.error);
   }, []);
 
@@ -267,6 +273,7 @@ const ProfileSetupPage = () => {
                       <option>Never Married</option>
                       <option>Divorced</option>
                       <option>Widowed</option>
+                      <option>Already Married</option>
                     </select>
                   </div>
                   <div>
@@ -316,7 +323,12 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Nationality</label>
-                    <input type="text" value={form.nationality} onChange={(e) => update("nationality", e.target.value)} placeholder="e.g. Pakistani" className={inputClass} />
+                    <select value={form.nationality} onChange={(e) => update("nationality", e.target.value)} className={selectClass}>
+                      <option value="">Select Nationality</option>
+                      {nationalities.map(n => (
+                        <option key={n.id} value={n.nationality}>{n.nationality}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className={labelClass}>State / Province</label>
