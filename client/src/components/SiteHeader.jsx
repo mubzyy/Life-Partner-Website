@@ -106,7 +106,7 @@ const SiteHeader = () => {
                 onClick={() => setDropdownOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-full border border-border-light px-2 py-1.5 cursor-pointer bg-white"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white">
                   <UserRound className="h-4 w-4" />
                 </div>
                 <div className="text-left hidden sm:block">
@@ -193,7 +193,7 @@ const SiteHeader = () => {
       </Container>
 
       {mobileMenuOpen && (
-        <div className="border-t border-border-light bg-card px-4 pb-4 pt-2 xl:hidden">
+        <div className="absolute top-full left-0 w-full border-b border-border-light bg-card px-4 pb-4 pt-2 xl:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
           <div className="grid gap-1">
             {authenticated ? navItems.map((item) => (
               <NavLink

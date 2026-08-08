@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, SlidersHorizontal } from "lucide-react";
 
 export const allProfiles = [
-  { id: 1,  name: "Ayesha Khan",   age: 25, profession: "Doctor",            city: "Lahore, Pakistan",    edu: "MBBS · King Edward Medical University",  online: true,  image: "/images/profile_f1.jpg" },
-  { id: 2,  name: "Fatima Ali",    age: 26, profession: "Software Engineer",  city: "Islamabad, Pakistan", edu: "BS Computer Science · FAST",              online: true,  image: "/images/profile_f2.jpg" },
-  { id: 3,  name: "Zainab Malik",  age: 24, profession: "Teacher",            city: "Rawalpindi, Pakistan",edu: "MA English · Punjab University",          online: true,  image: "/images/profile_f3.jpg" },
-  { id: 4,  name: "Hira Ahmed",    age: 23, profession: "Pharmacist",         city: "Karachi, Pakistan",   edu: "Doctor of Pharmacy · DOW",                online: true,  image: "/images/profile_f4.jpg" },
-  { id: 5,  name: "Maryam Noor",   age: 25, profession: "Graphic Designer",   city: "Lahore, Pakistan",    edu: "BS Design · LUMS",                        online: false, image: "/images/profile_f5.jpg" },
-  { id: 6,  name: "Sana Batool",   age: 27, profession: "Business Analyst",   city: "Faisalabad, Pakistan",edu: "MBA · Comsats University",                online: false, image: "/images/profile_f6.jpg" },
-  { id: 7,  name: "Iqra Saleem",   age: 24, profession: "Dentist",            city: "Multan, Pakistan",    edu: "BDS · Nishtar Institute",                 online: false, image: "/images/profile_f7.jpg" },
-  { id: 8,  name: "Areeba Hassan", age: 26, profession: "Interior Designer",  city: "Islamabad, Pakistan", edu: "BS Interior Design · NCA",                online: false, image: "/images/profile_f8.jpg" },
+  { id: 1,  name: "Ayesha Khan",   age: 25, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'4\"", profession: "Doctor",            city: "Lahore, Pakistan",    edu: "MBBS · King Edward Medical University",  online: true,  image: "/images/profile_f1.jpg" },
+  { id: 2,  name: "Fatima Ali",    age: 26, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'5\"", profession: "Software Engineer",  city: "Islamabad, Pakistan", edu: "BS Computer Science · FAST",              online: true,  image: "/images/profile_f2.jpg" },
+  { id: 3,  name: "Zainab Malik",  age: 24, gender: "Female", maritalStatus: "Divorced",      religion: "Shia",  height: "5'3\"", profession: "Teacher",            city: "Rawalpindi, Pakistan",edu: "MA English · Punjab University",          online: true,  image: "/images/profile_f3.jpg" },
+  { id: 4,  name: "Hira Ahmed",    age: 23, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'2\"", profession: "Pharmacist",         city: "Karachi, Pakistan",   edu: "Doctor of Pharmacy · DOW",                online: true,  image: "/images/profile_f4.jpg" },
+  { id: 5,  name: "Maryam Noor",   age: 25, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'6\"", profession: "Graphic Designer",   city: "Lahore, Pakistan",    edu: "BS Design · LUMS",                        online: false, image: "/images/profile_f5.jpg" },
+  { id: 6,  name: "Sana Batool",   age: 27, gender: "Female", maritalStatus: "Widowed",       religion: "Sunni", height: "5'5\"", profession: "Business Analyst",   city: "Faisalabad, Pakistan",edu: "MBA · Comsats University",                online: false, image: "/images/profile_f6.jpg" },
+  { id: 7,  name: "Iqra Saleem",   age: 24, gender: "Female", maritalStatus: "Never Married", religion: "Shia",  height: "5'4\"", profession: "Dentist",            city: "Multan, Pakistan",    edu: "BDS · Nishtar Institute",                 online: false, image: "/images/profile_f7.jpg" },
+  { id: 8,  name: "Areeba Hassan", age: 26, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'7\"", profession: "Interior Designer",  city: "Islamabad, Pakistan", edu: "BS Interior Design · NCA",                online: false, image: "/images/profile_f8.jpg" },
 ];
 
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]", "bg-[#7e2d2d]", "bg-[#2d4c7e]", "bg-[#6e2d7a]"][i % 8];
@@ -21,8 +21,19 @@ const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e25] to-[#2d7a6
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [heartedCards, setHeartedCards] = useState({});
-  const [activeFilters, setActiveFilters] = useState(["Female", "22 - 32 years", "Lahore", "Never Married", "Sunni"]);
+  const [filters, setFilters] = useState({
+    ageMin: 18,
+    ageMax: 40,
+    gender: 'Any',
+    location: '',
+    maritalStatus: '',
+    education: '',
+    profession: '',
+    height: '',
+    religion: ''
+  });
   const [showPremiumBanner, setShowPremiumBanner] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/favorites`, { credentials: "omit" /* Replace omit with include when auth is fully hooked */ })
@@ -53,11 +64,38 @@ const SearchPage = () => {
       console.error(err);
     }
   };
-  const removeFilter = f => setActiveFilters(arr => arr.filter(a => a !== f));
+  
+  const filteredProfiles = allProfiles.filter(p => {
+    if (query && !p.name.toLowerCase().includes(query.toLowerCase()) && !p.profession.toLowerCase().includes(query.toLowerCase())) return false;
+    if (p.age < filters.ageMin || p.age > filters.ageMax) return false;
+    if (filters.gender !== 'Any' && p.gender !== filters.gender) return false;
+    if (filters.location && !p.city.toLowerCase().includes(filters.location.toLowerCase())) return false;
+    if (filters.maritalStatus && p.maritalStatus !== filters.maritalStatus) return false;
+    if (filters.education && !p.edu.toLowerCase().includes(filters.education.toLowerCase())) return false;
+    if (filters.profession && !p.profession.toLowerCase().includes(filters.profession.toLowerCase())) return false;
+    if (filters.height && p.height !== filters.height) return false;
+    if (filters.religion && p.religion !== filters.religion) return false;
+    return true;
+  });
 
-  const filteredProfiles = allProfiles.filter(p =>
-    !query || p.name.toLowerCase().includes(query.toLowerCase()) || p.profession.toLowerCase().includes(query.toLowerCase())
-  );
+  const getActiveFilters = () => {
+    let arr = [];
+    if (filters.gender !== 'Any') arr.push({ key: 'gender', val: filters.gender });
+    if (filters.ageMin !== 18 || filters.ageMax !== 40) arr.push({ key: 'age', val: `${filters.ageMin} - ${filters.ageMax} yrs` });
+    if (filters.location) arr.push({ key: 'location', val: filters.location });
+    if (filters.maritalStatus) arr.push({ key: 'maritalStatus', val: filters.maritalStatus });
+    if (filters.education) arr.push({ key: 'education', val: filters.education });
+    if (filters.profession) arr.push({ key: 'profession', val: filters.profession });
+    if (filters.height) arr.push({ key: 'height', val: filters.height });
+    if (filters.religion) arr.push({ key: 'religion', val: filters.religion });
+    return arr;
+  };
+  
+  const removeFilter = (key) => {
+    if (key === 'age') setFilters(f => ({ ...f, ageMin: 18, ageMax: 40 }));
+    else if (key === 'gender') setFilters(f => ({ ...f, gender: 'Any' }));
+    else setFilters(f => ({ ...f, [key]: '' }));
+  };
 
   return (
     <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
@@ -72,8 +110,12 @@ const SearchPage = () => {
             <p className="text-sm text-text-secondary m-0">Discover compatible matches based on your preferences</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 shrink-0">
-            <span className="text-[13px] text-text-secondary">Showing <strong className="text-text-primary">1,248</strong> matches</span>
-            <div className="flex items-center gap-1.5 bg-card rounded-lg py-2 px-3.5 border border-border-light border-border-light cursor-pointer hover:bg-slate-50 transition-colors">
+            <span className="text-[13px] text-text-secondary">Showing <strong className="text-text-primary">{filteredProfiles.length}</strong> matches</span>
+            <div className="flex items-center gap-1.5 bg-card rounded-lg py-2 px-3.5 border border-border-light cursor-pointer hover:bg-slate-50 transition-colors lg:hidden" onClick={() => setShowFilters(!showFilters)}>
+              <SlidersHorizontal size={14} className="text-text-muted" />
+              <span className="text-[13px] text-slate-700 font-bold">Filters</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-card rounded-lg py-2 px-3.5 border border-border-light cursor-pointer hover:bg-slate-50 transition-colors">
               <span className="text-[13px] text-slate-700">Sort by: <strong>Recently Joined</strong></span>
               <ChevronDown size={14} className="text-text-muted" />
             </div>
@@ -84,32 +126,44 @@ const SearchPage = () => {
         <div className="flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-6 items-start">
 
           {/* ── LEFT FILTERS PANEL ── */}
-          <div className="bg-card rounded-[20px] p-[22px] border border-border-light  lg:sticky top-[92px] w-full min-w-0">
+          <div className={`bg-card rounded-[20px] p-[22px] border border-border-light lg:sticky top-[92px] w-full min-w-0 ${showFilters ? "block" : "hidden lg:block"}`}>
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-base font-bold text-text-primary m-0">Filters</h2>
-              <button className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
+              <button onClick={() => setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' })} className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
             </div>
 
             {/* Age Range */}
             <div className="mb-5 pb-5 border-b border-slate-100">
               <div className="flex justify-between mb-2.5">
                 <label className="text-[13px] font-bold text-slate-700">Age Range</label>
-                <span className="text-xs text-text-secondary">22 - 32 years</span>
+                <span className="text-xs text-text-secondary">{filters.ageMin} - {filters.ageMax} years</span>
               </div>
-              <div className="h-1.5 bg-slate-200 rounded-full relative mb-1">
-                <div className="absolute left-[15%] right-[35%] top-0 h-full bg-primary rounded-full" />
-                <div className="absolute left-[15%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-[3px] border-white shadow-sm cursor-pointer" />
-                <div className="absolute right-[35%] top-1/2 translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-[3px] border-white shadow-sm cursor-pointer" />
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  min="18" max="60" 
+                  value={filters.ageMin} 
+                  onChange={e => setFilters(f => ({ ...f, ageMin: Number(e.target.value) }))} 
+                  className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+                <span className="text-slate-400">-</span>
+                <input 
+                  type="number" 
+                  min="18" max="60" 
+                  value={filters.ageMax} 
+                  onChange={e => setFilters(f => ({ ...f, ageMax: Number(e.target.value) }))} 
+                  className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
               </div>
             </div>
 
             {/* Gender */}
             <div className="mb-5 pb-5 border-b border-slate-100">
               <label className="text-[13px] font-bold text-slate-700 block mb-2.5">Gender</label>
-              {["Female", "Male"].map(g => (
-                <label key={g} className="flex items-center gap-2 mb-2 cursor-pointer group">
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${g === "Female" ? "border-primary bg-primary" : "border-border-light bg-card group-hover:border-primary-light"}`}>
-                    {g === "Female" && <span className="text-white text-[10px] leading-none">✓</span>}
+              {["Any", "Female", "Male"].map(g => (
+                <label key={g} className="flex items-center gap-2 mb-2 cursor-pointer group" onClick={() => setFilters(f => ({ ...f, gender: g }))}>
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${filters.gender === g ? "border-primary bg-primary" : "border-border-light bg-card group-hover:border-primary-light"}`}>
+                    {filters.gender === g && <span className="text-white text-[10px] leading-none">✓</span>}
                   </div>
                   <span className="text-[13px] text-slate-700">{g}</span>
                 </label>
@@ -118,18 +172,25 @@ const SearchPage = () => {
 
             {/* Dropdown filters */}
             {[
-              { label: "Location",       placeholder: "Select City"        },
-              { label: "Marital Status", placeholder: "Select Status"      },
-              { label: "Education",      placeholder: "Select Education"   },
-              { label: "Profession",     placeholder: "Select Profession"  },
-              { label: "Height",         placeholder: "Select Range"       },
-              { label: "Religion",       placeholder: "Select Religion"    },
+              { key: "location",      label: "Location",       placeholder: "Select City",       options: ["Lahore", "Islamabad", "Rawalpindi", "Karachi", "Faisalabad", "Multan"] },
+              { key: "maritalStatus", label: "Marital Status", placeholder: "Select Status",     options: ["Never Married", "Divorced", "Widowed"] },
+              { key: "education",     label: "Education",      placeholder: "Select Education",  options: ["BS", "MS", "MBA", "MBBS", "BDS", "MA"] },
+              { key: "profession",    label: "Profession",     placeholder: "Select Profession", options: ["Doctor", "Engineer", "Teacher", "Pharmacist", "Designer", "Analyst"] },
+              { key: "height",        label: "Height",         placeholder: "Select Range",      options: ["5'2\"", "5'3\"", "5'4\"", "5'5\"", "5'6\"", "5'7\""] },
+              { key: "religion",      label: "Religion",       placeholder: "Select Religion",   options: ["Sunni", "Shia"] },
             ].map(f => (
-              <div key={f.label} className="mb-4">
+              <div key={f.label} className="mb-4 relative">
                 <label className="text-[13px] font-bold text-slate-700 block mb-1.5">{f.label}</label>
-                <div className="flex items-center justify-between bg-slate-50 rounded-lg py-2 px-3 border border-border-light border-border-light cursor-pointer hover:bg-slate-100 transition-colors">
-                  <span className="text-[13px] text-text-muted">{f.placeholder}</span>
-                  <ChevronDown size={14} className="text-text-muted" />
+                <div className="relative">
+                  <select 
+                    value={filters[f.key]}
+                    onChange={(e) => setFilters(prev => ({ ...prev, [f.key]: e.target.value }))}
+                    className="w-full appearance-none bg-slate-50 rounded-lg py-2 pl-3 pr-8 border border-border-light text-[13px] text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer transition-colors"
+                  >
+                    <option value="">{f.placeholder}</option>
+                    {f.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <ChevronDown size={14} className="text-text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
             ))}
@@ -174,16 +235,16 @@ const SearchPage = () => {
 
             {/* Active filter chips */}
             <div className="flex flex-wrap gap-2 mb-4 items-center">
-              {activeFilters.map(f => (
-                <div key={f} className="flex items-center gap-1.5 bg-card rounded-full border border-border-light border-border-light py-1 px-3 text-[13px] text-slate-700 font-medium">
-                  {f}
-                  <button onClick={() => removeFilter(f)} className="bg-transparent border-none cursor-pointer text-text-muted flex p-0 hover:text-slate-600 transition-colors">
+              {getActiveFilters().map(f => (
+                <div key={f.key} className="flex items-center gap-1.5 bg-card rounded-full border border-border-light border-border-light py-1 px-3 text-[13px] text-slate-700 font-medium">
+                  {f.val}
+                  <button onClick={() => removeFilter(f.key)} className="bg-transparent border-none cursor-pointer text-text-muted flex p-0 hover:text-slate-600 transition-colors">
                     <X size={13} />
                   </button>
                 </div>
               ))}
-              {activeFilters.length > 0 && (
-                <button onClick={() => setActiveFilters([])} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
+              {getActiveFilters().length > 0 && (
+                <button onClick={() => setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' })} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
                   Clear All
                 </button>
               )}
@@ -211,7 +272,7 @@ const SearchPage = () => {
             )}
 
             {/* Profile grid */}
-            <div className="overflow-x-auto pb-4 w-full">
+            <div className="w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[18px]">
               {filteredProfiles.map((p, i) => (
                 <div key={p.id} className="bg-card rounded-2xl border border-border-light  overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md">

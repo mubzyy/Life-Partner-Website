@@ -7,12 +7,12 @@ const steps = [
 
 const HowItWorks = () => (
   <section id="how" className="py-[80px] bg-background overflow-hidden">
-    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-[1400px] mx-auto px-4">
       <div className="max-w-4xl mx-auto text-center">
         <p className="text-xs font-extrabold tracking-[0.15em] text-primary uppercase mb-3">
           HOW IT WORKS
         </p>
-        <h2 className="font-serif font-bold text-text-primary m-0 mb-[60px] text-3xl md:text-5xl">
+        <h2 className="font-serif font-bold text-text-primary m-0 mb-[60px] text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
           Simple Steps to Find Your Life Partner
         </h2>
 

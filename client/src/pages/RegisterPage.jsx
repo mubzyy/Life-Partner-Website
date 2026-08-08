@@ -49,7 +49,7 @@ const BackgroundShowcase = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 z-[-1] pointer-events-none overflow-hidden bg-background">
+    <div className="hidden xl:block absolute inset-0 z-[-1] pointer-events-none overflow-hidden bg-background">
       <style>{`
         @keyframes floatFast1 {
           0%, 100% { transform: translateY(0) rotate(45deg); }

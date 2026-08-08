@@ -107,14 +107,29 @@ const DashboardPage = () => {
                 </div>
               </div>
               {/* Quran verse */}
-              <div className="bg-gray-200 rounded-2xl py-4 px-5 text-center border-l-[3px] border-primary">
-                <p className="font-serif text-[15px] text-text-primary mb-2 italic" dir="rtl">
-                  وَخَلَقَ كُلَّ شَيْءٍ فَقَدَّرَهُ تَقْدِيرًا
-                </p>
-                <p className="text-[11px] text-text-secondary m-0">
-                  "And He created everything and determined it with precision."
-                </p>
-                <p className="text-[11px] text-primary font-bold mt-1">— Quran 25:2</p>
+              <div className="relative overflow-hidden bg-card rounded-[20px] px-6 py-5 text-center border border-border-light shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-primary/20">
+                <div className="absolute -top-4 -right-4 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+                <div className="mb-2 opacity-30">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.3 6.2H5.8L3 11V18H11.3V6.2ZM21 6.2H15.5L12.7 11V18H21V6.2Z" fill="currentColor" className="text-primary"/>
+                  </svg>
+                </div>
+                <div className="relative z-10 w-full">
+                  <p 
+                    className="text-[26px] sm:text-[30px] text-text-primary leading-loose font-normal mb-1" 
+                    dir="rtl" 
+                    style={{ fontFamily: "'Amiri', serif" }}
+                  >
+                    وَخَلَقَ كُلَّ شَيْءٍ فَقَدَّرَهُ تَقْدِيرًا
+                  </p>
+                  <div className="w-12 h-[2px] bg-primary/20 mx-auto my-3 rounded-full"></div>
+                  <p className="text-[13px] text-text-secondary font-medium tracking-wide mb-3 px-2 italic">
+                    "And He created everything and determined it with precision."
+                  </p>
+                  <div className="inline-block bg-primary-very-light rounded-full px-3 py-1">
+                    <p className="text-[10px] text-primary font-bold tracking-widest uppercase m-0">Quran 25:2</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -353,13 +368,13 @@ const DashboardPage = () => {
             </div>
 
             {/* Upgrade to Premium */}
-            <div className="bg-card border border-border-light shadow-sm rounded-[20px] p-[22px] relative overflow-hidden">
-              <div className="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full bg-primary-very-light" />
+            <div className="rounded-[20px] p-[22px] relative overflow-hidden" style={{ background: "linear-gradient(135deg, #E91E63 0%, #ff6090 100%)" }}>
+              <div className="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full bg-white/10" />
               <div className="flex items-center gap-2 mb-2">
-                <Crown size={18} className="text-primary" />
+                <Crown size={18} className="text-white" />
                 <span className="text-[15px] font-bold text-white">Upgrade to Premium</span>
               </div>
-              <p className="text-xs text-white/70 mb-4 leading-relaxed">
+              <p className="text-xs text-white/80 mb-4 leading-relaxed">
                 Unlock all features and get better matches.
               </p>
               {[
@@ -367,16 +382,16 @@ const DashboardPage = () => {
                 "Unlimited messaging",
                 "Advanced search filters",
                 "Priority in recommendations",
-                "Hide your profile & browse privately",
+                "Browse privately",
               ].map(f => (
                 <div key={f} className="flex items-center gap-2 mb-2">
-                  <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center shrink-0">
-                    <Check size={10} className="text-white" />
+                  <div className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-white" strokeWidth={3} />
                   </div>
-                  <span className="text-xs text-white/85">{f}</span>
+                  <span className="text-xs text-white/90 font-medium">{f}</span>
                 </div>
               ))}
-              <Link to="/subscription" className="block text-center mt-4 py-3 text-[13px] font-bold no-underline bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all">
+              <Link to="/subscription" className="block text-center mt-4 py-3 text-[13px] font-bold no-underline bg-white hover:bg-pink-50 text-[#E91E63] rounded-xl shadow-sm hover:scale-105 transition-all">
                 Upgrade Now →
               </Link>
             </div>

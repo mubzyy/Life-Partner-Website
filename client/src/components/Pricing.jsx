@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Pricing = () => (
   <section id="pricing" className="py-[80px] bg-background overflow-hidden">
-    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-[1400px] mx-auto px-4">
       <div className="max-w-5xl mx-auto">
         {/* Premium banner matching the design */}
         <div className="bg-primary-very-light border border-primary rounded-2xl relative overflow-hidden p-8 md:p-12 lg:p-14 flex flex-col md:flex-row gap-8 md:gap-12 items-center shadow-sm">
@@ -17,7 +17,7 @@ const Pricing = () => (
               <Crown size={20} className="text-primary" />
               <span className="text-[13px] font-bold text-primary tracking-[0.08em]">UPGRADE TO PREMIUM</span>
             </div>
-            <h2 className="font-serif font-bold text-text-primary m-0 mb-4 leading-tight text-3xl md:text-4xl lg:text-5xl">
+            <h2 className="font-serif font-bold text-text-primary m-0 mb-4 leading-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
               Unlock Premium Features
             </h2>
             <p className="text-sm font-medium text-text-secondary m-0 mb-7 leading-relaxed">
@@ -25,7 +25,7 @@ const Pricing = () => (
             </p>
 
             {/* Feature icons row */}
-            <div className="flex gap-8 flex-wrap">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { icon: Heart,       label: "Unlimited\nMatches"  },
                 { icon: Filter,      label: "Advanced\nFilters"   },

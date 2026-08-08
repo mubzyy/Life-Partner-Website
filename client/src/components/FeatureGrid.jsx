@@ -33,14 +33,14 @@ const features = [
 
 const FeatureGrid = () => (
   <section id="why" className="py-[80px] bg-background overflow-hidden">
-    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-[1400px] mx-auto px-4">
       {/* Section label */}
       <p className="text-center text-xs font-bold tracking-[0.15em] text-primary uppercase mb-3">
         WHY CHOOSE US
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mb-16">
-        <h2 className="font-serif font-bold text-text-primary m-0 leading-tight text-3xl md:text-5xl text-center md:text-left">
+        <h2 className="font-serif font-bold text-text-primary m-0 leading-tight text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-center md:text-left">
           A Better Way to<br />Find Your Partner
         </h2>
         <div />

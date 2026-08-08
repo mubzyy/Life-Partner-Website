@@ -12,9 +12,15 @@ import ProfileSetupPage from "./pages/ProfileSetupPage";
 import AppLayout from "./components/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
 import SearchPage from "./pages/SearchPage";
+import MatchesPage from "./pages/MatchesPage";
+import MessagesPage from "./pages/MessagesPage";
 import ProfileViewPage from "./pages/ProfileViewPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import FavoritesPage from "./pages/FavoritesPage";
+import VisitorsPage from "./pages/VisitorsPage";
+import PricingPage from "./pages/PricingPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import SettingsPage from "./pages/SettingsPage";
 import PlaceholderPage from "./components/PlaceholderPage";
 
 // ── Guards ─────────────────────────────────────────────────────────────────
@@ -96,14 +102,16 @@ const AppRoutes = () => (
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/matches" element={<PlaceholderPage title="Matches" description="Your curated compatibility matches." />} />
-        <Route path="/messages" element={<PlaceholderPage title="Messages" description="Your conversations and connection requests." />} />
+        <Route path="/matches" element={<MatchesPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/visitors" element={<PlaceholderPage title="Visitors" description="People who viewed your profile." />} />
-        <Route path="/subscription" element={<PlaceholderPage title="Packages" description="Upgrade your membership plan." />} />
+        <Route path="/visitors" element={<VisitorsPage />} />
+        <Route path="/subscription" element={<PricingPage />} />
+        <Route path="/packages" element={<PricingPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/profile/me" element={<MyProfilePage />} />
         <Route path="/profile/:id" element={<ProfileViewPage />} />
-        <Route path="/settings" element={<PlaceholderPage title="Settings" description="Manage your account and privacy." />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
       {/* Catch-all */}

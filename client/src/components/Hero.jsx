@@ -6,11 +6,11 @@ const Hero = () => (
     id="home"
     className="relative overflow-hidden bg-primary-very-light pt-[80px] pb-[60px]"
   >
-    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center relative z-10">
+    <div className="w-full max-w-[1400px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[60px] items-center relative z-10">
 
       {/* ── Left column ── */}
       <div>
-        <h1 className="font-serif leading-[1.08] text-text-primary mb-5 text-5xl sm:text-6xl md:text-7xl font-bold">
+        <h1 className="font-serif leading-[1.08] text-text-primary mb-5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold">
           Find Your<br />
           <span className="text-primary">Life Partner</span>
         </h1>
@@ -32,7 +32,7 @@ const Hero = () => (
         </div>
 
         {/* Trust badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: "🛡️", label: "100%",    sub: "Verified Profiles"   },
             { icon: "🔒", label: "Privacy", sub: "Guaranteed"          },

@@ -43,8 +43,8 @@ const FavoritesPage = () => {
       <div className="flex-1 px-4 md:px-6 py-6 md:py-10">
         <div className="w-full max-w-[1400px] mx-auto">
           <div className="mb-8">
-            <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex items-center gap-2">
-              Your Favorites <Heart size={24} className="text-rose-600" fill="currentColor" />
+            <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex flex-wrap items-center gap-2">
+              Your Favorites <Heart size={24} className="text-rose-600 shrink-0" fill="currentColor" />
             </h1>
             <p className="text-sm text-text-secondary m-0">Profiles you've saved for later</p>
           </div>
@@ -85,14 +85,15 @@ const FavoritesPage = () => {
                   </div>
 
                   {/* Info */}
-                  <div className="p-4 flex-1 flex flex-col">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="font-bold text-[15px] text-text-primary">{p.name}, {p.age}</span>
-                      <span className="text-primary text-[15px]">✓</span>
+                  <div className="p-4 flex-1 flex flex-col min-w-0">
+                    <div className="flex items-center gap-1 mb-1 min-w-0">
+                      <span className="font-bold text-[15px] text-text-primary truncate">{p.name}, {p.age}</span>
+                      <span className="text-primary text-[15px] shrink-0">✓</span>
                     </div>
-                    <div className="text-[13px] text-text-secondary mb-2">{p.profession}</div>
-                    <div className="text-[13px] text-text-muted mb-1 flex items-center gap-1.5">
-                      <span className="text-base leading-none">📍</span> {p.city}
+                    <div className="text-[13px] text-text-secondary mb-2 truncate">{p.profession}</div>
+                    <div className="text-[13px] text-text-muted mb-1 flex items-center gap-1.5 min-w-0">
+                      <span className="text-base leading-none shrink-0">📍</span> 
+                      <span className="truncate">{p.city}</span>
                     </div>
                     
                     <div className="mt-auto pt-4 flex items-center gap-2">

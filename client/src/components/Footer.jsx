@@ -66,7 +66,7 @@ const Footer = () => (
           ].map(c => (
             <div key={c.icon} className="flex gap-2.5 mb-3.5 items-start">
               <span className="text-[14px] mt-[1px]">{c.icon}</span>
-              <span className="text-[13px] font-medium text-text-secondary leading-snug whitespace-pre-line">{c.text}</span>
+              <span className="text-[13px] font-medium text-text-secondary leading-snug whitespace-pre-line break-words">{c.text}</span>
             </div>
           ))}
         </div>

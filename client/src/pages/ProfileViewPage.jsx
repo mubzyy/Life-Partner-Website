@@ -78,11 +78,11 @@ const InfoSection = ({ title, icon, data }) => (
     <h3 className="flex items-center gap-2 text-[15px] font-bold text-text-primary mb-4">
       <span className="text-lg">{icon}</span> {title}
     </h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6">
       {Object.entries(data).map(([k, v]) => (
-        <div key={k} className="flex gap-2">
-          <span className="text-[13px] text-text-muted min-w-[120px] font-semibold">{k}</span>
-          <span className="text-[13px] text-text-primary font-semibold">{v}</span>
+        <div key={k} className="flex flex-col sm:flex-row sm:gap-2 min-w-0">
+          <span className="text-[13px] text-text-muted sm:min-w-[120px] font-semibold shrink-0">{k}</span>
+          <span className="text-[13px] text-text-primary font-semibold break-words">{v}</span>
         </div>
       ))}
     </div>
@@ -144,10 +144,10 @@ const ProfileViewPage = () => {
 
             {/* Hero banner */}
             <div className="bg-card rounded-[20px] overflow-hidden border-[1.5px] border-border-light min-w-0">
-              <div className="bg-gradient-to-br from-[#2d7a6e44] to-[#6b8a8622] p-7 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center md:items-start text-center md:text-left justify-items-center md:justify-items-start">
+              <div className="bg-gradient-to-br from-[#2d7a6e44] to-[#6b8a8622] p-7 flex flex-col md:grid md:grid-cols-[auto_1fr] gap-6 items-center md:items-start text-center md:text-left justify-items-center md:justify-items-start">
                 {/* Profile photo */}
-                <div className="relative">
-                  <div className="w-[160px] h-[200px] rounded-2xl overflow-hidden shadow-sm bg-primary-very-light">
+                <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-none md:w-auto mx-auto md:mx-0">
+                  <div className="w-full aspect-[4/5] md:w-[160px] md:h-[200px] md:aspect-auto rounded-2xl overflow-hidden shadow-sm bg-primary-very-light">
                     <img src={imageSrc} alt={displayProfile.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="absolute bottom-2.5 left-2.5 bg-primary text-white rounded-lg text-[11px] font-bold py-1 px-2.5 flex items-center gap-1">
@@ -156,8 +156,8 @@ const ProfileViewPage = () => {
                 </div>
 
                 {/* Name + info */}
-                <div className="flex flex-col md:block items-center">
-                  <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex items-center gap-2">
+                <div className="flex flex-col md:block items-center w-full min-w-0">
+                  <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex flex-wrap justify-center md:justify-start items-center gap-2 text-center md:text-left break-words">
                     {displayProfile.name}, {displayProfile.age}
                     <span className="text-primary text-xl">✓</span>
                   </h1>

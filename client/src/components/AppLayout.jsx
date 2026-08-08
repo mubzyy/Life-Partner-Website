@@ -193,7 +193,7 @@ const AppLayout = () => {
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 top-[50px] w-[min(320px,calc(100vw-32px))] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
+                <div className="absolute right-[-10px] sm:right-0 top-[50px] w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
                   <div className="flex justify-between mb-3 items-center">
                     <span className="font-bold text-[14px] text-text-primary">Notifications</span>
                     <div className="flex gap-2 items-center">
@@ -217,9 +217,9 @@ const AppLayout = () => {
                       notifications.map((n) => (
                         <div key={n.id} onClick={() => markAsRead(n.id, n.action_url)} className={`flex items-start gap-[10px] p-[10px_8px] rounded-[10px] cursor-pointer transition-colors duration-200 hover:bg-slate-50 ${n.is_read ? 'bg-transparent' : 'bg-slate-50'}`}>
                           <div className={`w-2 h-2 rounded-full mt-[5px] shrink-0 ${n.is_read ? 'bg-border-light' : 'bg-primary'}`} />
-                          <div className="flex-1">
-                            <p className={`text-[12px] text-text-primary m-0 ${n.is_read ? 'font-medium' : 'font-bold'}`}>{n.title}</p>
-                            <p className="text-[11px] text-text-secondary m-[2px_0_4px] leading-[1.4]">{n.message}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[12px] text-text-primary m-0 break-words ${n.is_read ? 'font-medium' : 'font-bold'}`}>{n.title}</p>
+                            <p className="text-[11px] text-text-secondary m-[2px_0_4px] leading-[1.4] break-words">{n.message}</p>
                             <p className="text-[10px] text-text-muted m-0">{getRelativeTime(n.created_at)}</p>
                           </div>
                           <button onClick={(e) => deleteNotification(e, n.id)} className="bg-transparent border-none p-1 cursor-pointer text-text-muted opacity-70 hover:opacity-100" title="Delete">
@@ -290,7 +290,7 @@ const AppLayout = () => {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="border-t border-border-light bg-white p-[12px_20px_16px]">
+          <div className="absolute top-full left-0 w-full border-b border-border-light bg-white p-[12px_20px_16px] xl:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
             {navItems.map(item => (
               <NavLink
                 key={item.to}

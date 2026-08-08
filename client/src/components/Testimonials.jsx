@@ -23,12 +23,12 @@ const Testimonials = () => {
 
   return (
     <section id="stories" className="py-[80px] bg-background overflow-hidden">
-      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1400px] mx-auto px-4">
         <div className="max-w-5xl mx-auto">
           <p className="text-center text-xs font-extrabold tracking-[0.15em] text-primary uppercase mb-3">
             SUCCESS STORIES
           </p>
-          <h2 className="text-center font-serif font-bold text-text-primary m-0 mb-12 text-3xl md:text-5xl">
+          <h2 className="text-center font-serif font-bold text-text-primary m-0 mb-12 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
             Alhamdulillah, They Found Their Life Partners
           </h2>
 

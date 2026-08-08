@@ -191,11 +191,12 @@ const ProfileSetupPage = () => {
           </div>
 
           {/* Step indicators */}
-          <div className="mb-8 flex items-center justify-center gap-1 sm:gap-3 overflow-x-auto pb-4">
-            {steps.map((s, index) => (
-              <div key={s.id} className="flex items-center gap-1 sm:gap-3 shrink-0">
-                <div className="flex flex-col items-center gap-1.5 w-16 sm:w-20">
-                  <div
+          <div className="mb-8 w-full overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
+            <div className="flex items-center md:justify-center gap-2 sm:gap-4 min-w-max">
+              {steps.map((s, index) => (
+                <div key={s.id} className="flex items-center gap-2 sm:gap-4 shrink-0">
+                  <div className="flex flex-col items-center gap-1.5 w-16 sm:w-20">
+                    <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                       step > s.id
                         ? "border-primary bg-primary text-white"
@@ -219,6 +220,7 @@ const ProfileSetupPage = () => {
                 )}
               </div>
             ))}
+            </div>
           </div>
 
           {error && (

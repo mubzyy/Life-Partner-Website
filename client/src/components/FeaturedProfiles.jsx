@@ -18,14 +18,14 @@ const FeaturedProfiles = () => {
 
   return (
     <section id="profiles" className="py-[80px] bg-background overflow-hidden">
-      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1400px] mx-auto px-4">
 
         <p className="text-xs font-bold tracking-[0.15em] text-primary uppercase mb-3">
           FEATURED PROFILES
         </p>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <h2 className="font-serif font-bold text-text-primary m-0 text-3xl md:text-4xl lg:text-5xl">
+          <h2 className="font-serif font-bold text-text-primary m-0 text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
             Meet Our Verified Members
           </h2>
           <button className="py-2.5 px-4.5 rounded-xl border border-border-light text-[13px] font-bold text-primary bg-card cursor-pointer hover:bg-primary hover:text-white transition-all shadow-sm">
