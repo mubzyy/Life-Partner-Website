@@ -169,11 +169,27 @@ const CheckoutPage = () => {
     if (Object.keys(errs).length) return;
 
     setPaying(true);
-    // Simulate a network delay for mock payment
-    await new Promise(r => setTimeout(r, 2200));
-    setPaying(false);
-    setSuccess(true);
-  }, [card, method]);
+    
+    try {
+      const { authFetch } = await import("../lib/authFetch");
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/subscriptions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_id: planId, duration_months: duration, payment_method: method })
+      });
+      
+      if (res.ok) {
+        setSuccess(true);
+      } else {
+        alert("Payment failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  }, [card, method, planId, duration]);
 
   const inputCls = (field) =>
     `w-full rounded-[12px] border ${errors[field] ? "border-red-400 bg-red-50" : "border-slate-200 bg-[#f9fafb]"} 
@@ -185,13 +201,13 @@ const CheckoutPage = () => {
         <SuccessOverlay plan={plan} total={totalPrice} onDone={() => navigate("/dashboard")} />
       )}
 
-      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8 overflow-x-hidden">
+      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
         <div className="w-full max-w-[1100px] mx-auto">
 
           {/* Step Bar */}
           <StepBar step={checkoutStep} />
 
-          <div className="flex flex-col xl:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
 
             {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
             <div className="flex-1 flex flex-col gap-5 min-w-0 w-full">
@@ -269,7 +285,7 @@ const CheckoutPage = () => {
                   <div>
                     <button
                       onClick={() => setMethod("card")}
-                      className="w-full flex items-center justify-between px-5 py-4 bg-transparent border-none cursor-pointer text-left hover:bg-slate-50 transition-colors">
+                      className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-4 bg-transparent border-none cursor-pointer text-left hover:bg-slate-50 transition-colors gap-3 sm:gap-0">
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
                           ${method === "card" ? "border-[#E91E63]" : "border-slate-300"}`}>
@@ -410,7 +426,7 @@ const CheckoutPage = () => {
                   className="flex items-center gap-2 text-[13px] font-bold text-slate-600 hover:text-[#E91E63] bg-transparent border-none cursor-pointer transition-colors">
                   <ChevronLeft size={16} /> Back to Plans
                 </button>
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center gap-4">
                   <button
                     onClick={handlePay}
                     disabled={paying}
@@ -427,7 +443,7 @@ const CheckoutPage = () => {
                       </>
                     )}
                   </button>
-                  <p className="text-[11px] text-slate-400 mt-2">You can cancel anytime</p>
+                  <p className="text-[11px] text-slate-400 mt-2 text-center sm:text-left">You can cancel anytime</p>
                 </div>
               </div>
 
@@ -446,7 +462,7 @@ const CheckoutPage = () => {
             </div>
 
             {/* ── RIGHT SIDEBAR ────────────────────────────────────────────── */}
-            <div className="w-full xl:w-[320px] shrink-0 flex flex-col gap-5">
+            <div className="w-full lg:w-[320px] xl:w-[350px] shrink-0 flex flex-col gap-5">
 
               {/* Order Summary */}
               <div className="bg-white rounded-[22px] border border-slate-200 shadow-sm p-6">

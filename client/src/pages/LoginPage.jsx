@@ -225,12 +225,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center overflow-x-hidden bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background">
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
 
       {/* Header */}
-      <div className="hidden xl:block absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20">
+      <div className="hidden md:block absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-2 no-underline transition-opacity hover:opacity-90">
           <BrandMark />
         </Link>

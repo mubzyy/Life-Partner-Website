@@ -24,15 +24,11 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
-  max-width: 100vw;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  overflow-x: hidden;
-  max-width: 100vw;
   background: #FAFAFA;
   color: #222222;
   font-family: 'Manrope', sans-serif;

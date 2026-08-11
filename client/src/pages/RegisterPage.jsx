@@ -49,7 +49,7 @@ const BackgroundShowcase = () => {
   }, []);
 
   return (
-    <div className="hidden xl:block absolute inset-0 z-[-1] pointer-events-none overflow-hidden bg-background">
+    <div className="hidden lg:block absolute inset-0 z-[-1] pointer-events-none overflow-hidden bg-background">
       <style>{`
         @keyframes floatFast1 {
           0%, 100% { transform: translateY(0) rotate(45deg); }
@@ -66,7 +66,7 @@ const BackgroundShowcase = () => {
       `}</style>
       
       {/* Left Diamond Grid (3 items, inconsistent sizes) */}
-      <div className="hidden xl:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
+      <div className="hidden lg:flex absolute left-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
         
         {/* Top: Medium, offset left */}
         <div className="animate-[floatFast1_8s_ease-in-out_infinite] ml-0">
@@ -92,7 +92,7 @@ const BackgroundShowcase = () => {
       </div>
 
       {/* Right Diamond Grid (3 items, mirrored sizes) */}
-      <div className="hidden xl:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
+      <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-center gap-10 opacity-95">
         
         {/* Top: Small, offset right */}
         <div className="animate-[floatFast3_10s_ease-in-out_infinite] -mr-8">
@@ -305,7 +305,7 @@ const RegisterPage = () => {
   const iconClasses = "absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted w-[18px] h-[18px]";
 
   return (
-    <div className="flex items-center justify-center min-h-screen relative overflow-hidden z-0 bg-background">
+    <div className="flex items-center justify-center min-h-screen relative z-0 bg-background">
       
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
@@ -404,7 +404,7 @@ const RegisterPage = () => {
       <BackgroundShowcase />
 
       {/* Header (Absolute top left) */}
-      <div className="hidden xl:block absolute top-0 left-0 px-6 py-6 z-20">
+      <div className="hidden md:block absolute top-0 left-0 px-6 py-6 z-20">
         <Link to="/" className="inline-flex items-center gap-3.5 no-underline transition-opacity hover:opacity-90">
           <BrandMark />
         </Link>
@@ -611,7 +611,7 @@ const RegisterPage = () => {
                 <div className="relative bg-card px-4 text-[13px] text-text-muted font-medium">or sign up with</div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <button type="button" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-border-light hover:bg-background transition-colors text-[14px] font-bold text-text-primary">
                   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

@@ -1,36 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Eye, Users, Heart, UserPlus, TrendingUp, MapPin, Briefcase,
   ChevronDown, Crown, Star, Zap, Camera, BookOpen, Activity, ArrowRight,
   BarChart2, CheckCircle2, RefreshCw
 } from "lucide-react";
-
-// ── Dummy Data ────────────────────────────────────────────────────────────────
-const ALL_VISITORS = [
-  { id: 1, name: "Ayesha Khan",  age: 25, profession: "Doctor",           city: "Lahore, Pakistan",     avatar: "/images/profile_f1.jpg", online: true,  time: "2 minutes ago",  interested: true  },
-  { id: 2, name: "Fatima Ali",   age: 26, profession: "Software Engineer", city: "Islamabad, Pakistan",  avatar: "/images/profile_f2.jpg", online: true,  time: "15 minutes ago", interested: false },
-  { id: 3, name: "Zainab Malik", age: 24, profession: "Teacher",           city: "Rawalpindi, Pakistan", avatar: "/images/profile_f3.jpg", online: false, time: "1 hour ago",     interested: true  },
-  { id: 4, name: "Hira Ahmed",   age: 23, profession: "Pharmacist",        city: "Karachi, Pakistan",    avatar: "/images/profile_f4.jpg", online: true,  time: "2 hours ago",    interested: false },
-  { id: 5, name: "Sarah Batool", age: 24, profession: "Content Writer",    city: "Multan, Pakistan",     avatar: "/images/profile_f6.jpg", online: true,  time: "3 hours ago",    interested: false },
-  { id: 6, name: "Laiba Zaidi",  age: 26, profession: "Business Analyst",  city: "Lahore, Pakistan",     avatar: "/images/profile_f7.jpg", online: true,  time: "Yesterday",      interested: false },
-  { id: 7, name: "Sana Tariq",   age: 25, profession: "UI/UX Designer",    city: "Islamabad, Pakistan",  avatar: "/images/profile_f8.jpg", online: false, time: "Yesterday",      interested: true  },
-  { id: 8, name: "Maria Noor",   age: 25, profession: "Graphic Designer",  city: "Faisalabad, Pakistan", avatar: "/images/profile_f5.jpg", online: false, time: "2 days ago",     interested: false },
-  { id: 9, name: "Nadia Islam",  age: 27, profession: "Dentist",           city: "Peshawar, Pakistan",   avatar: "/images/profile_f1.jpg", online: true,  time: "3 days ago",     interested: true  },
-  { id: 10,name: "Amna Raza",   age: 22, profession: "Student",           city: "Lahore, Pakistan",     avatar: "/images/profile_f3.jpg", online: false, time: "4 days ago",     interested: false },
-];
-
-const STATS = [
-  { label: "Profile Views",     value: "238", sub: "↑ 18 this week", subColor: "text-green-600", icon: <Eye size={22} className="text-[#E91E63]" />,    iconBg: "bg-pink-50"   },
-  { label: "Unique Visitors",   value: "156", sub: "↑ 12 this week", subColor: "text-green-600", icon: <Users size={22} className="text-[#E91E63]" />,  iconBg: "bg-pink-50"   },
-  { label: "Interested In You", value: "47",  sub: "↑ 6 this week",  subColor: "text-green-600", icon: <Heart size={22} className="text-[#E91E63]" fill="currentColor" />, iconBg: "bg-pink-50" },
-  { label: "New This Week",     value: "21",  sub: "↑ 5 new",        subColor: "text-green-600", icon: <UserPlus size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
-];
-
-const CHART_DATA = [
-  { day: "Mon", value: 24 }, { day: "Tue", value: 18 }, { day: "Wed", value: 28 },
-  { day: "Thu", value: 32 }, { day: "Fri", value: 35 }, { day: "Sat", value: 42 }, { day: "Sun", value: 59 },
-];
+import EmptyState from "../components/EmptyState";
+import { authFetch } from "../lib/authFetch";
+import { photoUrl } from "../lib/photoUrl";
 
 const BOOST_TIPS = [
   { icon: <Zap size={16} className="text-[#E91E63]" />,   title: "Increase Profile Visibility", desc: "Reach more potential matches" },
@@ -52,25 +29,84 @@ const VisitorsPage = () => {
   const [likedIds, setLikedIds] = useState(new Set());
   const [visibleCount, setVisibleCount] = useState(7);
 
-  const toggleLike = (id) => setLikedIds(prev => {
-    const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
-    return next;
-  });
+  const [visitors, setVisitors] = useState([]);
+  const [stats, setStats] = useState([
+    { label: "Profile Views",     value: "0", sub: "0 this week", subColor: "text-green-600", icon: <Eye size={22} className="text-[#E91E63]" />,    iconBg: "bg-pink-50"   },
+    { label: "Unique Visitors",   value: "0", sub: "0 this week", subColor: "text-green-600", icon: <Users size={22} className="text-[#E91E63]" />,  iconBg: "bg-pink-50"   },
+  ]);
+  const [chartData, setChartData] = useState([
+    { day: "Mon", value: 0 }, { day: "Tue", value: 0 }, { day: "Wed", value: 0 },
+    { day: "Thu", value: 0 }, { day: "Fri", value: 0 }, { day: "Sat", value: 0 }, { day: "Sun", value: 0 },
+  ]);
 
-  const filteredVisitors = ALL_VISITORS.filter(v => {
-    if (activeTab === "interested") return v.interested;
-    if (activeTab === "new")        return ["2 minutes ago","15 minutes ago","1 hour ago","2 hours ago","3 hours ago"].includes(v.time);
-    return true;
-  });
+  useEffect(() => {
+    fetchVisitors();
+    fetchStats();
+  }, []);
+
+  const fetchVisitors = async () => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/visitors`);
+      if (res.ok) {
+        const data = await res.json();
+        setVisitors(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/visitors/stats`);
+      if (res.ok) {
+        const data = await res.json();
+        // Merge the backend stats with the icons
+        const newStats = data.stats.map(s => {
+          if (s.label === "Profile Views") {
+            return { ...s, icon: <Eye size={22} className="text-[#E91E63]" /> };
+          } else if (s.label === "Unique Visitors") {
+            return { ...s, icon: <Users size={22} className="text-[#E91E63]" /> };
+          }
+          return s;
+        });
+        setStats(newStats);
+        setChartData(data.chartData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const toggleLike = async (id) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/interactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_id: id, action: 'like' })
+      });
+      if (res.ok) {
+        setLikedIds(prev => {
+          const next = new Set(prev);
+          next.has(id) ? next.delete(id) : next.add(id);
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const filteredVisitors = visitors; // Assuming all visitors are returned
 
   const visibleVisitors = filteredVisitors.slice(0, visibleCount);
-  const maxChart = Math.max(...CHART_DATA.map(d => d.value));
+  const maxChart = Math.max(...chartData.map(d => d.value), 10); // Ensure maxChart is at least 10 to avoid division by zero
+
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8 overflow-x-hidden">
-      <div className="w-full max-w-[1400px] mx-auto">
-        <div className="flex flex-col xl:flex-row gap-6 items-start">
+    <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
+      <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
 
           {/* ── MAIN COLUMN ─────────────────────────────────────────────────── */}
           <div className="flex-1 flex flex-col gap-6 min-w-0 w-full">
@@ -97,7 +133,7 @@ const VisitorsPage = () => {
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {STATS.map(s => (
+              {stats.map(s => (
                 <div key={s.label} className="bg-white rounded-[20px] p-5 border border-slate-200 shadow-sm flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-[14px] ${s.iconBg} flex items-center justify-center shrink-0`}>
@@ -117,9 +153,8 @@ const VisitorsPage = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-0 border-b border-slate-200 overflow-x-auto no-scrollbar">
                 {[
-                  { id: "all",        label: "All Visitors",      count: ALL_VISITORS.length },
-                  { id: "interested", label: "Interested In You", count: ALL_VISITORS.filter(v => v.interested).length },
-                  { id: "new",        label: "New This Week",     count: 21 },
+                  { id: "all",        label: "All Visitors",      count: visitors.length },
+                  { id: "new",        label: "New This Week",     count: visitors.length }, // Ideally filtered by date
                 ].map(tab => (
                   <button key={tab.id} onClick={() => { setActiveTab(tab.id); setVisibleCount(7); }}
                     className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors cursor-pointer bg-transparent
@@ -143,13 +178,13 @@ const VisitorsPage = () => {
             {/* Visitor List */}
             <div className="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
               {visibleVisitors.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-                  <div className="w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center mb-4">
-                    <Eye size={28} className="text-[#E91E63]" />
-                  </div>
-                  <h3 className="text-[16px] font-bold text-slate-800 mb-2">No visitors yet</h3>
-                  <p className="text-[13px] text-slate-500 max-w-xs">Complete your profile and add photos to attract more profile views.</p>
-                </div>
+                <EmptyState
+                  icon={Eye}
+                  title="No visitors yet"
+                  description="Complete your profile and add photos to attract more profile views."
+                  actionText="Update Profile"
+                  actionLink="/profile/me"
+                />
               ) : (
                 visibleVisitors.map((v, idx) => (
                   <div key={v.id}
@@ -157,30 +192,20 @@ const VisitorsPage = () => {
 
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      <img src={v.avatar} alt={v.name}
+                      <img src={photoUrl(v.image) || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} alt={v.name}
                         className="w-[54px] h-[54px] rounded-full object-cover border border-slate-100 cursor-pointer hover:opacity-90 transition-opacity"
                         onClick={() => navigate(`/profile/${v.id}`)} />
-                      {v.online && <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-[15px] font-bold text-slate-800 cursor-pointer hover:text-[#E91E63] transition-colors" onClick={() => navigate(`/profile/${v.id}`)}>
-                          {v.name}, {v.age}
+                          {v.name}
                         </span>
                         <CheckCircle2 size={15} fill="#E91E63" color="white" />
-                        {v.interested && (
-                          <span className="text-[11px] font-bold text-[#E91E63] bg-[#fff0f5] border border-pink-200 px-2 py-0.5 rounded-full leading-none">
-                            Interested
-                          </span>
-                        )}
                       </div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
-                          <Briefcase size={13} className="text-slate-400 shrink-0" />
-                          {v.profession}
-                        </div>
                         <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
                           <MapPin size={13} className="text-slate-400 shrink-0" />
                           {v.city}
@@ -190,7 +215,7 @@ const VisitorsPage = () => {
 
                     {/* Time + Actions */}
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[12px] text-slate-400 font-medium hidden sm:block whitespace-nowrap">{v.time}</span>
+                      <span className="text-[12px] text-slate-400 font-medium hidden sm:block whitespace-nowrap">{new Date(v.time).toLocaleDateString()}</span>
                       <Link to={`/profile/${v.id}`}
                         className="text-[13px] font-bold text-[#E91E63] bg-[#fff0f5] hover:bg-pink-100 border border-pink-200 px-4 py-2 rounded-xl no-underline transition-colors whitespace-nowrap">
                         View Profile
@@ -223,15 +248,15 @@ const VisitorsPage = () => {
           </div>
 
           {/* ── RIGHT SIDEBAR ────────────────────────────────────────────────── */}
-          <div className="w-full xl:w-[320px] shrink-0 flex flex-col gap-5">
+          <div className="w-full lg:w-[320px] shrink-0 flex flex-col gap-5">
 
             {/* Profile Views Overview (Bar Chart) */}
             <div className="bg-white rounded-[24px] p-5 border border-slate-200 shadow-sm">
               <h3 className="text-[14px] font-bold text-slate-800 mb-5">Profile Views Overview</h3>
               <div className="flex items-end justify-between gap-1.5 h-[90px] mb-2">
-                {CHART_DATA.map((d) => {
+                {chartData.map((d) => {
                   const pct = (d.value / maxChart) * 100;
-                  const isMax = d.value === maxChart;
+                  const isMax = d.value === maxChart && d.value > 0;
                   return (
                     <div key={d.day} className="flex flex-col items-center gap-1.5 flex-1">
                       <span className="text-[10px] font-bold text-slate-500">{d.value}</span>
@@ -246,7 +271,7 @@ const VisitorsPage = () => {
                 })}
               </div>
               <div className="flex items-center justify-between gap-1">
-                {CHART_DATA.map(d => (
+                {chartData.map(d => (
                   <div key={d.day} className="flex-1 text-center text-[10px] text-slate-400 font-medium">{d.day}</div>
                 ))}
               </div>

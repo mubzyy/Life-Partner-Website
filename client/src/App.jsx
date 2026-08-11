@@ -21,6 +21,8 @@ import VisitorsPage from "./pages/VisitorsPage";
 import PricingPage from "./pages/PricingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import SettingsPage from "./pages/SettingsPage";
+import BlockedUsersPage from "./pages/BlockedUsersPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import PlaceholderPage from "./components/PlaceholderPage";
 
 // ── Guards ─────────────────────────────────────────────────────────────────
@@ -42,12 +44,12 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Route only for incomplete profiles
+// Route only for incomplete profiles or editing
 const SetupRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.profileComplete) return <Navigate to="/dashboard" replace />;
+  // Removed the redirection away from /profile-setup so users can edit their profiles
   return children;
 };
 
@@ -112,10 +114,11 @@ const AppRoutes = () => (
         <Route path="/profile/me" element={<MyProfilePage />} />
         <Route path="/profile/:id" element={<ProfileViewPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/blocked-users" element={<BlockedUsersPage />} />
       </Route>
 
       {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   </>
 );

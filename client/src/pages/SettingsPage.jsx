@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -127,14 +127,47 @@ const AccountTab = ({ user, navigate }) => {
   );
 };
 
-const PrivacyTab = () => {
+const PrivacyTab = ({ navigate }) => {
   const [toggles, setToggles] = useState({
     onlineStatus: true,
     readReceipts: true,
+    twoFactor: false
   });
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 
-  const toggleSetting = (key) => setToggles(prev => ({ ...prev, [key]: !prev[key] }));
+  useEffect(() => {
+    import("../lib/authFetch").then(({ authFetch }) => {
+        authFetch(`${import.meta.env.VITE_API_URL}/api/settings`)
+            .then(res => res.json())
+            .then(data => {
+                setToggles({
+                    onlineStatus: data.show_online_status ?? true,
+                    readReceipts: data.read_receipts ?? true,
+                    twoFactor: data.two_factor ?? false
+                });
+            })
+            .catch(console.error);
+    });
+  }, []);
+
+  const toggleSetting = (key) => {
+      setToggles(prev => {
+          const next = { ...prev, [key]: !prev[key] };
+          // Save to backend
+          import("../lib/authFetch").then(({ authFetch }) => {
+              authFetch(`${import.meta.env.VITE_API_URL}/api/settings`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      show_online_status: next.onlineStatus,
+                      read_receipts: next.readReceipts,
+                      two_factor: next.twoFactor
+                  })
+              }).catch(console.error);
+          });
+          return next;
+      });
+  };
 
   return (
     <div className="animate-fade-in space-y-8">
@@ -159,13 +192,12 @@ const PrivacyTab = () => {
           />
         </div>
       </div>
-
       <div>
         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Security</h3>
         <div className="space-y-2">
           <ActionRow icon={Key} title="Change Password" subtitle="Update your account password" onClick={() => {}} />
           <ActionRow icon={Shield} title="Two-Step Verification" subtitle="Add an extra layer of security" action={<span className="text-[12px] font-bold text-slate-400">Not Enabled</span>} onClick={() => {}} />
-          <ActionRow icon={UserX} title="Blocked Users" subtitle="Manage users you have blocked" onClick={() => {}} />
+          <ActionRow icon={UserX} title="Blocked Users" subtitle="Manage users you have blocked" onClick={() => navigate('/blocked-users')} />
           <ActionRow icon={Smartphone} title="Sessions & Devices" subtitle="Manage your active sessions" onClick={() => {}} />
         </div>
       </div>

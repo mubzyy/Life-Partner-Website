@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, SlidersHorizontal } from "lucide-react";
-
-export const allProfiles = [
-  { id: 1,  name: "Ayesha Khan",   age: 25, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'4\"", profession: "Doctor",            city: "Lahore, Pakistan",    edu: "MBBS · King Edward Medical University",  online: true,  image: "/images/profile_f1.jpg" },
-  { id: 2,  name: "Fatima Ali",    age: 26, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'5\"", profession: "Software Engineer",  city: "Islamabad, Pakistan", edu: "BS Computer Science · FAST",              online: true,  image: "/images/profile_f2.jpg" },
-  { id: 3,  name: "Zainab Malik",  age: 24, gender: "Female", maritalStatus: "Divorced",      religion: "Shia",  height: "5'3\"", profession: "Teacher",            city: "Rawalpindi, Pakistan",edu: "MA English · Punjab University",          online: true,  image: "/images/profile_f3.jpg" },
-  { id: 4,  name: "Hira Ahmed",    age: 23, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'2\"", profession: "Pharmacist",         city: "Karachi, Pakistan",   edu: "Doctor of Pharmacy · DOW",                online: true,  image: "/images/profile_f4.jpg" },
-  { id: 5,  name: "Maryam Noor",   age: 25, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'6\"", profession: "Graphic Designer",   city: "Lahore, Pakistan",    edu: "BS Design · LUMS",                        online: false, image: "/images/profile_f5.jpg" },
-  { id: 6,  name: "Sana Batool",   age: 27, gender: "Female", maritalStatus: "Widowed",       religion: "Sunni", height: "5'5\"", profession: "Business Analyst",   city: "Faisalabad, Pakistan",edu: "MBA · Comsats University",                online: false, image: "/images/profile_f6.jpg" },
-  { id: 7,  name: "Iqra Saleem",   age: 24, gender: "Female", maritalStatus: "Never Married", religion: "Shia",  height: "5'4\"", profession: "Dentist",            city: "Multan, Pakistan",    edu: "BDS · Nishtar Institute",                 online: false, image: "/images/profile_f7.jpg" },
-  { id: 8,  name: "Areeba Hassan", age: 26, gender: "Female", maritalStatus: "Never Married", religion: "Sunni", height: "5'7\"", profession: "Interior Designer",  city: "Islamabad, Pakistan", edu: "BS Interior Design · NCA",                online: false, image: "/images/profile_f8.jpg" },
-];
+import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, SlidersHorizontal, Users } from "lucide-react";
+import EmptyState from "../components/EmptyState";
+import { authFetch } from "../lib/authFetch";
+import { photoUrl } from "../lib/photoUrl";
 
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]", "bg-[#7e2d2d]", "bg-[#2d4c7e]", "bg-[#6e2d7a]"][i % 8];
 const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e25] to-[#2d7a6e50]", "bg-gradient-to-br from-[#6b4c8a25] to-[#6b4c8a50]", "bg-gradient-to-br from-[#2d6e7e25] to-[#2d6e7e50]", "bg-gradient-to-br from-[#7a6e2d25] to-[#7a6e2d50]", "bg-gradient-to-br from-[#4c6e2d25] to-[#4c6e2d50]", "bg-gradient-to-br from-[#7e2d2d25] to-[#7e2d2d50]", "bg-gradient-to-br from-[#2d4c7e25] to-[#2d4c7e50]", "bg-gradient-to-br from-[#6e2d7a25] to-[#6e2d7a50]"][i % 8];
@@ -21,38 +13,65 @@ const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e25] to-[#2d7a6
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [heartedCards, setHeartedCards] = useState({});
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    ageMin: 18,
-    ageMax: 40,
+    minAge: 18,
+    maxAge: 40,
     gender: 'Any',
-    location: '',
+    city: '',
     maritalStatus: '',
     education: '',
     profession: '',
-    height: '',
-    religion: ''
+    religion: '',
+    sect: ''
   });
   const [showPremiumBanner, setShowPremiumBanner] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/favorites`, { credentials: "omit" /* Replace omit with include when auth is fully hooked */ })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const map = {};
-          data.forEach(item => {
-            map[item.target_profile_id] = true;
-          });
-          setHeartedCards(map);
-        }
-      })
-      .catch(console.error);
+    fetchFavorites();
+    fetchProfiles();
   }, []);
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites`);
+      if (res.ok) {
+        const data = await res.json();
+        const map = {};
+        data.forEach(item => {
+          map[item.target_profile_id] = true;
+        });
+        setHeartedCards(map);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchProfiles = async () => {
+    setLoading(true);
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(filters)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProfiles(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleHeart = async (id) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_profile_id: id })
@@ -65,41 +84,40 @@ const SearchPage = () => {
     }
   };
   
-  const filteredProfiles = allProfiles.filter(p => {
+  const filteredProfiles = profiles.filter(p => {
     if (query && !p.name.toLowerCase().includes(query.toLowerCase()) && !p.profession.toLowerCase().includes(query.toLowerCase())) return false;
-    if (p.age < filters.ageMin || p.age > filters.ageMax) return false;
-    if (filters.gender !== 'Any' && p.gender !== filters.gender) return false;
-    if (filters.location && !p.city.toLowerCase().includes(filters.location.toLowerCase())) return false;
-    if (filters.maritalStatus && p.maritalStatus !== filters.maritalStatus) return false;
-    if (filters.education && !p.edu.toLowerCase().includes(filters.education.toLowerCase())) return false;
-    if (filters.profession && !p.profession.toLowerCase().includes(filters.profession.toLowerCase())) return false;
-    if (filters.height && p.height !== filters.height) return false;
-    if (filters.religion && p.religion !== filters.religion) return false;
     return true;
   });
 
   const getActiveFilters = () => {
     let arr = [];
     if (filters.gender !== 'Any') arr.push({ key: 'gender', val: filters.gender });
-    if (filters.ageMin !== 18 || filters.ageMax !== 40) arr.push({ key: 'age', val: `${filters.ageMin} - ${filters.ageMax} yrs` });
-    if (filters.location) arr.push({ key: 'location', val: filters.location });
+    if (filters.minAge !== 18 || filters.maxAge !== 40) arr.push({ key: 'age', val: `${filters.minAge} - ${filters.maxAge} yrs` });
+    if (filters.city) arr.push({ key: 'city', val: filters.city });
     if (filters.maritalStatus) arr.push({ key: 'maritalStatus', val: filters.maritalStatus });
     if (filters.education) arr.push({ key: 'education', val: filters.education });
     if (filters.profession) arr.push({ key: 'profession', val: filters.profession });
-    if (filters.height) arr.push({ key: 'height', val: filters.height });
     if (filters.religion) arr.push({ key: 'religion', val: filters.religion });
+    if (filters.sect) arr.push({ key: 'sect', val: filters.sect });
     return arr;
   };
   
   const removeFilter = (key) => {
-    if (key === 'age') setFilters(f => ({ ...f, ageMin: 18, ageMax: 40 }));
+    if (key === 'age') setFilters(f => ({ ...f, minAge: 18, maxAge: 40 }));
     else if (key === 'gender') setFilters(f => ({ ...f, gender: 'Any' }));
     else setFilters(f => ({ ...f, [key]: '' }));
+    // Wait for state to update, then fetch
+    setTimeout(fetchProfiles, 0);
+  };
+
+  const handleApplyFilters = () => {
+    fetchProfiles();
+    setShowFilters(false);
   };
 
   return (
-    <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
-      <div className="w-full max-w-[1400px] mx-auto">
+    <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10">
+      <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto">
 
         {/* ── Page header ── */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
@@ -129,29 +147,32 @@ const SearchPage = () => {
           <div className={`bg-card rounded-[20px] p-[22px] border border-border-light lg:sticky top-[92px] w-full min-w-0 ${showFilters ? "block" : "hidden lg:block"}`}>
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-base font-bold text-text-primary m-0">Filters</h2>
-              <button onClick={() => setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' })} className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
+              <button onClick={() => {
+                setFilters({ minAge: 18, maxAge: 40, gender: 'Any', city: '', maritalStatus: '', education: '', profession: '', religion: '', sect: '' });
+                setTimeout(fetchProfiles, 0);
+              }} className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
             </div>
 
             {/* Age Range */}
             <div className="mb-5 pb-5 border-b border-slate-100">
               <div className="flex justify-between mb-2.5">
                 <label className="text-[13px] font-bold text-slate-700">Age Range</label>
-                <span className="text-xs text-text-secondary">{filters.ageMin} - {filters.ageMax} years</span>
+                <span className="text-xs text-text-secondary">{filters.minAge} - {filters.maxAge} years</span>
               </div>
               <div className="flex items-center gap-2">
                 <input 
                   type="number" 
                   min="18" max="60" 
-                  value={filters.ageMin} 
-                  onChange={e => setFilters(f => ({ ...f, ageMin: Number(e.target.value) }))} 
+                  value={filters.minAge} 
+                  onChange={e => setFilters(f => ({ ...f, minAge: Number(e.target.value) }))} 
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <span className="text-slate-400">-</span>
                 <input 
                   type="number" 
                   min="18" max="60" 
-                  value={filters.ageMax} 
-                  onChange={e => setFilters(f => ({ ...f, ageMax: Number(e.target.value) }))} 
+                  value={filters.maxAge} 
+                  onChange={e => setFilters(f => ({ ...f, maxAge: Number(e.target.value) }))} 
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -172,12 +193,12 @@ const SearchPage = () => {
 
             {/* Dropdown filters */}
             {[
-              { key: "location",      label: "Location",       placeholder: "Select City",       options: ["Lahore", "Islamabad", "Rawalpindi", "Karachi", "Faisalabad", "Multan"] },
+              { key: "city",          label: "Location",       placeholder: "Select City",       options: ["Lahore", "Islamabad", "Rawalpindi", "Karachi", "Faisalabad", "Multan"] },
               { key: "maritalStatus", label: "Marital Status", placeholder: "Select Status",     options: ["Never Married", "Divorced", "Widowed"] },
               { key: "education",     label: "Education",      placeholder: "Select Education",  options: ["BS", "MS", "MBA", "MBBS", "BDS", "MA"] },
               { key: "profession",    label: "Profession",     placeholder: "Select Profession", options: ["Doctor", "Engineer", "Teacher", "Pharmacist", "Designer", "Analyst"] },
-              { key: "height",        label: "Height",         placeholder: "Select Range",      options: ["5'2\"", "5'3\"", "5'4\"", "5'5\"", "5'6\"", "5'7\""] },
               { key: "religion",      label: "Religion",       placeholder: "Select Religion",   options: ["Sunni", "Shia"] },
+              { key: "sect",          label: "Sect",           placeholder: "Select Sect",       options: ["Deobandi", "Barelvi", "Ahl-e-Hadith", "Ismaili", "Bohra"] },
             ].map(f => (
               <div key={f.label} className="mb-4 relative">
                 <label className="text-[13px] font-bold text-slate-700 block mb-1.5">{f.label}</label>
@@ -196,7 +217,7 @@ const SearchPage = () => {
             ))}
 
             {/* Apply button */}
-            <button className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer text-sm">
+            <button onClick={handleApplyFilters} className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer text-sm">
               <SlidersHorizontal size={16} />
               Apply Filters
             </button>
@@ -244,7 +265,10 @@ const SearchPage = () => {
                 </div>
               ))}
               {getActiveFilters().length > 0 && (
-                <button onClick={() => setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' })} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
+                <button onClick={() => {
+                  setFilters({ minAge: 18, maxAge: 40, gender: 'Any', city: '', maritalStatus: '', education: '', profession: '', religion: '', sect: '' });
+                  setTimeout(fetchProfiles, 0);
+                }} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
                   Clear All
                 </button>
               )}
@@ -273,12 +297,31 @@ const SearchPage = () => {
 
             {/* Profile grid */}
             <div className="w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[18px]">
+              {filteredProfiles.length === 0 ? (
+                <div className="py-12 bg-card rounded-2xl border border-border-light text-center">
+                  <EmptyState
+                    icon={Search}
+                    title="No Profiles Found"
+                    description="We couldn't find any matches for your current search and filters. Try adjusting your criteria."
+                    actionText="Clear Filters"
+                    onAction={() => {
+                      setQuery("");
+                      setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' });
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 md:gap-[18px]">
               {filteredProfiles.map((p, i) => (
                 <div key={p.id} className="bg-card rounded-2xl border border-border-light  overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                   {/* Photo */}
                   <div className={`h-[180px] relative flex items-center justify-center bg-primary-very-light overflow-hidden`}>
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                    <img
+                      src={photoUrl(p.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=e91e63&color=fff&size=200`}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=e91e63&color=fff&size=200`; e.target.onerror = null; }}
+                    />
                     {/* Badges */}
                     <div className="absolute top-2.5 left-2.5 flex gap-1.5">
                       {p.online && (
@@ -327,6 +370,7 @@ const SearchPage = () => {
                 </div>
               ))}
               </div>
+              )}
             </div>
           </div>
         </div>

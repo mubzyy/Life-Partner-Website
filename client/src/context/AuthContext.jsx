@@ -1,13 +1,23 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { authFetch } from "../lib/authFetch";
 
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = "life-partner-session";
-const API_BASE = `${import.meta.env.VITE_API_URL}/api/auth`;
+const API_URL = import.meta.env.VITE_API_URL;
+const API_BASE = `${API_URL}/api/auth`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // The authenticated user's real profile, loaded from PostgreSQL via
+  // GET /api/profile/me. This is the single source of truth for profile
+  // fields, completion %, and onboarding progress — every screen that needs
+  // any of that (Complete Profile wizard, My Profile, Dashboard widget,
+  // navbar avatar) reads it from here instead of keeping its own copy.
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Rehydrate session from localStorage on mount
   useEffect(() => {
@@ -28,6 +38,36 @@ export const AuthProvider = ({ children }) => {
     return nextUser;
   };
 
+  const refreshProfile = useCallback(async () => {
+    setProfileLoading(true);
+    try {
+      const res = await authFetch(`${API_URL}/api/profile/me`);
+      if (!res.ok) {
+        setProfile(null);
+        return null;
+      }
+      const data = await res.json();
+      setProfile(data);
+      return data;
+    } catch {
+      setProfile(null);
+      return null;
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
+
+  // Whenever we gain (or lose) an authenticated user, keep `profile` in sync
+  // — covers both fresh logins and session rehydration on page reload.
+  useEffect(() => {
+    if (user?.id) {
+      refreshProfile();
+    } else {
+      setProfile(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   // Real sign-in: POST /api/auth/login
   const signIn = async (email, password) => {
     try {
@@ -43,18 +83,7 @@ export const AuthProvider = ({ children }) => {
         return { data: null, error: { message: data.message || "Login failed." } };
       }
 
-      // Check if profile is complete
-      let profileComplete = false;
-      try {
-        const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/profile/${data.id}`);
-        if (profileRes.ok) {
-          profileComplete = true;
-        }
-      } catch (e) {
-        // ignore error
-      }
-
-      const userData = { ...data, profileComplete };
+      const userData = { ...data };
       persistUser(userData);
       return { data: { user: userData }, error: null };
     } catch {
@@ -62,26 +91,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const completeProfile = (profileFlags = {}) => {
-    const nextUser = {
-      ...(user ?? {}),
-      ...profileFlags,
-      profileComplete: true,
-    };
-    persistUser(nextUser);
-    return nextUser;
-  };
-
   const signOut = () => {
     setUser(null);
+    setProfile(null);
     window.localStorage.removeItem(STORAGE_KEY);
     return Promise.resolve({ error: null });
   };
 
   const value = useMemo(
-    () => ({ user, loading, signIn, signOut, completeProfile }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loading]
+    () => ({ user, loading, profile, profileLoading, signIn, signOut, refreshProfile }),
+    [user, loading, profile, profileLoading, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

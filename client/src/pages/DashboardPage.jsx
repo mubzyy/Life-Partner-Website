@@ -5,41 +5,8 @@ import {
   Heart, MessageSquare, Eye, ChevronRight, ChevronLeft,
   Shield, MapPin, GraduationCap, Crown, Check,
 } from "lucide-react";
-
-// ── Mock Data ──────────────────────────────────────────────────────────────
-const stats = [
-  { label: "Matches",       value: 12, sub: "↑ 4 new this week",   icon: "👥", color: "currentColor" },
-  { label: "Messages",      value: 8,  sub: "↑ 2 unread",          icon: "💬", color: "currentColor" },
-  { label: "Profile Views", value: 23, sub: "↑ 6 this week",       icon: "👁️", color: "currentColor" },
-  { label: "Who Likes Me",  value: 17, sub: "↑ 3 new",             icon: "❤️", color: "#e11d48" },
-];
-
-const matches = [
-  { id: 1, name: "Ayesha Khan",  age: 25, profession: "Doctor",           city: "Lahore, Pakistan",    edu: "MBBS · KEMU",                   online: true,  image: "/images/profile_f1.jpg" },
-  { id: 2, name: "Fatima Ali",   age: 26, profession: "Software Engineer", city: "Islamabad, Pakistan", edu: "BS Computer Science · FAST",    online: true,  image: "/images/profile_f2.jpg" },
-  { id: 3, name: "Zainab Malik", age: 24, profession: "Teacher",           city: "Rawalpindi, Pakistan", edu: "MA English · PUNJAB",           online: true,  image: "/images/profile_f3.jpg" },
-  { id: 4, name: "Hira Ahmed",   age: 23, profession: "Pharmacist",        city: "Karachi, Pakistan",   edu: "Doctor of Pharmacy · DOW",       online: true,  image: "/images/profile_f4.jpg" },
-];
-
-const recentMessages = [
-  { name: "Fatima Ali",   msg: "Assalamualaikum! Thank you for your interest.", time: "10:30 AM", unread: 2, image: "/images/profile_f2.jpg" },
-  { name: "Hira Ahmed",   msg: "I would like to know more about you.",          time: "Yesterday", unread: 1, image: "/images/profile_f4.jpg" },
-  { name: "Zainab Malik", msg: "That sounds great!",                            time: "Yesterday", unread: 0, image: "/images/profile_f3.jpg" },
-];
-
-const recentActivity = [
-  { name: "Ayesha Khan",  action: "viewed your profile",  time: "2 minutes ago",  online: true,  image: "/images/profile_f1.jpg" },
-  { name: "Fatima Ali",   action: "sent you a message",   time: "15 minutes ago", online: true,  image: "/images/profile_f2.jpg" },
-  { name: "Zainab Malik", action: "liked your profile",   time: "1 hour ago",     online: false, image: "/images/profile_f3.jpg" },
-  { name: "Hira Ahmed",   action: "favorited you",      time: "2 hours ago",    online: false, image: "/images/profile_f4.jpg" },
-  { name: "Sarah Batool", action: "viewed your profile",  time: "3 hours ago",    online: false, image: "/images/profile_f5.jpg" },
-];
-
-const visitors = [
-  { name: "Ayesha Khan",  city: "Lahore, Pakistan",    time: "2 min ago",   image: "/images/profile_f1.jpg" },
-  { name: "Sarah Batool", city: "Faisalabad, Pakistan", time: "3 hours ago", image: "/images/profile_f5.jpg" },
-  { name: "Maryam Noor",  city: "Islamabad, Pakistan", time: "5 hours ago", image: "/images/profile_f6.jpg" },
-];
+import { authFetch } from "../lib/authFetch";
+import { photoUrl } from "../lib/photoUrl";
 
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]"][i % 5];
 const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e33] to-[#2d7a6e66]", "bg-gradient-to-br from-[#6b4c8a33] to-[#6b4c8a66]", "bg-gradient-to-br from-[#2d6e7e33] to-[#2d6e7e66]", "bg-gradient-to-br from-[#7a6e2d33] to-[#7a6e2d66]", "bg-gradient-to-br from-[#4c6e2d33] to-[#4c6e2d66]"][i % 5];
@@ -49,34 +16,93 @@ const chartData = [10, 18, 14, 22, 20, 30, 25, 35, 28, 38, 32, 40, 36, 23];
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
+  const [matches, setMatches] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
   const [heartedCards, setHeartedCards] = useState({});
-  const [completion, setCompletion] = useState(25); // Default base completion
+  const [dashboardData, setDashboardData] = useState({ stats: {}, recentActivity: [] });
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [visitors, setVisitors] = useState([]);
 
-  // Calculate actual profile completion
   useEffect(() => {
-    if (user?.id) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/profile/${user.id}`)
+    authFetch(`${import.meta.env.VITE_API_URL}/api/matches`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setMatches(data.slice(0, 4));
+        }
+        setMatchesLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setMatchesLoading(false);
+      });
+
+    authFetch(`${import.meta.env.VITE_API_URL}/api/favorites`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const map = {};
+          data.forEach(item => { map[item.target_profile_id] = true; });
+          setHeartedCards(map);
+        }
+      })
+      .catch(console.error);
+
+    authFetch(`${import.meta.env.VITE_API_URL}/api/dashboard`)
+        .then(res => res.json())
+        .then(data => setDashboardData(data))
+        .catch(console.error);
+
+    authFetch(`${import.meta.env.VITE_API_URL}/api/messages/conversations`)
         .then(res => res.json())
         .then(data => {
-          if (data && !data.message) {
-            const keys = Object.keys(data);
-            const exclude = ["id", "user_id", "created_at", "updated_at"];
-            const relevantKeys = keys.filter(k => !exclude.includes(k));
-            const filledKeys = relevantKeys.filter(k => {
-              const val = data[k];
-              return val !== null && val !== "" && val !== "[]";
-            });
-            if (relevantKeys.length > 0) {
-              setCompletion(Math.round((filledKeys.length / relevantKeys.length) * 100));
+            if (Array.isArray(data)) {
+                setRecentMessages(data.slice(0, 3).map(c => ({
+                    name: c.name,
+                    msg: c.lastMessage,
+                    time: c.time ? new Date(c.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New",
+                    unread: c.unread,
+                    image: c.image
+                })));
             }
-          }
         })
         .catch(console.error);
-    }
+
+    authFetch(`${import.meta.env.VITE_API_URL}/api/visitors`)
+        .then(res => res.json())
+        .then(data => {
+            if (Array.isArray(data)) {
+                setVisitors(data.slice(0, 3));
+            }
+        })
+        .catch(console.error);
+  }, []);
+
+  // Real, backend-calculated profile completion (server/lib/profileCompletion.js)
+  // — the same number shown on the Complete Profile wizard and My Profile.
+  // No hardcoded percentage and no local recalculation here.
+  useEffect(() => {
+    if (user?.id) refreshProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const toggleHeart = (id) => setHeartedCards(h => ({ ...h, [id]: !h[id] }));
+  const completion = profile?.completion?.profileCompletion ?? 0;
+
+  const toggleHeart = async (id) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_profile_id: id })
+      });
+      if (res.ok) {
+        setHeartedCards(h => ({ ...h, [id]: !h[id] }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // SVG sparkline
   const maxVal = Math.max(...chartData);
@@ -84,11 +110,11 @@ const DashboardPage = () => {
   const pts = chartData.map((v, i) => `${(i / (chartData.length - 1)) * w},${h - (v / maxVal) * (h - 10) - 5}`).join(" ");
 
   return (
-    <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10 overflow-x-hidden">
-      <div className="w-full max-w-[1400px] mx-auto">
+    <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10">
+      <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto">
 
         {/* ── Main 2-column layout ── */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] 2xl:grid-cols-[1fr_360px] 3xl:grid-cols-[1fr_400px] gap-6 items-start">
 
           {/* ── LEFT COLUMN ── */}
           <div className="flex flex-col gap-6 min-w-0">
@@ -96,14 +122,18 @@ const DashboardPage = () => {
             {/* Welcome banner */}
             <div className="bg-card rounded-[20px] px-7 py-6 border border-border-light  grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
               <div className="flex items-center gap-4">
-                <div className="w-[54px] h-[54px] rounded-full bg-primary flex items-center justify-center text-[22px] font-bold text-white shrink-0">
-                  {user?.name?.[0] ?? "A"}
+                <div className="w-[54px] h-[54px] rounded-full bg-primary flex items-center justify-center text-[22px] font-bold text-white shrink-0 overflow-hidden">
+                  {profile?.profile_photo_url ? (
+                    <img src={photoUrl(profile.profile_photo_url)} alt="Your profile" className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.[0] ?? user?.first_name?.[0] ?? "A"
+                  )}
                 </div>
                 <div>
                   <h1 className="text-[20px] font-bold text-text-primary mb-1">
                     Assalamualaikum, {user?.name?.split(" ")[0] || user?.first_name || "Guest"}! 👋
                   </h1>
-                  <p className="text-[13px] text-text-secondary m-0">Welcome back! You have 12 new matches today.</p>
+                  <p className="text-[13px] text-text-secondary m-0">Welcome back! You have {dashboardData.stats?.matches || 0} matches.</p>
                 </div>
               </div>
               {/* Quran verse */}
@@ -134,10 +164,15 @@ const DashboardPage = () => {
             </div>
 
             {/* Stats row */}
-            <div className="overflow-x-auto pb-4 w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 min-w-[600px] md:min-w-0">
-              {stats.map(s => (
-                <div key={s.label} className="bg-card rounded-2xl py-[18px] px-5 border border-border-light ">
+            <div className="pb-4 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-4">
+              {[
+                { label: "Matches",       value: dashboardData.stats?.matches || 0, sub: "Based on mutual likes",   icon: "👥", color: "currentColor" },
+                { label: "Messages",      value: dashboardData.stats?.messages || 0,  sub: "Unread threads",          icon: "💬", color: "currentColor" },
+                { label: "Profile Views", value: dashboardData.stats?.views || 0, sub: "Total profile views",       icon: "👁️", color: "currentColor" },
+                { label: "Who Likes Me",  value: dashboardData.stats?.likes || 0, sub: "Total likes received",             icon: "❤️", color: "#e11d48" },
+              ].map(s => (
+                <div key={s.label} className="bg-card rounded-2xl p-5 xl:p-6 border border-border-light shadow-sm hover:shadow-md transition-shadow flex flex-col justify-center">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-primary-very-light flex items-center justify-center text-lg">
                       {s.icon}
@@ -169,13 +204,22 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto pb-4 w-full">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 min-w-[800px] md:min-w-0">
+              <div className="pb-4 w-full">
+                {matchesLoading ? (
+                  <div className="flex justify-center items-center py-10">
+                    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                  </div>
+                ) : matches.length === 0 ? (
+                  <div className="text-center py-10 text-text-muted text-[13px]">
+                    No recommended matches yet. Try completing your profile or updating your preferences!
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {matches.map((m, i) => (
                   <div key={m.id} className="rounded-2xl border border-border-light  overflow-hidden bg-card hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                     {/* Photo */}
                     <div className={`h-[140px] relative flex items-center justify-center bg-primary-very-light overflow-hidden`}>
-                      <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
+                      <img src={photoUrl(m.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=e91e63&color=fff&size=200`} alt={m.name} className="w-full h-full object-cover" onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=e91e63&color=fff&size=200`; e.target.onerror = null; }} />
                       {/* Online dot */}
                       {m.online && (
                         <div className="absolute top-2.5 left-2.5 bg-green-500 text-white rounded-md text-[10px] font-bold py-0.5 px-1.5 flex items-center gap-1">
@@ -193,7 +237,7 @@ const DashboardPage = () => {
                     {/* Info */}
                     <div className="px-3.5 pt-3 pb-3.5">
                       <div className="flex items-center gap-1 mb-0.5">
-                        <span className="font-bold text-[13px] text-text-primary">{m.name}, {m.age}</span>
+                        <span className="font-bold text-[13px] text-text-primary capitalize">{m.name}, {m.age}</span>
                         <span className="text-primary text-xs">✓</span>
                       </div>
                       <div className="text-xs text-text-secondary mb-1.5">{m.profession}</div>
@@ -210,6 +254,7 @@ const DashboardPage = () => {
                   </div>
                 ))}
                 </div>
+                )}
               </div>
             </div>
 
@@ -217,15 +262,15 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
               {/* Recent Messages */}
-              <div className="bg-card rounded-2xl p-5 border border-border-light shadow-sm  overflow-x-auto">
-                <div className="min-w-[300px] md:min-w-0">
+              <div className="bg-card rounded-2xl p-5 border border-border-light shadow-sm">
+                <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-[15px] font-bold text-text-primary m-0">Recent Messages</h3>
                   <Link to="/messages" className="text-xs text-primary font-bold no-underline hover:text-primary-dark transition-colors">View All</Link>
                 </div>
                 {recentMessages.map((m, i) => (
                   <div key={i} className="flex items-center gap-3 mb-3.5">
-                    <img src={m.image} alt={m.name} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" />
+                    <img src={photoUrl(m.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=e91e63&color=fff&size=100`} alt={m.name} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=e91e63&color=fff&size=100`; e.target.onerror = null; }} />
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between">
                         <span className="text-[13px] font-bold text-text-primary">{m.name}</span>
@@ -242,8 +287,8 @@ const DashboardPage = () => {
                 </div>
 
               {/* Profile Visitors */}
-              <div className="bg-card rounded-2xl p-5 border border-border-light shadow-sm  overflow-x-auto">
-                <div className="min-w-[300px] md:min-w-0">
+              <div className="bg-card rounded-2xl p-5 border border-border-light shadow-sm">
+                <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-[15px] font-bold text-text-primary m-0">Profile Visitors</h3>
                   <Link to="/visitors" className="text-xs text-primary font-bold no-underline hover:text-primary-dark transition-colors">View All</Link>
@@ -251,7 +296,7 @@ const DashboardPage = () => {
                 {visitors.map((v, i) => (
                   <div key={i} className="flex items-center justify-between gap-2.5 mb-3.5">
                     <div className="flex items-center gap-2.5">
-                      <img src={v.image} alt={v.name} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" />
+                      <img src={photoUrl(v.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e91e63&color=fff&size=100`} alt={v.name} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e91e63&color=fff&size=100`; e.target.onerror = null; }} />
                       <div>
                         <div className="text-[13px] font-bold text-text-primary">{v.name}</div>
                         <div className="text-[11px] text-text-muted">{v.city}</div>
@@ -348,19 +393,21 @@ const DashboardPage = () => {
             <div className="bg-card rounded-[20px] p-[22px] border border-border-light ">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-[15px] font-bold text-text-primary m-0">Recent Activity</h3>
-                <a href="#" className="text-xs text-primary font-bold no-underline hover:text-primary-dark transition-colors">View All</a>
+                <Link to="/notifications" className="text-xs text-primary font-bold no-underline hover:text-primary-dark transition-colors">View All</Link>
               </div>
-              {recentActivity.map((a, i) => (
+              {(dashboardData.recentActivity || []).length === 0 ? (
+                  <div className="text-[13px] text-text-muted">No recent activity yet.</div>
+              ) : dashboardData.recentActivity.map((a, i) => (
                 <div key={i} className="flex items-center gap-2.5 mb-3.5">
                   <div className="relative shrink-0">
-                    <img src={a.image} alt={a.name} className="w-9 h-9 rounded-full object-cover" />
+                    <img src={photoUrl(a.image) || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=e91e63&color=fff&size=100`} alt={a.name} className="w-9 h-9 rounded-full object-cover" onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=e91e63&color=fff&size=100`; e.target.onerror = null; }} />
                     {a.online && <div className="absolute bottom-[1px] right-[1px] w-[9px] h-[9px] rounded-full bg-green-500 border-2 border-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-text-primary">
                       <strong>{a.name}</strong> {a.action}
                     </div>
-                    <div className="text-[11px] text-text-muted">{a.time}</div>
+                    <div className="text-[11px] text-text-muted">{new Date(a.time).toLocaleString()}</div>
                   </div>
                   <div className={`w-2 h-2 rounded-full shrink-0 ${a.online ? "bg-green-500" : "bg-slate-200"}`} />
                 </div>

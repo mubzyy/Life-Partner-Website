@@ -19,8 +19,11 @@ import {
   Package,
   CheckCheck,
   Trash2,
+  BellOff,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import EmptyState from "./EmptyState";
+import { photoUrl } from "../lib/photoUrl";
 
 // ── Nav items matching the design exactly ─────────────────────────────────
 const navItems = [
@@ -35,7 +38,7 @@ const navItems = [
 
 const AppLayout = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [notifOpen, setNotifOpen]       = useState(false);
@@ -125,13 +128,13 @@ const AppLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background w-full">
 
       {/* ══════════════════════════════════════════════════════════════════
           PERSISTENT TOP NAVBAR
       ══════════════════════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 bg-white border-b border-border-light shadow-sm w-full">
-        <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-4">
 
           {/* ── Logo ── */}
           <Link to="/dashboard" className="no-underline shrink-0">
@@ -139,7 +142,7 @@ const AppLayout = () => {
           </Link>
 
           {/* ── Desktop nav tabs ── */}
-          <nav className="hidden xl:flex items-center gap-[2px] flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-[2px] flex-1 justify-center">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -169,7 +172,7 @@ const AppLayout = () => {
 
             {/* Upgrade to Premium button */}
             <button
-              className="hidden xl:flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all py-[6px] px-[12px] text-xs font-bold cursor-pointer whitespace-nowrap"
+              className="hidden min-[901px]:flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all py-[6px] px-[12px] text-xs font-bold cursor-pointer whitespace-nowrap"
             >
               <Crown size={14} />
               Premium
@@ -193,7 +196,7 @@ const AppLayout = () => {
               </button>
 
               {notifOpen && (
-                <div className="absolute right-[-10px] sm:right-0 top-[50px] w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
+                <div className="absolute right-0 top-[50px] w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
                   <div className="flex justify-between mb-3 items-center">
                     <span className="font-bold text-[14px] text-text-primary">Notifications</span>
                     <div className="flex gap-2 items-center">
@@ -212,7 +215,12 @@ const AppLayout = () => {
                   </div>
                   <div className="max-h-[350px] overflow-y-auto -mx-2 px-2">
                     {notifications.length === 0 ? (
-                      <p className="text-center text-[13px] text-text-muted py-[20px] m-0">No notifications yet</p>
+                      <EmptyState
+                        icon={BellOff}
+                        title="No notifications yet"
+                        description="When you get new matches or messages, they'll appear here."
+                        compact={true}
+                      />
                     ) : (
                       notifications.map((n) => (
                         <div key={n.id} onClick={() => markAsRead(n.id, n.action_url)} className={`flex items-start gap-[10px] p-[10px_8px] rounded-[10px] cursor-pointer transition-colors duration-200 hover:bg-slate-50 ${n.is_read ? 'bg-transparent' : 'bg-slate-50'}`}>
@@ -239,10 +247,14 @@ const AppLayout = () => {
                 onClick={() => setDropdownOpen(v => !v)}
                 className="flex items-center gap-2 bg-white border-[1.5px] border-border-light rounded-[40px] p-[5px_12px_5px_5px] cursor-pointer"
               >
-                <div className="w-[34px] h-[34px] rounded-full bg-primary flex items-center justify-center text-white font-bold text-[13px] shrink-0">
-                  {(user?.name || user?.first_name || "U")[0].toUpperCase()}
+                <div className="w-[34px] h-[34px] rounded-full bg-primary flex items-center justify-center text-white font-bold text-[13px] shrink-0 overflow-hidden">
+                  {profile?.profile_photo_url ? (
+                    <img src={photoUrl(profile.profile_photo_url)} alt="Your profile" className="w-full h-full object-cover" />
+                  ) : (
+                    (user?.name || user?.first_name || "U")[0].toUpperCase()
+                  )}
                 </div>
-                <div className="text-left leading-[1.3] hidden xl:block">
+                <div className="text-left leading-[1.3] hidden md:block">
                   <div className="text-[13px] font-bold text-text-primary">{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</div>
                   <div className="text-[10px] text-text-secondary font-medium">View Profile</div>
                 </div>
@@ -250,7 +262,7 @@ const AppLayout = () => {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-[52px] w-[220px] bg-card border border-border-light shadow-sm rounded-[16px] p-2 z-[100]">
+                <div className="absolute right-0 top-[52px] w-[220px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-2 z-[100]">
                   <div className="p-[8px_12px_10px] border-b border-border-light mb-1">
                     <p className="font-bold text-[13px] text-text-primary m-0">{user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "Guest")}</p>
                     <p className="text-[11px] text-text-secondary m-[2px_0_0]">{user?.email || "user@example.com"}</p>
@@ -280,7 +292,7 @@ const AppLayout = () => {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="xl:hidden w-[40px] h-[40px] rounded-full border-[1.5px] border-border-light bg-white flex items-center justify-center cursor-pointer text-text-secondary"
+              className="lg:hidden w-[40px] h-[40px] rounded-full border-[1.5px] border-border-light bg-white flex items-center justify-center cursor-pointer text-text-secondary"
               aria-label="Menu"
             >
               {mobileOpen ? <X size={17} /> : <Menu size={17} />}
@@ -290,7 +302,7 @@ const AppLayout = () => {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="absolute top-full left-0 w-full border-b border-border-light bg-white p-[12px_20px_16px] xl:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
+          <div className="absolute top-full left-0 w-full border-b border-border-light bg-white p-[12px_20px_16px] lg:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
             {navItems.map(item => (
               <NavLink
                 key={item.to}

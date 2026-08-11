@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,10 +9,15 @@ import {
   Users,
   Coffee,
   Heart,
-  Upload
+  Upload,
+  Loader2
 } from "lucide-react";
 import SiteHeader from "../components/SiteHeader";
+import LoadingState from "../components/LoadingState";
 import { useAuth } from "../context/AuthContext";
+import { authFetch } from "../lib/authFetch";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const steps = [
   { id: 1, label: "Personal", icon: User },
@@ -22,73 +27,271 @@ const steps = [
   { id: 5, label: "Partner Preferences", icon: Heart },
 ];
 
+const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB — must match server/middleware/upload.js
+
+// ── Per-step payloads (frontend camelCase → backend column names) ──────────
+const buildStepPayload = (stepNum, form) => {
+  switch (stepNum) {
+    case 1:
+      return {
+        gender: form.gender,
+        date_of_birth: form.dob,
+        marital_status: form.maritalStatus,
+        religion: form.religion,
+        sect: form.sect,
+        mother_tongue: form.motherTongue,
+        height: form.height,
+        weight: form.weight,
+        country_id: form.countryId || null,
+        nationality_id: form.nationalityId || null,
+        state: form.state,
+        city: form.city,
+        address: form.address,
+        about_me: form.aboutMe,
+      };
+    case 2:
+      return {
+        education: form.education,
+        occupation: form.occupation,
+        annual_income: form.annualIncome,
+      };
+    case 3:
+      return {
+        father_occupation: form.fatherOccupation,
+        mother_occupation: form.motherOccupation,
+        siblings_count: form.siblingsCount,
+        family_type: form.familyType,
+        family_values: form.familyValues,
+      };
+    case 4:
+      return {
+        prayer_frequency: form.prayerFrequency,
+        religious_preference: form.religiousPreference,
+        dietary_preference: form.dietaryPreference,
+        smoking: form.smoking,
+        drinking: form.drinking,
+      };
+    case 5:
+      return {
+        partner_age_range: form.partnerAgeRange,
+        partner_marital_status: form.partnerMaritalStatus,
+        partner_education: form.partnerEducation,
+        partner_height_range: form.partnerHeightRange,
+        partner_about: form.partnerAbout,
+        partner_countries: form.partnerCountries,
+      };
+    default:
+      return {};
+  }
+};
+
+// ── Client-side "required field" validation, mirrors the backend's rules so
+//    users get instant feedback — the backend re-validates independently and
+//    is the actual authority (see server/lib/profileValidation.js). ───────
+const validateStepClient = (stepNum, form) => {
+  const errors = [];
+  const req = (val, label) => {
+    if (val === undefined || val === null || String(val).trim() === "") {
+      errors.push(`${label} is required.`);
+    }
+  };
+
+  if (stepNum === 1) {
+    req(form.gender, "Gender");
+    req(form.dob, "Date of birth");
+    req(form.maritalStatus, "Marital status");
+    req(form.religion, "Religion");
+    req(form.sect, "Sect");
+    req(form.motherTongue, "Mother tongue");
+    req(form.height, "Height");
+    req(form.weight, "Weight");
+    req(form.countryId, "Country of residence");
+    req(form.nationalityId, "Nationality");
+    req(form.state, "State / Province");
+    req(form.city, "City");
+
+    if (form.dob) {
+      const dob = new Date(form.dob);
+      if (Number.isNaN(dob.getTime())) {
+        errors.push("Date of birth is invalid.");
+      } else {
+        const age = (Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        if (dob > new Date()) errors.push("Date of birth cannot be in the future.");
+        else if (age < 18) errors.push("You must be at least 18 years old.");
+      }
+    }
+    if (form.weight && (Number(form.weight) < 30 || Number(form.weight) > 300 || Number.isNaN(Number(form.weight)))) {
+      errors.push("Weight must be a number between 30 and 300 kg.");
+    }
+  } else if (stepNum === 2) {
+    req(form.education, "Highest education");
+    req(form.occupation, "Current occupation");
+  } else if (stepNum === 3) {
+    req(form.fatherOccupation, "Father's occupation");
+    req(form.motherOccupation, "Mother's occupation");
+    req(form.siblingsCount, "Number of siblings");
+    req(form.familyType, "Family type");
+    req(form.familyValues, "Family values");
+    if (form.siblingsCount !== "" && form.siblingsCount !== null && form.siblingsCount !== undefined) {
+      const n = Number(form.siblingsCount);
+      if (!Number.isInteger(n) || n < 0) errors.push("Number of siblings must be a whole number of 0 or more.");
+    }
+  } else if (stepNum === 4) {
+    req(form.prayerFrequency, "Prayer frequency");
+    req(form.religiousPreference, "Appearance preference");
+    req(form.dietaryPreference, "Dietary preference");
+    req(form.smoking, "Smoking");
+    req(form.drinking, "Drinking");
+  } else if (stepNum === 5) {
+    req(form.partnerAgeRange, "Preferred age range");
+    req(form.partnerMaritalStatus, "Preferred marital status");
+    req(form.partnerEducation, "Preferred education");
+    req(form.partnerHeightRange, "Preferred height range");
+  }
+
+  return errors;
+};
+
+const emptyForm = {
+  // Step 1: Personal
+  profilePhotoUrl: "",
+  gender: "",
+  dob: "",
+  maritalStatus: "",
+  height: "",
+  weight: "",
+  religion: "",
+  sect: "",
+  motherTongue: "",
+  nationalityId: "",
+  countryId: "",
+  state: "",
+  city: "",
+  address: "",
+  aboutMe: "",
+
+  // Step 2: Education & Career
+  occupation: "",
+  education: "",
+  annualIncome: "",
+
+  // Step 3: Family
+  fatherOccupation: "",
+  motherOccupation: "",
+  siblingsCount: "",
+  familyType: "",
+  familyValues: "",
+
+  // Step 4: Lifestyle
+  smoking: "",
+  drinking: "",
+  prayerFrequency: "",
+  religiousPreference: "",
+  dietaryPreference: "",
+
+  // Step 5: Partner Preferences
+  partnerAgeRange: "",
+  partnerCountries: [],
+  partnerMaritalStatus: "",
+  partnerEducation: "",
+  partnerOccupation: "",
+  partnerHeightRange: "",
+  partnerAbout: "",
+};
+
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
-  const { user, completeProfile } = useAuth();
+  const { user, profile, profileLoading, refreshProfile } = useAuth();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [countries, setCountries] = useState([]);
   const [nationalities, setNationalities] = useState([]);
+  const [form, setForm] = useState(emptyForm);
+  const [hydrated, setHydrated] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+
+  const submittingRef = useRef(false);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
+    fetch(`${API_URL}/api/countries`)
       .then(res => res.json())
       .then(data => setCountries(data))
       .catch(console.error);
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/nationalities`)
+    fetch(`${API_URL}/api/nationalities`)
       .then(res => res.json())
       .then(data => setNationalities(data))
       .catch(console.error);
   }, []);
 
-  const [form, setForm] = useState({
-    // Step 1: Personal
-    profilePhotoUrl: "",
-    gender: "",
-    dob: "",
-    maritalStatus: "",
-    height: "",
-    weight: "",
-    religion: "",
-    sect: "",
-    motherTongue: "",
-    nationality: "",
-    countryId: user?.country_id || "",
-    state: "",
-    city: "",
-    address: "",
-    aboutMe: "",
-    
-    // Step 2: Education & Career
-    occupation: "",
-    education: "",
-    annualIncome: "",
-    
-    // Step 3: Family
-    fatherOccupation: "",
-    motherOccupation: "",
-    siblingsCount: "",
-    familyType: "",
-    familyValues: "",
-    
-    // Step 4: Lifestyle
-    smoking: "",
-    drinking: "",
-    prayerFrequency: "",
-    religiousPreference: "",
-    dietaryPreference: "",
-    
-    // Step 5: Partner Preferences
-    partnerAgeRange: "",
-    partnerCountries: [],
-    partnerMaritalStatus: "",
-    partnerEducation: "",
-    partnerOccupation: "",
-    partnerHeightRange: "",
-    partnerAbout: "",
-  });
+  // Always pull the freshest profile from the backend when this page opens —
+  // never trust stale in-memory state from a previous visit.
+  useEffect(() => {
+    if (user?.id) refreshProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Hydrate the form from the backend exactly once per visit. Deliberately
+  // NOT re-run on every `profile` change (e.g. after a photo upload calls
+  // refreshProfile()) — that would clobber whatever the user is mid-typing
+  // in other fields with the last-saved server values.
+  useEffect(() => {
+    if (hydratedRef.current || !profile) return;
+    hydratedRef.current = true;
+
+    setForm(prev => ({
+      ...prev,
+      profilePhotoUrl: profile.profile_photo_url || "",
+      gender: profile.gender || "",
+      dob: profile.date_of_birth ? profile.date_of_birth.split("T")[0] : "",
+      maritalStatus: profile.marital_status || "",
+      height: profile.height || "",
+      weight: profile.weight || "",
+      religion: profile.religion || "",
+      sect: profile.sect || "",
+      motherTongue: profile.mother_tongue || "",
+      nationalityId: profile.nationality_id || "",
+      countryId: profile.country_id || user?.country_id || "",
+      state: profile.state || "",
+      city: profile.city || "",
+      address: profile.address || "",
+      aboutMe: profile.about_me || "",
+      occupation: profile.occupation || "",
+      education: profile.education || "",
+      annualIncome: profile.annual_income || "",
+      fatherOccupation: profile.father_occupation || "",
+      motherOccupation: profile.mother_occupation || "",
+      siblingsCount: profile.siblings_count !== null && profile.siblings_count !== undefined ? String(profile.siblings_count) : "",
+      familyType: profile.family_type || "",
+      familyValues: profile.family_values || "",
+      smoking: profile.smoking || "",
+      drinking: profile.drinking || "",
+      prayerFrequency: profile.prayer_frequency || "",
+      religiousPreference: profile.religious_preference || "",
+      dietaryPreference: profile.dietary_preference || "",
+      partnerAgeRange: profile.partner_age_range || "",
+      partnerCountries: (profile.partner_countries || []).map(c => c.id),
+      partnerMaritalStatus: profile.partner_marital_status || "",
+      partnerEducation: profile.partner_education || "",
+      partnerOccupation: profile.partner_occupation || "",
+      partnerHeightRange: profile.partner_height_range || "",
+      partnerAbout: profile.partner_about || "",
+    }));
+
+    // Resume where they left off; a user revisiting an already-completed
+    // profile lands on step 1 in edit mode instead of being pushed to step 5.
+    if (profile.completion && !profile.completion.isComplete) {
+      setStep(Math.min(Math.max(profile.completion.currentStep, 1), 5));
+    } else {
+      setStep(1);
+    }
+
+    setHydrated(true);
+  }, [profile, user?.country_id]);
 
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -97,75 +300,99 @@ const ProfileSetupPage = () => {
       const exists = prev.partnerCountries.includes(countryId);
       return {
         ...prev,
-        partnerCountries: exists 
+        partnerCountries: exists
           ? prev.partnerCountries.filter(id => id !== countryId)
           : [...prev.partnerCountries, countryId]
       };
     });
   };
 
-  const handleNext = async () => {
-    if (step < steps.length) {
-      setStep((s) => s + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: user?.id,
-            profile_photo_url: form.profilePhotoUrl,
-            gender: form.gender,
-            date_of_birth: form.dob,
-            marital_status: form.maritalStatus,
-            height: form.height,
-            weight: form.weight,
-            religion: form.religion,
-            sect: form.sect,
-            mother_tongue: form.motherTongue,
-            nationality: form.nationality,
-            state: form.state,
-            city: form.city,
-            address: form.address,
-            about_me: form.aboutMe,
-            occupation: form.occupation,
-            education: form.education,
-            annual_income: form.annualIncome,
-            father_occupation: form.fatherOccupation,
-            mother_occupation: form.motherOccupation,
-            siblings_count: parseInt(form.siblingsCount) || 0,
-            family_type: form.familyType,
-            family_values: form.familyValues,
-            smoking: form.smoking,
-            drinking: form.drinking,
-            prayer_frequency: form.prayerFrequency,
-            religious_preference: form.religiousPreference,
-            dietary_preference: form.dietaryPreference,
-            partner_age_range: form.partnerAgeRange,
-            partner_countries: form.partnerCountries,
-            partner_marital_status: form.partnerMaritalStatus,
-            partner_education: form.partnerEducation,
-            partner_occupation: form.partnerOccupation,
-            partner_height_range: form.partnerHeightRange,
-            partner_about: form.partnerAbout,
-          }),
-        });
+  // ── Real photo upload: multipart/form-data straight to the backend, which
+  //    validates, stores the file on disk, and persists a user_photos row.
+  //    No blob: URLs are ever used as the "real" photo. ────────────────────
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file again later
+    if (!file) return;
 
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || "Failed to save profile");
-        }
-        
-        completeProfile({ profileComplete: true });
-        navigate("/dashboard");
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    setPhotoError("");
+
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setPhotoError("Please upload a JPEG, PNG, or WEBP image.");
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoError("Photo must be 5MB or smaller.");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("primary", "true");
+
+      const res = await authFetch(`${API_URL}/api/profile/me/photos`, {
+        method: "POST",
+        body: formData,
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to upload photo.");
+
+      update("profilePhotoUrl", result.photo.photo_url);
+      await refreshProfile();
+    } catch (err) {
+      setPhotoError(err.message);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleNext = async () => {
+    if (submittingRef.current) return;
+    setError("");
+
+    const clientErrors = validateStepClient(step, form);
+    if (clientErrors.length > 0) {
+      setError(clientErrors.join(" "));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    submittingRef.current = true;
+    setSaving(true);
+    const isLastStep = step === steps.length;
+
+    try {
+      const res = await authFetch(`${API_URL}/api/profile/me`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          step,
+          data: buildStepPayload(step, form),
+          ...(isLastStep ? { complete: true } : {}),
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok) {
+        const message = (result.errors && result.errors.join(" ")) || result.message || "Failed to save. Please try again.";
+        throw new Error(message);
       }
+
+      if (isLastStep) {
+        await refreshProfile();
+        navigate("/dashboard");
+      } else {
+        setStep((s) => s + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } catch (err) {
+      setError(err.message || "Something went wrong. Your data on this step was not lost — please try again.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      submittingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -174,8 +401,17 @@ const ProfileSetupPage = () => {
   const labelClass = "mb-1.5 block text-sm font-semibold text-text-primary";
   const sectionTitleClass = "text-xl font-bold text-text-primary mb-6 pb-2 border-b border-slate-100";
 
+  if (!hydrated && (profileLoading || !profile)) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.08),_transparent_40%),linear-gradient(180deg,_#ffffff_0%,_#fcfaf7_100%)] flex flex-col">
+        <SiteHeader />
+        <LoadingState message="Loading your profile…" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.08),_transparent_40%),linear-gradient(180deg,_#ffffff_0%,_#fcfaf7_100%)] flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(15,118,110,0.08),_transparent_40%),linear-gradient(180deg,_#ffffff_0%,_#fcfaf7_100%)] flex flex-col">
       <SiteHeader />
 
       <div className="flex flex-1 items-start justify-center px-4 md:px-8 py-8 md:py-12 w-full">
@@ -231,28 +467,38 @@ const ProfileSetupPage = () => {
 
           {/* Form card */}
           <div className="rounded-[1.75rem] border border-border-light bg-card p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">
-            
+
             {/* Step 1 — Personal */}
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <h2 className={sectionTitleClass}>Personal Information</h2>
-                
+
                 <div className="flex flex-col items-center mb-8">
-                  <div className="w-24 h-24 rounded-full bg-slate-100 border border-border-light flex items-center justify-center mb-3 overflow-hidden">
+                  <div className="relative w-24 h-24 rounded-full bg-slate-100 border border-border-light flex items-center justify-center mb-3 overflow-hidden">
                     {form.profilePhotoUrl ? (
-                      <img src={form.profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={`${API_URL}${form.profilePhotoUrl}`} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User size={32} className="text-text-muted" />
                     )}
+                    {uploadingPhoto && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Loader2 size={22} className="text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
-                  <label className="cursor-pointer flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary transition">
+                  <label className={`flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary transition ${uploadingPhoto ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
                     <Upload size={16} />
-                    Upload Photo
-                    <input type="file" className="hidden" onChange={(e) => {
-                       // Simulated photo upload
-                       update("profilePhotoUrl", URL.createObjectURL(e.target.files[0]));
-                    }} />
+                    {uploadingPhoto ? "Uploading…" : "Upload Photo"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                      onChange={handlePhotoChange}
+                    />
                   </label>
+                  {photoError && <p className="mt-2 text-xs font-semibold text-red-600">{photoError}</p>}
+                  <p className="mt-1 text-[11px] text-text-muted">JPEG, PNG or WEBP — up to 5MB</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -325,10 +571,10 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Nationality</label>
-                    <select value={form.nationality} onChange={(e) => update("nationality", e.target.value)} className={selectClass}>
+                    <select value={form.nationalityId} onChange={(e) => update("nationalityId", parseInt(e.target.value))} className={selectClass}>
                       <option value="">Select Nationality</option>
                       {nationalities.map(n => (
-                        <option key={n.id} value={n.nationality}>{n.nationality}</option>
+                        <option key={n.id} value={n.id}>{n.nationality}</option>
                       ))}
                     </select>
                   </div>
@@ -345,7 +591,7 @@ const ProfileSetupPage = () => {
                     <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Optional" className={inputClass} />
                   </div>
                 </div>
-                
+
                 <div className="mt-4">
                   <label className={labelClass}>About Me</label>
                   <textarea rows={4} value={form.aboutMe} onChange={(e) => update("aboutMe", e.target.value)} placeholder="Write a short, honest introduction about yourself..." className={`${inputClass} resize-none`} />
@@ -562,8 +808,9 @@ const ProfileSetupPage = () => {
               {step > 1 ? (
                 <button
                   type="button"
-                  onClick={() => setStep((s) => s - 1)}
-                  className="flex items-center gap-2 rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-text-primary transition hover:border-slate-400 hover:bg-background"
+                  onClick={() => { setError(""); setStep((s) => s - 1); }}
+                  disabled={saving}
+                  className="flex items-center gap-2 rounded-full border border-slate-300 px-6 py-2.5 text-sm font-semibold text-text-primary transition hover:border-slate-400 hover:bg-background disabled:opacity-50"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back
@@ -574,15 +821,15 @@ const ProfileSetupPage = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={loading}
+                disabled={saving}
                 className={`flex items-center gap-2 rounded-full px-8 py-2.5 text-sm font-semibold text-white shadow-lg transition ${
-                  loading 
-                    ? "bg-slate-400 cursor-not-allowed" 
+                  saving
+                    ? "bg-slate-400 cursor-not-allowed"
                     : "bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all"
                 }`}
               >
-                {loading ? "Saving..." : step === steps.length ? "Complete Profile" : "Continue"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
+                {saving ? "Saving..." : step === steps.length ? "Complete Profile" : "Continue"}
+                {!saving && <ArrowRight className="h-4 w-4" />}
               </button>
             </div>
           </div>

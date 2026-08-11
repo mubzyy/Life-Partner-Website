@@ -1,10 +1,15 @@
 const { Pool } = require("pg");
+// Load .env.local first (local dev), then fall back to .env (production)
+require("dotenv").config({ path: ".env.local", override: false });
 require("dotenv").config();
+
+const isProduction = process.env.NODE_ENV === "production";
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
+
 
 const countriesData = [
     { name: "United States", iso_code: "US", phone_code: "+1", flag_emoji: "🇺🇸" },

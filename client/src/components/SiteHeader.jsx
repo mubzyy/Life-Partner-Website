@@ -119,7 +119,7 @@ const SiteHeader = () => {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 top-14 z-50 w-52 rounded-2xl bg-card border border-border-light shadow-sm p-2">
+                <div className="absolute right-0 top-14 z-50 w-52 max-w-[calc(100vw-2rem)] rounded-2xl bg-card border border-border-light shadow-sm p-2">
                   <Link
                     to="/profile/me"
                     onClick={() => setDropdownOpen(false)}

@@ -1,31 +1,35 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle } from "lucide-react";
-import { allProfiles } from "./SearchPage";
+import EmptyState from "../components/EmptyState";
+import { authFetch } from "../lib/authFetch";
+import { photoUrl } from "../lib/photoUrl";
 
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/favorites`, { credentials: "omit" })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          // Map favorite DB entries to the dummy profile data
-          const favoritedProfiles = data.map(fav => {
-            return allProfiles.find(p => String(p.id) === String(fav.target_profile_id));
-          }).filter(Boolean); // remove undefined if not found
-          setFavorites(favoritedProfiles);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchFavorites();
   }, []);
+
+  const fetchFavorites = async () => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites`);
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const removeFavorite = async (id) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_profile_id: id })
@@ -38,78 +42,88 @@ const FavoritesPage = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-68px)] bg-[#f8fafc] px-4 md:px-6 py-6 md:py-10 flex items-center justify-center">
+        <div className="text-slate-500 font-medium">Loading favorites...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex-1 px-4 md:px-6 py-6 md:py-10">
-        <div className="w-full max-w-[1400px] mx-auto">
-          <div className="mb-8">
-            <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex flex-wrap items-center gap-2">
-              Your Favorites <Heart size={24} className="text-rose-600 shrink-0" fill="currentColor" />
-            </h1>
-            <p className="text-sm text-text-secondary m-0">Profiles you've saved for later</p>
+    <div className="min-h-[calc(100vh-68px)] bg-[#f8fafc] px-4 md:px-6 py-6 md:py-10">
+      <div className="w-full max-w-[1200px] mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-[26px] font-extrabold text-slate-800 mb-1">Your Favorites</h1>
+            <p className="text-[14px] text-slate-500">Profiles you've saved for later</p>
           </div>
+          <div className="text-[13px] font-bold text-slate-500 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+            {favorites.length} Saved Profile{favorites.length !== 1 ? 's' : ''}
+          </div>
+        </div>
 
-          {loading ? (
-            <div className="text-center text-text-muted py-20">Loading your favorites...</div>
-          ) : favorites.length === 0 ? (
-            <div className="bg-card rounded-3xl border border-border-light p-12 text-center max-w-2xl mx-auto mt-10">
-              <div className="w-20 h-20 bg-primary-very-light rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
-                <Heart size={32} />
-              </div>
-              <h2 className="text-2xl font-bold text-text-primary mb-3">No favorites yet</h2>
-              <p className="text-text-secondary mb-8">You haven't favorited any profiles. Start exploring and save the ones you like!</p>
-              <Link to="/search" className="inline-block py-3 px-8 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-sm transition-all hover:scale-105 no-underline">
-                Find Matches
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[18px]">
-              {favorites.map((p) => (
-                <div key={p.id} className="bg-card rounded-2xl border border-border-light overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md flex flex-col">
-                  {/* Photo */}
-                  <div className="h-[200px] relative flex items-center justify-center bg-primary-very-light overflow-hidden">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
-                    {/* Badges */}
-                    <div className="absolute top-2.5 left-2.5 flex gap-1.5">
-                      {p.online && (
-                        <span className="bg-green-500 text-white rounded-md text-[10px] font-bold py-1 px-1.5 flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-card" /> Online
-                        </span>
-                      )}
-                    </div>
-                    {/* Heart */}
-                    <button onClick={() => removeFavorite(p.id)}
-                      className="absolute bottom-2.5 right-2.5 w-9 h-9 rounded-full bg-card border border-border-light cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm">
-                      <Heart size={16} className="text-rose-600" fill="currentColor" />
-                    </button>
-                  </div>
+        {favorites.length === 0 ? (
+          <div className="py-12 bg-white rounded-[24px] shadow-sm border border-slate-100 text-center">
+            <EmptyState
+              icon={Heart}
+              title="No Favorites Yet"
+              description="When you see a profile you like, tap the heart icon to save it here."
+              actionText="Discover Profiles"
+              actionLink="/search"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 md:gap-5">
+            {favorites.map((p) => (
+              <div key={p.id} className="bg-white rounded-[20px] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 group relative flex flex-col">
+                
+                {/* Remove Button */}
+                <button 
+                  onClick={() => removeFavorite(p.id)}
+                  className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-sm opacity-0 group-hover:opacity-100"
+                  title="Remove from favorites"
+                >
+                  <Heart size={16} fill="currentColor" />
+                </button>
 
-                  {/* Info */}
-                  <div className="p-4 flex-1 flex flex-col min-w-0">
-                    <div className="flex items-center gap-1 mb-1 min-w-0">
-                      <span className="font-bold text-[15px] text-text-primary truncate">{p.name}, {p.age}</span>
-                      <span className="text-primary text-[15px] shrink-0">✓</span>
+                {/* Photo */}
+                <div className="h-[200px] relative overflow-hidden bg-slate-100 shrink-0">
+                  <img src={photoUrl(p.image) || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                  
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <div className="font-extrabold text-[16px] flex items-center gap-2">
+                      {p.name}, {p.age}
+                      {p.online && <span className="w-2 h-2 rounded-full bg-green-400 border border-white" title="Online" />}
                     </div>
-                    <div className="text-[13px] text-text-secondary mb-2 truncate">{p.profession}</div>
-                    <div className="text-[13px] text-text-muted mb-1 flex items-center gap-1.5 min-w-0">
-                      <span className="text-base leading-none shrink-0">📍</span> 
-                      <span className="truncate">{p.city}</span>
-                    </div>
-                    
-                    <div className="mt-auto pt-4 flex items-center gap-2">
-                      <button className="w-9 h-9 rounded-xl border border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
-                        <MessageCircle size={16} className="text-text-secondary" />
-                      </button>
-                      <Link to={`/profile/${p.id}`} className="flex-1 text-center py-2 text-[13px] font-bold bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all no-underline">
-                        View Profile
-                      </Link>
-                    </div>
+                    <div className="text-[12px] opacity-90 truncate">{p.profession}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                {/* Content */}
+                <div className="p-4 flex-1 flex flex-col">
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded-md text-[11px] font-bold">📍 {p.city}</span>
+                    <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded-md text-[11px] font-bold">🎓 {p.edu ? p.edu.split('·')[0].trim() : "N/A"}</span>
+                    <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded-md text-[11px] font-bold">🕌 {p.sect}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-auto">
+                    <Link to={`/profile/${p.id}`} className="flex-1 text-center py-2 text-[13px] font-bold text-[#E91E63] bg-pink-50 hover:bg-pink-100 rounded-xl transition-colors no-underline">
+                      View Profile
+                    </Link>
+                    <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors shrink-0">
+                      <MessageCircle size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

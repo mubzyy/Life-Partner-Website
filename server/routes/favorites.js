@@ -1,30 +1,56 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const authMiddleware = require("../middleware/auth");
 
-// authMiddleware should ideally be imported, but we can verify token inline or assume it's attached via middleware before this route
-// Let's create a simple auth middleware inline if we need to verify JWT
-const jwt = require("jsonwebtoken");
-
-const authMiddleware = (req, res, next) => {
-    const token = req.cookies?.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
-};
 
 // Get all favorites for the logged in user
 router.get("/", authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
-        const result = await pool.query(`SELECT target_profile_id, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC`, [userId]);
-        res.json(result.rows);
+        const query = `
+            SELECT 
+                u.id as target_profile_id, u.first_name, u.last_name, 
+                up.profile_photo_url as image, 
+                up.gender, up.date_of_birth, up.marital_status, 
+                up.city, up.state, up.nationality,
+                up.occupation as profession, up.education, 
+                up.religion, up.sect, up.about_me,
+                f.created_at
+            FROM favorites f
+            JOIN users u ON f.target_profile_id = u.id
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            WHERE f.user_id = $1
+            ORDER BY f.created_at DESC
+        `;
+        const result = await pool.query(query, [userId]);
+        
+        const favorites = result.rows.map(profile => {
+            let age = null;
+            if (profile.date_of_birth) {
+                const dob = new Date(profile.date_of_birth);
+                const diff = Date.now() - dob.getTime();
+                age = Math.abs(new Date(diff).getUTCFullYear() - 1970);
+            }
+            
+            return {
+                id: profile.target_profile_id,
+                target_profile_id: profile.target_profile_id,
+                name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : "Unknown",
+                age: age || "N/A",
+                gender: profile.gender,
+                maritalStatus: profile.marital_status,
+                religion: profile.religion,
+                sect: profile.sect,
+                profession: profile.profession || "Not specified",
+                city: profile.city || "Not specified",
+                edu: profile.education || "Not specified",
+                image: profile.image || null,
+                online: false
+            };
+        });
+
+        res.json(favorites);
     } catch (err) {
         console.error("Error fetching favorites:", err);
         res.status(500).json({ error: "Server error" });

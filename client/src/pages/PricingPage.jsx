@@ -204,7 +204,7 @@ const PricingPage = () => {
   return (
     <>
 
-      <div className="min-h-[calc(100vh-72px)] bg-white px-4 md:px-8 py-8 md:py-12 overflow-x-hidden">
+      <div className="min-h-[calc(100vh-72px)] bg-white px-4 md:px-8 py-8 md:py-12">
         <div className="w-full max-w-[1200px] mx-auto flex flex-col gap-10">
 
           {/* ── HEADER ─────────────────────────────────────────────────────── */}
@@ -258,7 +258,7 @@ const PricingPage = () => {
           ) : (
             <>
               {/* ── PRICING CARDS ──────────────────────────────────────────── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
                 {PLANS.map(plan => {
                   const isSelected = selectedPlanId === plan.id;
                   const price = getPrice(plan.basePrice);

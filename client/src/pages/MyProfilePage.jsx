@@ -6,26 +6,10 @@ import {
   Globe, Home, Utensils, Moon, AlertCircle
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-
-// ── Completion calculator ──────────────────────────────────────────────────────
-const PROFILE_FIELDS = [
-  "profile_photo_url", "gender", "date_of_birth", "marital_status",
-  "height", "weight", "religion", "sect", "mother_tongue", "nationality",
-  "state", "city", "about_me", "occupation", "education",
-  "father_occupation", "mother_occupation", "siblings_count",
-  "family_type", "family_values", "smoking", "drinking",
-  "prayer_frequency", "dietary_preference",
-  "partner_age_range", "partner_marital_status", "partner_education",
-];
-
-const getCompletion = (profile) => {
-  if (!profile) return 0;
-  const filled = PROFILE_FIELDS.filter(k => {
-    const v = profile[k];
-    return v !== null && v !== undefined && v !== "" && String(v).trim() !== "";
-  });
-  return Math.round((filled.length / PROFILE_FIELDS.length) * 100);
-};
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
+import EmptyState from "../components/EmptyState";
+import { photoUrl } from "../lib/photoUrl";
 
 // ── Info Row ──────────────────────────────────────────────────────────────────
 const InfoRow = ({ label, value }) => {
@@ -54,21 +38,27 @@ const InfoCard = ({ title, icon, children }) => (
 // ── Main Component ─────────────────────────────────────────────────────────────
 const MyProfilePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, profile, profileLoading, refreshProfile } = useAuth();
   const [error, setError] = useState(false);
 
+  // Always reload from the backend on visit — never rely on stale state from
+  // an earlier page. GET /api/profile/me is authenticated via the JWT, so
+  // there's no way to see (or accidentally request) another user's data here.
+  const loadProfile = async () => {
+    setError(false);
+    const data = await refreshProfile();
+    if (!data) setError(true);
+  };
+
   useEffect(() => {
-    if (!user?.id) { setLoading(false); return; }
-    fetch(`${import.meta.env.VITE_API_URL}/api/profile/${user.id}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
-      .then(data => { setProfile(data); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
+    if (!user?.id) return;
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  const handleRetry = () => loadProfile();
+
+  const loading = profileLoading && !profile;
 
   // Derived display values
   const displayName = user?.name
@@ -76,7 +66,10 @@ const MyProfilePage = () => {
 
   const initials = displayName.slice(0, 2).toUpperCase();
 
-  const completion = getCompletion(profile);
+  // Real, backend-calculated completion — same number the Dashboard widget
+  // and the Complete Profile wizard show. No local recalculation here.
+  const completion = profile?.completion?.profileCompletion ?? 0;
+  const hasAnyProfileData = completion > 0;
 
   const dob = profile?.date_of_birth
     ? new Date(profile.date_of_birth).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -89,39 +82,39 @@ const MyProfilePage = () => {
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-72px)] flex items-center justify-center bg-[#f9fafb]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-[#E91E63] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[14px] text-slate-500 font-medium">Loading your profile…</p>
-        </div>
+      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb]">
+        <LoadingState message="Loading your profile…" />
+      </div>
+    );
+  }
+
+  // ── Error ───────────────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb]">
+        <ErrorState onRetry={handleRetry} />
       </div>
     );
   }
 
   // ── No Profile Yet ──────────────────────────────────────────────────────────
-  if (!profile || error) {
+  if (!profile || !hasAnyProfileData) {
     return (
-      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] flex flex-col items-center justify-center px-4 text-center">
-        <div className="bg-white rounded-[28px] border border-slate-200 shadow-sm p-10 max-w-md w-full">
-          <div className="w-20 h-20 rounded-full bg-[#fff0f5] flex items-center justify-center mx-auto mb-5">
-            <User size={36} className="text-[#E91E63]" />
-          </div>
-          <h2 className="text-[22px] font-bold text-slate-800 mb-2">Your Profile is Empty</h2>
-          <p className="text-[14px] text-slate-500 mb-8 leading-relaxed">
-            Complete your profile to get better matches and let others know more about you.
-          </p>
-          <Link to="/profile-setup"
-            className="inline-flex items-center justify-center gap-2 bg-[#E91E63] hover:bg-[#d81557] text-white font-bold rounded-[14px] px-8 py-3.5 text-[14px] no-underline transition-colors shadow-md">
-            Complete Profile <ChevronRight size={16} />
-          </Link>
-        </div>
+      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb]">
+        <EmptyState
+          icon={User}
+          title="Your Profile is Empty"
+          description="Complete your profile to get better matches and let others know more about you."
+          actionText="Complete Profile"
+          actionLink="/profile-setup"
+        />
       </div>
     );
   }
 
   // ── Full Profile View ───────────────────────────────────────────────────────
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8 overflow-x-hidden">
+    <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
       <div className="w-full max-w-[1100px] mx-auto flex flex-col gap-6">
 
         {/* ── HEADER CARD ──────────────────────────────────────────────────── */}
@@ -131,11 +124,11 @@ const MyProfilePage = () => {
 
           <div className="px-6 md:px-8 pb-7 relative">
             {/* Avatar */}
-            <div className="relative -mt-[52px] mb-4 flex items-end justify-between flex-wrap gap-4">
-              <div className="relative">
+            <div className="relative -mt-[52px] mb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div className="relative self-start sm:self-auto">
                 <div className="w-[100px] h-[100px] rounded-full border-4 border-white shadow-md bg-[#E91E63] flex items-center justify-center text-white text-[32px] font-bold overflow-hidden">
                   {profile.profile_photo_url
-                    ? <img src={profile.profile_photo_url} alt={displayName} className="w-full h-full object-cover" />
+                    ? <img src={photoUrl(profile.profile_photo_url)} alt={displayName} className="w-full h-full object-cover" />
                     : initials
                   }
                 </div>
@@ -144,7 +137,7 @@ const MyProfilePage = () => {
               </div>
 
               {/* Edit buttons */}
-              <div className="flex flex-wrap gap-2 mt-[52px] sm:mt-0">
+              <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                 <button
                   onClick={() => navigate("/profile-setup")}
                   className="flex items-center gap-2 bg-white border-2 border-[#E91E63] text-[#E91E63] hover:bg-[#fff0f5] font-bold rounded-[12px] px-4 py-2 text-[13px] transition-colors cursor-pointer">
@@ -315,13 +308,27 @@ const MyProfilePage = () => {
             <h3 className="text-[15px] font-bold text-slate-800 m-0">Partner Preferences</h3>
           </div>
           <div className="px-6 py-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-x-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
               <InfoRow label="Preferred Age Range"     value={profile.partner_age_range} />
               <InfoRow label="Preferred Marital Status" value={profile.partner_marital_status} />
               <InfoRow label="Preferred Education"     value={profile.partner_education} />
               <InfoRow label="Preferred Height"        value={profile.partner_height_range} />
               <InfoRow label="Preferred Occupation"    value={profile.partner_occupation} />
             </div>
+            {profile.partner_countries?.length > 0 && (
+              <div className="border-t border-slate-100 mt-2 pt-4">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                  Preferred Countries
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {profile.partner_countries.map(c => (
+                    <span key={c.id} className="bg-[#fff0f5] border border-pink-100 rounded-full px-2.5 py-1 text-[12px] font-semibold text-[#E91E63]">
+                      {c.flag_emoji} {c.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {profile.partner_about && (
               <div className="border-t border-slate-100 mt-2 pt-4">
                 <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
@@ -361,7 +368,7 @@ const MyProfilePage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {/* Primary photo */}
                 <div className="col-span-2 row-span-2 aspect-square rounded-[16px] overflow-hidden border border-slate-100 relative group">
-                  <img src={profile.profile_photo_url} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={photoUrl(profile.profile_photo_url)} alt="Profile" className="w-full h-full object-cover" />
                   <div className="absolute top-2 left-2 bg-[#E91E63] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     Main
                   </div>
