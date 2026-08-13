@@ -187,7 +187,7 @@ export const faqItems = [
   },
   {
     question: 'Are the profiles real?',
-    answer: 'For now, the website uses realistic dummy profiles to simulate the final product experience without backend data.',
+    answer: 'Yes. Every profile is created by a real registered member and stored in our database — nothing you see after signing up is placeholder data.',
   },
   {
     question: 'How does matching work?',

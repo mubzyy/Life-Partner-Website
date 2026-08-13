@@ -1,26 +1,31 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { authFetch } from "../lib/authFetch";
 import {
   Shield, Lock, RefreshCw, Headphones, CreditCard,
   ChevronDown, ChevronLeft, CheckCircle2, Check, Gem, Crown, Star, Send,
   HelpCircle, AlertCircle, Eye, EyeOff
 } from "lucide-react";
 
-// ─── Static data ──────────────────────────────────────────────────────────────
+const API_URL = import.meta.env.VITE_API_URL;
 
-const PLANS = {
-  basic:        { id: "basic",        name: "Basic Plan",        icon: <Send size={22} className="text-[#E91E63]" />,  basePrice: 999,  desc: "Profile visibility, see who likes you & more" },
-  premium:      { id: "premium",      name: "Premium Plan",      icon: <Gem size={22} className="text-[#E91E63]" />,   basePrice: 1999, desc: "Unlimited messages, advanced filters, profile boost & more" },
-  "premium-plus": { id: "premium-plus", name: "Premium Plus",   icon: <Star size={22} className="text-[#E91E63]" />,  basePrice: 3499, desc: "Everything in Premium plus 5× profile boost & exclusive badge" },
-  ultimate:     { id: "ultimate",     name: "Ultimate Plan",     icon: <Crown size={22} className="text-[#E91E63]" />, basePrice: 5999, desc: "Top search results, personal match recommendations & more" },
+// ─── Static presentation content only — icon/desc per tier. All prices, plan
+// ids and durations come from GET /api/subscriptions/plans (same source of
+// truth PricingPage and the backend use). ───────────────────────────────────
+const TIER_PRESENTATION = {
+  basic:          { name: "Basic Plan",        icon: <Send size={22} className="text-[#E91E63]" />,  desc: "Profile visibility, see who likes you & more" },
+  premium:        { name: "Premium Plan",      icon: <Gem size={22} className="text-[#E91E63]" />,   desc: "Unlimited messages, advanced filters, profile boost & more" },
+  "premium-plus": { name: "Premium Plus",      icon: <Star size={22} className="text-[#E91E63]" />,  desc: "Everything in Premium plus 5× profile boost & exclusive badge" },
+  ultimate:       { name: "Ultimate Plan",     icon: <Crown size={22} className="text-[#E91E63]" />, desc: "Top search results, personal match recommendations & more" },
 };
 
-const DURATIONS = [
-  { months: 1,  label: "1 Month",   discount: 0  },
-  { months: 3,  label: "3 Months",  discount: 10 },
-  { months: 6,  label: "6 Months",  discount: 20 },
-  { months: 12, label: "12 Months", discount: 30 },
-];
+const DURATION_LABELS = { 1: "1 Month", 3: "3 Months", 6: "6 Months", 12: "12 Months" };
+
+// "basic-3mo" → { tier: "basic", months: 3 }
+const parsePlanId = (planId) => {
+  const match = /^(.+)-(\d+)mo$/.exec(planId || "");
+  return match ? { tier: match[1], months: parseInt(match[2], 10) } : { tier: "premium", months: 1 };
+};
 
 const PAYMENT_METHODS = [
   { id: "card",     label: "Credit / Debit Card",  logos: ["VISA","MC","JCB","AMEX"] },
@@ -102,15 +107,22 @@ const formatExpiry     = (v) => {
 };
 
 // ─── Success overlay ──────────────────────────────────────────────────────────
-const SuccessOverlay = ({ plan, total, onDone }) => (
+// Deliberately does NOT say "Payment Successful" or "charged" — no real
+// payment provider is configured (see server/lib/paymentProvider.js), so the
+// copy here must not imply real money moved.
+const SuccessOverlay = ({ planName, total, testMode, onDone }) => (
   <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div className="bg-white rounded-[28px] p-10 max-w-sm w-full text-center shadow-2xl">
       <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
         <CheckCircle2 size={40} className="text-green-500" fill="#22c55e" color="white" />
       </div>
-      <h2 className="text-[24px] font-extrabold text-slate-800 mb-2">Payment Successful!</h2>
-      <p className="text-[14px] text-slate-500 mb-1">Welcome to <span className="font-bold text-[#E91E63]">{plan.name}</span></p>
-      <p className="text-[13px] text-slate-400 mb-8">PKR {total.toLocaleString()} charged. Your premium features are now active.</p>
+      <h2 className="text-[24px] font-extrabold text-slate-800 mb-2">{testMode ? "Subscription Activated (Test Mode)" : "Payment Successful!"}</h2>
+      <p className="text-[14px] text-slate-500 mb-1">Welcome to <span className="font-bold text-[#E91E63]">{planName}</span></p>
+      <p className="text-[13px] text-slate-400 mb-8">
+        {testMode
+          ? `No real payment was processed — this app has no payment provider configured yet. PKR ${total.toLocaleString()} was recorded as a test transaction, and your premium features are active.`
+          : `PKR ${total.toLocaleString()} charged. Your premium features are now active.`}
+      </p>
       <button
         onClick={onDone}
         className="w-full py-3.5 bg-[#E91E63] hover:bg-[#d81557] text-white font-bold rounded-[14px] text-[15px] transition-colors border-none cursor-pointer">
@@ -125,30 +137,50 @@ const CheckoutPage = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
 
-  // Allow the PricingPage to pass state when navigating here
-  const passedPlanId   = location.state?.planId   || "premium";
-  const passedDuration = location.state?.duration || 1;
+  // PricingPage passes a real plan id (e.g. "premium-3mo"); default to the
+  // real 1-month Premium plan if none was passed.
+  const passedPlanId = location.state?.planId || "premium-1mo";
 
-  const [planId,   setPlanId]   = useState(passedPlanId);
-  const [duration, setDuration] = useState(passedDuration);
-  const [method,   setMethod]   = useState("card");
+  const [planId, setPlanId] = useState(passedPlanId);
+  const [method, setMethod] = useState("card");
   const [checkoutStep, setCheckoutStep] = useState(1); // 1=plan, 2=payment, 3=review, 4=complete
+  const [plans, setPlans] = useState([]); // real rows from GET /api/subscriptions/plans
+  const [plansLoading, setPlansLoading] = useState(true);
 
   // Card form
   const [card, setCard] = useState({ number: "", name: "", expiry: "", cvv: "" });
   const [showCvv, setShowCvv] = useState(false);
   const [errors, setErrors]   = useState({});
+  const [payError, setPayError] = useState("");
   const [paying, setPaying]   = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successResult, setSuccessResult] = useState(null); // { testMode } once checkout succeeds
 
-  const plan = PLANS[planId] || PLANS.premium;
-  const dur  = DURATIONS.find(d => d.months === duration) || DURATIONS[0];
+  // One idempotency key per checkout attempt — generated on the first Pay
+  // click and reused for that same attempt (e.g. a network retry), so an
+  // accidental double-submit can't create two subscriptions/transactions.
+  // Reset whenever the user picks a different plan (a genuinely new attempt).
+  const idempotencyKeyRef = useRef(null);
+  useEffect(() => { idempotencyKeyRef.current = null; }, [planId]);
 
-  // Price math
-  const monthlyPrice  = Math.round(plan.basePrice * (1 - dur.discount / 100));
-  const totalPrice    = monthlyPrice * dur.months;
-  const regularTotal  = plan.basePrice * dur.months;
-  const savings       = regularTotal - totalPrice;
+  useEffect(() => {
+    fetch(`${API_URL}/api/subscriptions/plans`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setPlans(data); })
+      .catch(console.error)
+      .finally(() => setPlansLoading(false));
+  }, []);
+
+  const { tier } = parsePlanId(planId);
+  const presentation = TIER_PRESENTATION[tier] || TIER_PRESENTATION.premium;
+  const plan = plans.find(p => p.id === planId);
+  const oneMonthPlan = plans.find(p => p.id === `${tier}-1mo`);
+
+  // Price math — entirely from the real plan rows, never a local formula.
+  const totalPrice   = plan?.price_cents ?? 0;
+  const months       = plan?.duration_months ?? 1;
+  const monthlyPrice = Math.round(totalPrice / months);
+  const regularTotal = (oneMonthPlan?.price_cents ?? totalPrice) * months;
+  const savings       = Math.max(0, regularTotal - totalPrice);
 
   // ── Validation ───────────────────────────────────────────────────────────
   const validate = () => {
@@ -164,41 +196,63 @@ const CheckoutPage = () => {
 
   // ── Payment handler ──────────────────────────────────────────────────────
   const handlePay = useCallback(async () => {
+    setPayError("");
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length) return;
+    if (!plan) { setPayError("This plan is no longer available. Please pick another."); return; }
+
+    if (!idempotencyKeyRef.current) {
+      idempotencyKeyRef.current = crypto.randomUUID();
+    }
 
     setPaying(true);
-    
     try {
-      const { authFetch } = await import("../lib/authFetch");
-      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/subscriptions`, {
+      const res = await authFetch(`${API_URL}/api/subscriptions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan_id: planId, duration_months: duration, payment_method: method })
+        body: JSON.stringify({ plan_id: planId, payment_method: method, idempotency_key: idempotencyKeyRef.current })
       });
-      
+      const data = await res.json();
+
       if (res.ok) {
-        setSuccess(true);
+        setSuccessResult({ testMode: data.testMode });
       } else {
-        alert("Payment failed");
+        setPayError(data.message || "Payment failed. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("Payment failed");
+      setPayError("Unable to reach the server. Please try again.");
     } finally {
       setPaying(false);
     }
-  }, [card, method, planId, duration]);
+  }, [card, method, planId, plan]);
 
   const inputCls = (field) =>
     `w-full rounded-[12px] border ${errors[field] ? "border-red-400 bg-red-50" : "border-slate-200 bg-[#f9fafb]"} 
      px-4 py-3 text-[14px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#E91E63] focus:bg-white transition-colors`;
 
+  if (!plansLoading && !plan) {
+    // The passed/default plan id doesn't exist (or was deactivated) — don't
+    // silently show wrong numbers, send the user back to pick a real one.
+    return (
+      <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] flex items-center justify-center px-4">
+        <div className="bg-white rounded-[22px] border border-slate-200 shadow-sm p-8 max-w-sm text-center">
+          <AlertCircle size={32} className="text-red-500 mx-auto mb-3" />
+          <h2 className="text-[16px] font-bold text-slate-800 mb-2">Plan not found</h2>
+          <p className="text-[13px] text-slate-500 mb-5">This plan isn't available anymore.</p>
+          <button onClick={() => navigate("/packages")} className="py-2.5 px-6 rounded-full font-bold text-[13px] text-white bg-[#E91E63] hover:bg-pink-600 transition-colors">
+            Back to Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      {success && (
-        <SuccessOverlay plan={plan} total={totalPrice} onDone={() => navigate("/dashboard")} />
+      {successResult && (
+        <SuccessOverlay planName={presentation.name} total={totalPrice} testMode={successResult.testMode} onDone={() => navigate("/dashboard")} />
       )}
 
       <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
@@ -207,7 +261,7 @@ const CheckoutPage = () => {
           {/* Step Bar */}
           <StepBar step={checkoutStep} />
 
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
 
             {/* ── LEFT COLUMN ─────────────────────────────────────────────── */}
             <div className="flex-1 flex flex-col gap-5 min-w-0 w-full">
@@ -219,7 +273,7 @@ const CheckoutPage = () => {
                   <h1 className="text-[22px] font-extrabold text-slate-800 m-0">Checkout</h1>
                 </div>
                 <p className="text-[13px] text-slate-500 m-0 flex items-center gap-1.5">
-                  <Shield size={13} className="text-green-500" /> Secure checkout. Your data is protected.
+                  <Shield size={13} className="text-green-500" /> Test-mode checkout — no real payment provider is connected yet.
                 </p>
               </div>
 
@@ -228,11 +282,11 @@ const CheckoutPage = () => {
                 <h2 className="text-[14px] font-bold text-slate-800 mb-4">Selected Plan</h2>
                 <div className="flex items-center gap-4 p-4 rounded-[16px] bg-[#fff9fb] border border-pink-100">
                   <div className="w-14 h-14 rounded-full bg-[#fff0f5] border border-pink-100 flex items-center justify-center shrink-0">
-                    {plan.icon}
+                    {presentation.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[15px] font-extrabold text-slate-800">{plan.name}</div>
-                    <div className="text-[12px] text-slate-500 mt-0.5">{plan.desc}</div>
+                    <div className="text-[15px] font-extrabold text-slate-800">{presentation.name}</div>
+                    <div className="text-[12px] text-slate-500 mt-0.5">{presentation.desc}</div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="text-[18px] font-extrabold text-[#E91E63]">PKR {monthlyPrice.toLocaleString()}</div>
@@ -250,13 +304,15 @@ const CheckoutPage = () => {
               <div className="bg-white rounded-[22px] border border-slate-200 shadow-sm p-6">
                 <h2 className="text-[14px] font-bold text-slate-800 mb-4">Billing Period</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {DURATIONS.map(d => {
-                    const active  = duration === d.months;
-                    const total   = Math.round(plan.basePrice * (1 - d.discount / 100)) * d.months;
+                  {plans.filter(p => p.id.startsWith(`${tier}-`)).sort((a, b) => a.duration_months - b.duration_months).map(p => {
+                    const active = planId === p.id;
+                    const discount = oneMonthPlan
+                      ? Math.round((1 - p.price_cents / (oneMonthPlan.price_cents * p.duration_months)) * 100)
+                      : 0;
                     return (
                       <button
-                        key={d.months}
-                        onClick={() => setDuration(d.months)}
+                        key={p.id}
+                        onClick={() => setPlanId(p.id)}
                         className={`relative flex flex-col items-center py-4 px-3 rounded-[16px] border-2 transition-all cursor-pointer text-center
                           ${active ? "border-[#E91E63] bg-[#fff0f5] shadow-md" : "border-slate-200 bg-white hover:border-pink-200 hover:bg-[#fff9fb]"}`}>
                         {active && (
@@ -264,10 +320,10 @@ const CheckoutPage = () => {
                             <Check size={11} strokeWidth={3} className="text-white" />
                           </div>
                         )}
-                        <div className={`text-[13px] font-bold mb-1 ${active ? "text-[#E91E63]" : "text-slate-800"}`}>{d.label}</div>
-                        <div className="text-[12px] text-slate-600">PKR {total.toLocaleString()}</div>
-                        {d.discount > 0 && (
-                          <div className={`text-[11px] font-extrabold mt-1 ${active ? "text-[#E91E63]" : "text-[#E91E63]"}`}>{d.discount}% OFF</div>
+                        <div className={`text-[13px] font-bold mb-1 ${active ? "text-[#E91E63]" : "text-slate-800"}`}>{DURATION_LABELS[p.duration_months] || `${p.duration_months} Months`}</div>
+                        <div className="text-[12px] text-slate-600">PKR {p.price_cents.toLocaleString()}</div>
+                        {discount > 0 && (
+                          <div className="text-[11px] font-extrabold mt-1 text-[#E91E63]">{discount}% OFF</div>
                         )}
                       </button>
                     );
@@ -419,6 +475,12 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
+              {payError && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 text-sm text-red-600">
+                  {payError}
+                </div>
+              )}
+
               {/* Footer Actions */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-[22px] border border-slate-200 shadow-sm px-6 py-5">
                 <button
@@ -429,7 +491,7 @@ const CheckoutPage = () => {
                 <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center gap-4">
                   <button
                     onClick={handlePay}
-                    disabled={paying}
+                    disabled={paying || plansLoading || !plan}
                     className="flex items-center gap-2 bg-[#E91E63] hover:bg-[#d81557] disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold rounded-[14px] px-8 py-3.5 text-[15px] transition-colors border-none cursor-pointer shadow-lg min-w-[220px] justify-center">
                     {paying ? (
                       <>
@@ -469,7 +531,7 @@ const CheckoutPage = () => {
                 <h2 className="text-[16px] font-extrabold text-slate-800 mb-5">Order Summary</h2>
 
                 <div className="flex items-center justify-between text-[13px] text-slate-600 mb-3">
-                  <span>{plan.name} ({dur.label})</span>
+                  <span>{presentation.name} ({DURATION_LABELS[months] || `${months} Months`})</span>
                   <span className="font-bold text-slate-800">PKR {regularTotal.toLocaleString()}</span>
                 </div>
 

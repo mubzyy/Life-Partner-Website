@@ -53,15 +53,44 @@ router.post("/", authMiddleware, async (req, res) => {
             return res.status(200).json({ message: "Viewed self, ignored" });
         }
 
-        // We only insert if they haven't viewed in the last 24 hours to prevent spam, 
-        // or we just insert every time. Let's just insert for now.
-        const query = `
-            INSERT INTO profile_views (viewer_id, viewed_id)
-            VALUES ($1, $2)
-        `;
-        await pool.query(query, [viewerId, viewed_id]);
+        const blockCheck = await pool.query(
+            `SELECT id FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`,
+            [viewerId, viewed_id]
+        );
+        if (blockCheck.rows.length > 0) {
+            return res.status(200).json({ message: "Blocked relationship, not recorded." });
+        }
 
-        res.json({ success: true });
+        // Dedup: don't record (or re-notify) a repeat view from the same
+        // viewer within a 24h window — refreshing/reopening a profile
+        // shouldn't spam the owner's notifications or inflate their view count.
+        const recent = await pool.query(
+            `SELECT id FROM profile_views
+             WHERE viewer_id = $1 AND viewed_id = $2 AND viewed_at >= NOW() - INTERVAL '24 hours'`,
+            [viewerId, viewed_id]
+        );
+        if (recent.rows.length > 0) {
+            return res.json({ success: true, deduped: true });
+        }
+
+        await pool.query(
+            `INSERT INTO profile_views (viewer_id, viewed_id) VALUES ($1, $2)`,
+            [viewerId, viewed_id]
+        );
+
+        // Notify the profile owner — best-effort, never blocks the view itself.
+        try {
+            const viewer = await pool.query("SELECT first_name FROM users WHERE id = $1", [viewerId]);
+            const viewerName = viewer.rows[0]?.first_name || "Someone";
+            await pool.query(`
+                INSERT INTO notifications (user_id, title, message, type, action_url)
+                VALUES ($1, 'Profile View', $2, 'view', '/visitors')
+            `, [viewed_id, `${viewerName} viewed your profile.`]);
+        } catch (e) {
+            console.error("Error creating profile view notification", e);
+        }
+
+        res.json({ success: true, deduped: false });
     } catch (err) {
         console.error("Error recording visitor:", err);
         res.status(500).json({ error: "Server error" });
@@ -96,11 +125,21 @@ router.get("/stats", authMiddleware, async (req, res) => {
         `, [userId]);
         const uniqueWeeklyViews = parseInt(uniqueWeeklyResult.rows[0].count);
 
-        // Mock chart data for now, ideally we group by day
-        const chartData = [
-            { day: "Mon", value: 0 }, { day: "Tue", value: 0 }, { day: "Wed", value: 0 },
-            { day: "Thu", value: 0 }, { day: "Fri", value: 0 }, { day: "Sat", value: 0 }, { day: "Sun", value: 0 }
-        ];
+        // Real per-day counts for the last 7 days (today inclusive). Days with
+        // zero views still appear, via generate_series + LEFT JOIN, so the
+        // chart's x-axis is always a complete week rather than only days that
+        // happened to have activity.
+        const dailyResult = await pool.query(`
+            SELECT gs::date AS day, COUNT(pv.id) AS count
+            FROM generate_series(CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, INTERVAL '1 day') AS gs
+            LEFT JOIN profile_views pv ON pv.viewed_id = $1 AND pv.viewed_at::date = gs::date
+            GROUP BY gs::date
+            ORDER BY gs::date
+        `, [userId]);
+        const chartData = dailyResult.rows.map(row => ({
+            day: new Date(row.day).toLocaleDateString("en-US", { weekday: "short" }),
+            value: parseInt(row.count, 10),
+        }));
 
         res.json({
             stats: [

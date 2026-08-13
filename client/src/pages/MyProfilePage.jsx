@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Edit3, MapPin, Briefcase, Heart, User, Users, Coffee, Shield,
   CheckCircle2, GraduationCap, Book, Camera, ChevronRight, Star,
-  Globe, Home, Utensils, Moon, AlertCircle
+  Globe, Home, Utensils, Moon, AlertCircle, Crown
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import LoadingState from "../components/LoadingState";
@@ -161,6 +161,13 @@ const MyProfilePage = () => {
                     <Shield size={12} className="text-[#E91E63]" />
                     <span className="text-[11px] font-bold text-[#E91E63]">Verified</span>
                   </div>
+                  {/* Real premium status — from GET /api/profile/me (isPremium), backed by an active subscriptions row. */}
+                  {profile.isPremium && (
+                    <div className="flex items-center gap-1 bg-[#fff0f5] border border-pink-100 rounded-full px-2.5 py-0.5">
+                      <Crown size={12} className="text-[#E91E63]" />
+                      <span className="text-[11px] font-bold text-[#E91E63]">Premium</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Profession & Location */}

@@ -1,48 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, SlidersHorizontal, Users } from "lucide-react";
+import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, Users, Crown } from "lucide-react";
 import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
 
-const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]", "bg-[#7e2d2d]", "bg-[#2d4c7e]", "bg-[#6e2d7a]"][i % 8];
-const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e25] to-[#2d7a6e50]", "bg-gradient-to-br from-[#6b4c8a25] to-[#6b4c8a50]", "bg-gradient-to-br from-[#2d6e7e25] to-[#2d6e7e50]", "bg-gradient-to-br from-[#7a6e2d25] to-[#7a6e2d50]", "bg-gradient-to-br from-[#4c6e2d25] to-[#4c6e2d50]", "bg-gradient-to-br from-[#7e2d2d25] to-[#7e2d2d50]", "bg-gradient-to-br from-[#2d4c7e25] to-[#2d4c7e50]", "bg-gradient-to-br from-[#6e2d7a25] to-[#6e2d7a50]"][i % 8];
+const API_URL = import.meta.env.VITE_API_URL;
+const RESULTS_PER_PAGE = 20;
 
+const DEFAULT_FILTERS = {
+  minAge: 18,
+  maxAge: 40,
+  gender: 'Any',
+  city: '',
+  maritalStatus: '',
+  education: '',
+  profession: '',
+  religion: '',
+  sect: ''
+};
 
+// These option lists must match the real enum values Complete Profile
+// actually writes to user_profiles (server/lib/profileFields.js) — a filter
+// whose options don't exist in the data can never match anything real.
+const FILTER_OPTIONS = {
+  maritalStatus: ["Never Married", "Divorced", "Widowed", "Already Married"],
+  education: ["High School", "Associate Degree", "Bachelor's Degree", "Master's Degree", "Doctorate / PhD", "Islamic Education"],
+  religion: ["Islam", "Other"],
+  sect: ["Sunni", "Shia", "Just Muslim", "Other"],
+};
 
 const SearchPage = () => {
-  const [query, setQuery] = useState("");
+  const [queryInput, setQueryInput] = useState("");   // what's typed
+  const [query, setQuery] = useState("");              // what was actually searched
   const [heartedCards, setHeartedCards] = useState({});
-  const [profiles, setProfiles] = useState([]);
+  const [likedCards, setLikedCards] = useState({});
+  const [results, setResults] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    minAge: 18,
-    maxAge: 40,
-    gender: 'Any',
-    city: '',
-    maritalStatus: '',
-    education: '',
-    profession: '',
-    religion: '',
-    sect: ''
-  });
+  const [error, setError] = useState(false);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showPremiumBanner, setShowPremiumBanner] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    fetchFavorites();
-    fetchProfiles();
-  }, []);
+  const requestIdRef = useRef(0); // guards against out-of-order responses
 
   const fetchFavorites = async () => {
     try {
-      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites`);
+      const res = await authFetch(`${API_URL}/api/favorites`);
       if (res.ok) {
         const data = await res.json();
         const map = {};
-        data.forEach(item => {
-          map[item.target_profile_id] = true;
-        });
+        data.forEach(item => { map[item.target_profile_id] = true; });
         setHeartedCards(map);
       }
     } catch (err) {
@@ -50,28 +62,43 @@ const SearchPage = () => {
     }
   };
 
-  const fetchProfiles = async () => {
+  // Real server-side search: filters, text query, and pagination all travel
+  // in one request — nothing is fetched-then-filtered-in-React.
+  const fetchProfiles = async (targetPage = page, activeFilters = filters, activeQuery = query) => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
+    setError(false);
     try {
-      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/search`, {
+      const res = await authFetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(filters)
+        body: JSON.stringify({ ...activeFilters, query: activeQuery, page: targetPage, limit: RESULTS_PER_PAGE })
       });
-      if (res.ok) {
-        const data = await res.json();
-        setProfiles(data);
-      }
+      if (requestId !== requestIdRef.current) return; // a newer request superseded this one
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+      setResults(data.results);
+      setTotal(data.total);
+      setPage(data.page);
+      setHasNextPage(data.hasNextPage);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       console.error(err);
+      setError(true);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchFavorites();
+    fetchProfiles(1, DEFAULT_FILTERS, "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleHeart = async (id) => {
     try {
-      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/favorites/toggle`, {
+      const res = await authFetch(`${API_URL}/api/favorites/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_profile_id: id })
@@ -83,11 +110,27 @@ const SearchPage = () => {
       console.error(err);
     }
   };
-  
-  const filteredProfiles = profiles.filter(p => {
-    if (query && !p.name.toLowerCase().includes(query.toLowerCase()) && !p.profession.toLowerCase().includes(query.toLowerCase())) return false;
-    return true;
-  });
+
+  const interact = async (id, action) => {
+    try {
+      const res = await authFetch(`${API_URL}/api/interactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_id: id, action })
+      });
+      if (res.ok) {
+        if (action === 'like') setLikedCards(h => ({ ...h, [id]: true }));
+        else setLikedCards(h => ({ ...h, [id]: false }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const runSearch = () => {
+    setQuery(queryInput);
+    fetchProfiles(1, filters, queryInput);
+  };
 
   const getActiveFilters = () => {
     let arr = [];
@@ -101,19 +144,34 @@ const SearchPage = () => {
     if (filters.sect) arr.push({ key: 'sect', val: filters.sect });
     return arr;
   };
-  
+
   const removeFilter = (key) => {
-    if (key === 'age') setFilters(f => ({ ...f, minAge: 18, maxAge: 40 }));
-    else if (key === 'gender') setFilters(f => ({ ...f, gender: 'Any' }));
-    else setFilters(f => ({ ...f, [key]: '' }));
-    // Wait for state to update, then fetch
-    setTimeout(fetchProfiles, 0);
+    setFilters(f => {
+      const next = key === 'age' ? { ...f, minAge: 18, maxAge: 40 }
+        : key === 'gender' ? { ...f, gender: 'Any' }
+        : { ...f, [key]: '' };
+      fetchProfiles(1, next, query);
+      return next;
+    });
   };
 
   const handleApplyFilters = () => {
-    fetchProfiles();
+    fetchProfiles(1, filters, query);
     setShowFilters(false);
   };
+
+  const handleResetAll = () => {
+    setFilters(DEFAULT_FILTERS);
+    fetchProfiles(1, DEFAULT_FILTERS, query);
+  };
+
+  const goToPage = (nextPage) => {
+    if (nextPage < 1) return;
+    fetchProfiles(nextPage, filters, query);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / RESULTS_PER_PAGE));
 
   return (
     <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10">
@@ -128,7 +186,7 @@ const SearchPage = () => {
             <p className="text-sm text-text-secondary m-0">Discover compatible matches based on your preferences</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 shrink-0">
-            <span className="text-[13px] text-text-secondary">Showing <strong className="text-text-primary">{filteredProfiles.length}</strong> matches</span>
+            <span className="text-[13px] text-text-secondary">Showing <strong className="text-text-primary">{total}</strong> {total === 1 ? "match" : "matches"}</span>
             <div className="flex items-center gap-1.5 bg-card rounded-lg py-2 px-3.5 border border-border-light cursor-pointer hover:bg-slate-50 transition-colors lg:hidden" onClick={() => setShowFilters(!showFilters)}>
               <SlidersHorizontal size={14} className="text-text-muted" />
               <span className="text-[13px] text-slate-700 font-bold">Filters</span>
@@ -141,16 +199,13 @@ const SearchPage = () => {
         </div>
 
         {/* ── 2-column layout ── */}
-        <div className="flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-6 items-start">
+        <div className="flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-6 lg:items-start">
 
           {/* ── LEFT FILTERS PANEL ── */}
           <div className={`bg-card rounded-[20px] p-[22px] border border-border-light lg:sticky top-[92px] w-full min-w-0 ${showFilters ? "block" : "hidden lg:block"}`}>
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-base font-bold text-text-primary m-0">Filters</h2>
-              <button onClick={() => {
-                setFilters({ minAge: 18, maxAge: 40, gender: 'Any', city: '', maritalStatus: '', education: '', profession: '', religion: '', sect: '' });
-                setTimeout(fetchProfiles, 0);
-              }} className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
+              <button onClick={handleResetAll} className="text-xs text-primary font-bold bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors">Reset All</button>
             </div>
 
             {/* Age Range */}
@@ -160,19 +215,19 @@ const SearchPage = () => {
                 <span className="text-xs text-text-secondary">{filters.minAge} - {filters.maxAge} years</span>
               </div>
               <div className="flex items-center gap-2">
-                <input 
-                  type="number" 
-                  min="18" max="60" 
-                  value={filters.minAge} 
-                  onChange={e => setFilters(f => ({ ...f, minAge: Number(e.target.value) }))} 
+                <input
+                  type="number"
+                  min="18" max="60"
+                  value={filters.minAge}
+                  onChange={e => setFilters(f => ({ ...f, minAge: Number(e.target.value) }))}
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <span className="text-slate-400">-</span>
-                <input 
-                  type="number" 
-                  min="18" max="60" 
-                  value={filters.maxAge} 
-                  onChange={e => setFilters(f => ({ ...f, maxAge: Number(e.target.value) }))} 
+                <input
+                  type="number"
+                  min="18" max="60"
+                  value={filters.maxAge}
+                  onChange={e => setFilters(f => ({ ...f, maxAge: Number(e.target.value) }))}
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -191,25 +246,43 @@ const SearchPage = () => {
               ))}
             </div>
 
-            {/* Dropdown filters */}
+            {/* Free-text filters — city/profession are free-form fields in
+                Complete Profile, so a fixed dropdown can never cover real
+                values; ILIKE substring matching on the backend handles it. */}
             {[
-              { key: "city",          label: "Location",       placeholder: "Select City",       options: ["Lahore", "Islamabad", "Rawalpindi", "Karachi", "Faisalabad", "Multan"] },
-              { key: "maritalStatus", label: "Marital Status", placeholder: "Select Status",     options: ["Never Married", "Divorced", "Widowed"] },
-              { key: "education",     label: "Education",      placeholder: "Select Education",  options: ["BS", "MS", "MBA", "MBBS", "BDS", "MA"] },
-              { key: "profession",    label: "Profession",     placeholder: "Select Profession", options: ["Doctor", "Engineer", "Teacher", "Pharmacist", "Designer", "Analyst"] },
-              { key: "religion",      label: "Religion",       placeholder: "Select Religion",   options: ["Sunni", "Shia"] },
-              { key: "sect",          label: "Sect",           placeholder: "Select Sect",       options: ["Deobandi", "Barelvi", "Ahl-e-Hadith", "Ismaili", "Bohra"] },
+              { key: "city", label: "Location", placeholder: "e.g. Lahore" },
+              { key: "profession", label: "Profession", placeholder: "e.g. Engineer" },
             ].map(f => (
-              <div key={f.label} className="mb-4 relative">
+              <div key={f.key} className="mb-4">
+                <label className="text-[13px] font-bold text-slate-700 block mb-1.5">{f.label}</label>
+                <input
+                  type="text"
+                  value={filters[f.key]}
+                  onChange={e => setFilters(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder}
+                  className="w-full bg-slate-50 rounded-lg py-2 px-3 border border-border-light text-[13px] text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                />
+              </div>
+            ))}
+
+            {/* Enum-backed dropdown filters — options match the real values
+                Complete Profile writes (server/lib/profileFields.js). */}
+            {[
+              { key: "maritalStatus", label: "Marital Status", placeholder: "Select Status" },
+              { key: "education",     label: "Education",      placeholder: "Select Education" },
+              { key: "religion",      label: "Religion",       placeholder: "Select Religion" },
+              { key: "sect",          label: "Sect",           placeholder: "Select Sect" },
+            ].map(f => (
+              <div key={f.key} className="mb-4 relative">
                 <label className="text-[13px] font-bold text-slate-700 block mb-1.5">{f.label}</label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={filters[f.key]}
                     onChange={(e) => setFilters(prev => ({ ...prev, [f.key]: e.target.value }))}
                     className="w-full appearance-none bg-slate-50 rounded-lg py-2 pl-3 pr-8 border border-border-light text-[13px] text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer transition-colors"
                   >
                     <option value="">{f.placeholder}</option>
-                    {f.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {FILTER_OPTIONS[f.key].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                   <ChevronDown size={14} className="text-text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
@@ -221,13 +294,6 @@ const SearchPage = () => {
               <SlidersHorizontal size={16} />
               Apply Filters
             </button>
-
-            {/* Advanced filters */}
-            <div className="flex items-center gap-1.5 justify-center mt-3.5 cursor-pointer hover:opacity-80 transition-opacity">
-              <SlidersHorizontal size={14} className="text-text-muted" />
-              <span className="text-[13px] text-text-muted">Advanced Filters</span>
-              <ChevronDown size={14} className="text-text-muted" />
-            </div>
           </div>
 
           {/* ── RIGHT: search + results ── */}
@@ -237,14 +303,15 @@ const SearchPage = () => {
               <div className="flex-1 flex items-center bg-card rounded-xl border border-border-light border-border-light px-4 gap-2.5 focus-within:border-primary-mid focus-within:ring-2 focus-within:ring-primary-light transition-all">
                 <Search size={16} className="text-text-muted" />
                 <input
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="Search by name, profession or education..."
+                  value={queryInput}
+                  onChange={e => setQueryInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && runSearch()}
+                  placeholder="Search by name or profession..."
                   className="flex-1 border-none outline-none text-sm text-slate-700 bg-transparent py-3"
                 />
               </div>
               <div className="flex gap-3">
-                <button className="flex-1 sm:flex-none px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all font-bold cursor-pointer text-sm">
+                <button onClick={runSearch} className="flex-1 sm:flex-none px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all font-bold cursor-pointer text-sm">
                   Search
                 </button>
                 <button className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 rounded-xl border border-border-light border-border-light bg-card text-[13px] font-bold text-slate-700 cursor-pointer whitespace-nowrap hover:bg-slate-50 transition-colors">
@@ -265,10 +332,7 @@ const SearchPage = () => {
                 </div>
               ))}
               {getActiveFilters().length > 0 && (
-                <button onClick={() => {
-                  setFilters({ minAge: 18, maxAge: 40, gender: 'Any', city: '', maritalStatus: '', education: '', profession: '', religion: '', sect: '' });
-                  setTimeout(fetchProfiles, 0);
-                }} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
+                <button onClick={handleResetAll} className="text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:text-primary-dark transition-colors ml-1">
                   Clear All
                 </button>
               )}
@@ -295,24 +359,31 @@ const SearchPage = () => {
               </div>
             )}
 
-            {/* Profile grid */}
+            {/* Profile grid — loading / error / empty are distinct real states,
+                never a fallback to fake profiles. */}
             <div className="w-full">
-              {filteredProfiles.length === 0 ? (
+              {loading ? (
+                <div className="py-12 bg-card rounded-2xl border border-border-light">
+                  <LoadingState message="Searching profiles…" fullHeight={false} />
+                </div>
+              ) : error ? (
+                <div className="py-12 bg-card rounded-2xl border border-border-light">
+                  <ErrorState onRetry={() => fetchProfiles(page, filters, query)} showHomeButton={false} />
+                </div>
+              ) : results.length === 0 ? (
                 <div className="py-12 bg-card rounded-2xl border border-border-light text-center">
                   <EmptyState
                     icon={Search}
                     title="No Profiles Found"
                     description="We couldn't find any matches for your current search and filters. Try adjusting your criteria."
                     actionText="Clear Filters"
-                    onAction={() => {
-                      setQuery("");
-                      setFilters({ ageMin: 18, ageMax: 40, gender: 'Any', location: '', maritalStatus: '', education: '', profession: '', height: '', religion: '' });
-                    }}
+                    onAction={() => { setQueryInput(""); setQuery(""); handleResetAll(); }}
                   />
                 </div>
               ) : (
+                <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 md:gap-[18px]">
-              {filteredProfiles.map((p, i) => (
+              {results.map((p) => (
                 <div key={p.id} className="bg-card rounded-2xl border border-border-light  overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                   {/* Photo */}
                   <div className={`h-[180px] relative flex items-center justify-center bg-primary-very-light overflow-hidden`}>
@@ -333,8 +404,8 @@ const SearchPage = () => {
                         ✓ Verified
                       </span>
                     </div>
-                    {/* Heart */}
-                    <button onClick={() => toggleHeart(p.id)}
+                    {/* Heart (Favorite) */}
+                    <button onClick={() => toggleHeart(p.id)} title="Favorite"
                       className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-card border border-border-light border-border-light cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
                       <Heart size={15} className={heartedCards[p.id] ? "text-rose-600" : "text-text-muted"} fill={heartedCards[p.id] ? "currentColor" : "none"} />
                     </button>
@@ -345,6 +416,8 @@ const SearchPage = () => {
                     <div className="flex items-center gap-1 mb-0.5">
                       <span className="font-bold text-sm text-text-primary">{p.name}, {p.age}</span>
                       <span className="text-primary text-sm">♡</span>
+                      {/* Real premium status — from POST /api/search (isPremium), backed by an active subscriptions row. */}
+                      {p.isPremium && <Crown size={13} className="text-[#E91E63]" fill="#E91E63" />}
                     </div>
                     <div className="text-[13px] text-text-secondary mb-1.5">{p.profession}</div>
                     <div className="text-xs text-text-muted mb-0.5 flex items-center gap-1">
@@ -354,13 +427,18 @@ const SearchPage = () => {
                       🎓 {p.edu}
                     </div>
 
-                    {/* Action buttons */}
+                    {/* Action buttons: Message, Pass, Like, View Profile */}
                     <div className="flex items-center gap-2">
-                      <button className="w-8 h-8 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
+                      <Link to={`/messages`} title="Message" className="w-8 h-8 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
                         <MessageCircle size={14} className="text-text-secondary" />
+                      </Link>
+                      <button onClick={() => interact(p.id, 'pass')} title="Pass"
+                        className="w-8 h-8 rounded-full border border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
+                        <X size={14} className="text-text-secondary" />
                       </button>
-                      <button className="w-8 h-8 rounded-full border border-border-light border-red-300 bg-red-50 cursor-pointer flex items-center justify-center hover:bg-red-100 transition-colors shrink-0">
-                        <Heart size={14} className="text-rose-600" fill="currentColor" />
+                      <button onClick={() => interact(p.id, 'like')} title="Like"
+                        className={`w-8 h-8 rounded-full border cursor-pointer flex items-center justify-center transition-colors shrink-0 ${likedCards[p.id] ? "border-red-300 bg-red-50 hover:bg-red-100" : "border-border-light bg-card hover:bg-slate-50"}`}>
+                        <Heart size={14} className={likedCards[p.id] ? "text-rose-600" : "text-text-secondary"} fill={likedCards[p.id] ? "currentColor" : "none"} />
                       </button>
                       <Link to={`/profile/${p.id}`} className="flex-1 text-center py-1.5 text-xs font-bold bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all no-underline">
                         View Profile
@@ -369,7 +447,27 @@ const SearchPage = () => {
                   </div>
                 </div>
               ))}
-              </div>
+                </div>
+
+                {/* Pagination — real, server-backed */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6 mb-2">
+                    <button
+                      onClick={() => goToPage(page - 1)}
+                      disabled={page <= 1}
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none">
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span className="text-[13px] font-bold text-text-secondary px-2">Page {page} of {totalPages}</span>
+                    <button
+                      onClick={() => goToPage(page + 1)}
+                      disabled={!hasNextPage}
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none">
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
+                </>
               )}
             </div>
           </div>

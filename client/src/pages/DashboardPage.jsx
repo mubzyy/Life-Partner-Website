@@ -11,18 +11,36 @@ import { photoUrl } from "../lib/photoUrl";
 const getAvatarBg = (i) => ["bg-[#2d7a6e]", "bg-[#6b4c8a]", "bg-[#2d6e7e]", "bg-[#7a6e2d]", "bg-[#4c6e2d]"][i % 5];
 const getAvatarGradient = (i) => ["bg-gradient-to-br from-[#2d7a6e33] to-[#2d7a6e66]", "bg-gradient-to-br from-[#6b4c8a33] to-[#6b4c8a66]", "bg-gradient-to-br from-[#2d6e7e33] to-[#2d6e7e66]", "bg-gradient-to-br from-[#7a6e2d33] to-[#7a6e2d66]", "bg-gradient-to-br from-[#4c6e2d33] to-[#4c6e2d66]"][i % 5];
 
-// Simple sparkline data for activity chart
-const chartData = [10, 18, 14, 22, 20, 30, 25, 35, 28, 38, 32, 40, 36, 23];
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const EMPTY_WEEKLY_ACTIVITY = { days: [], views: [], matches: [], messagesSent: [], likesReceived: [] };
+const EMPTY_WEEKLY_TOTALS = { views: 0, matches: 0, messagesSent: 0, likesReceived: 0 };
 
 const DashboardPage = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [matches, setMatches] = useState([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [heartedCards, setHeartedCards] = useState({});
-  const [dashboardData, setDashboardData] = useState({ stats: {}, recentActivity: [] });
+  const [dashboardData, setDashboardData] = useState({ stats: {}, recentActivity: [], weeklyActivity: EMPTY_WEEKLY_ACTIVITY, weeklyTotals: EMPTY_WEEKLY_TOTALS });
+  const [dashboardError, setDashboardError] = useState(false);
   const [recentMessages, setRecentMessages] = useState([]);
   const [visitors, setVisitors] = useState([]);
+  const [subscription, setSubscription] = useState(null);
+
+  // Real dashboard stats — never silently falls back to zeros on failure.
+  // A failed request surfaces a visible, retryable error instead of pretending
+  // the user has no matches/messages/views/likes.
+  const loadDashboard = () => {
+    setDashboardError(false);
+    authFetch(`${import.meta.env.VITE_API_URL}/api/dashboard`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to load dashboard");
+        return res.json();
+      })
+      .then((data) => setDashboardData(data))
+      .catch((err) => {
+        console.error(err);
+        setDashboardError(true);
+      });
+  };
 
   useEffect(() => {
     authFetch(`${import.meta.env.VITE_API_URL}/api/matches`)
@@ -49,10 +67,7 @@ const DashboardPage = () => {
       })
       .catch(console.error);
 
-    authFetch(`${import.meta.env.VITE_API_URL}/api/dashboard`)
-        .then(res => res.json())
-        .then(data => setDashboardData(data))
-        .catch(console.error);
+    loadDashboard();
 
     authFetch(`${import.meta.env.VITE_API_URL}/api/messages/conversations`)
         .then(res => res.json())
@@ -76,6 +91,11 @@ const DashboardPage = () => {
                 setVisitors(data.slice(0, 3));
             }
         })
+        .catch(console.error);
+
+    authFetch(`${import.meta.env.VITE_API_URL}/api/subscriptions/me`)
+        .then(res => res.json())
+        .then(data => setSubscription(data))
         .catch(console.error);
   }, []);
 
@@ -104,10 +124,14 @@ const DashboardPage = () => {
     }
   };
 
-  // SVG sparkline
-  const maxVal = Math.max(...chartData);
+  // SVG sparkline — real per-day profile-views trend from the backend
+  // (server/routes/dashboard.js), not a hardcoded fixture.
+  const weekly = dashboardData.weeklyActivity?.days?.length ? dashboardData.weeklyActivity : EMPTY_WEEKLY_ACTIVITY;
+  const sparklineData = weekly.views.length ? weekly.views : [0, 0, 0, 0, 0, 0, 0];
+  const sparklineDays = weekly.days.length ? weekly.days : ["", "", "", "", "", "", ""];
+  const maxVal = Math.max(...sparklineData, 1); // avoid divide-by-zero when a user has no activity yet
   const w = 600, h = 120;
-  const pts = chartData.map((v, i) => `${(i / (chartData.length - 1)) * w},${h - (v / maxVal) * (h - 10) - 5}`).join(" ");
+  const pts = sparklineData.map((v, i) => `${(i / (sparklineData.length - 1)) * w},${h - (v / maxVal) * (h - 10) - 5}`).join(" ");
 
   return (
     <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-10">
@@ -163,6 +187,13 @@ const DashboardPage = () => {
               </div>
             </div>
 
+            {dashboardError && (
+              <div className="flex items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-2xl px-5 py-3.5 text-sm text-red-600">
+                <span>Couldn't load your dashboard stats. They aren't zero — the data just failed to load.</span>
+                <button onClick={loadDashboard} className="shrink-0 font-bold underline hover:no-underline">Retry</button>
+              </div>
+            )}
+
             {/* Stats row */}
             <div className="pb-4 w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-4">
@@ -188,7 +219,7 @@ const DashboardPage = () => {
 
             {/* Recommended Matches */}
             <div className="bg-card rounded-2xl p-6 border border-border-light shadow-sm ">
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">✨</span>
                   <h2 className="text-[17px] font-bold text-text-primary m-0">Recommended Matches</h2>
@@ -316,32 +347,36 @@ const DashboardPage = () => {
                 <h3 className="text-[15px] font-bold text-text-primary mb-1">Your Activity Overview</h3>
                 <div className="w-full overflow-hidden mt-4">
                   <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full h-auto">
-                    {/* Grid lines */}
-                    {[0, 10, 20, 30, 40].map(v => (
-                      <g key={v}>
-                        <line x1="0" y1={h - (v / 40) * (h - 10) - 5} x2={w} y2={h - (v / 40) * (h - 10) - 5} stroke="#f1f5f9" strokeWidth="1" />
-                        <text x="0" y={h - (v / 40) * (h - 10) - 5} fontSize="14" fill="#94a3b8">{v}</text>
-                      </g>
-                    ))}
+                    {/* Grid lines — scaled to the real weekly max, not a fixed 0-40 range */}
+                    {[0, 0.25, 0.5, 0.75, 1].map(f => {
+                      const v = Math.round(maxVal * f);
+                      return (
+                        <g key={f}>
+                          <line x1="0" y1={h - f * (h - 10) - 5} x2={w} y2={h - f * (h - 10) - 5} stroke="#f1f5f9" strokeWidth="1" />
+                          <text x="0" y={h - f * (h - 10) - 5} fontSize="14" fill="#94a3b8">{v}</text>
+                        </g>
+                      );
+                    })}
                     {/* Line */}
                     <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     {/* Dots */}
-                    {chartData.map((v, i) => (
-                      <circle key={i} cx={(i / (chartData.length - 1)) * w} cy={h - (v / maxVal) * (h - 10) - 5} r="5" fill="currentColor" />
+                    {sparklineData.map((v, i) => (
+                      <circle key={i} cx={(i / (sparklineData.length - 1)) * w} cy={h - (v / maxVal) * (h - 10) - 5} r="5" fill="currentColor" />
                     ))}
                     {/* Day labels */}
-                    {days.map((d, i) => (
-                      <text key={d} x={(i / (days.length - 1)) * w} y={h + 18} fontSize="14" fill="#94a3b8" textAnchor="middle">{d}</text>
+                    {sparklineDays.map((d, i) => (
+                      <text key={`${d}-${i}`} x={(i / (sparklineDays.length - 1)) * w} y={h + 18} fontSize="14" fill="#94a3b8" textAnchor="middle">{d}</text>
                     ))}
                   </svg>
                 </div>
+                <p className="text-[11px] text-text-muted mt-1">Profile views over the last 7 days</p>
                 {/* Legend */}
                 <div className="flex gap-4 mt-2 flex-wrap">
                   {[
-                    { color: "bg-primary", label: "23 Profile Views"  },
-                    { color: "bg-primary", label: "12 New Matches"     },
-                    { color: "bg-[#6b8a86]", label: "8 Messages Sent"    },
-                    { color: "bg-rose-600", label: "17 Likes Received"  },
+                    { color: "bg-primary", label: `${dashboardData.weeklyTotals?.views ?? 0} Profile Views` },
+                    { color: "bg-primary", label: `${dashboardData.weeklyTotals?.matches ?? 0} New Matches` },
+                    { color: "bg-[#6b8a86]", label: `${dashboardData.weeklyTotals?.messagesSent ?? 0} Messages Sent` },
+                    { color: "bg-rose-600", label: `${dashboardData.weeklyTotals?.likesReceived ?? 0} Likes Received` },
                   ].map(l => (
                     <div key={l.label} className="flex items-center gap-1.5">
                       <div className={`w-2 h-2 rounded-full ${l.color}`} />
@@ -414,33 +449,52 @@ const DashboardPage = () => {
               ))}
             </div>
 
-            {/* Upgrade to Premium */}
+            {/* Premium status — real, from GET /api/subscriptions/me */}
             <div className="rounded-[20px] p-[22px] relative overflow-hidden" style={{ background: "linear-gradient(135deg, #E91E63 0%, #ff6090 100%)" }}>
               <div className="absolute -top-5 -right-5 w-[100px] h-[100px] rounded-full bg-white/10" />
-              <div className="flex items-center gap-2 mb-2">
-                <Crown size={18} className="text-white" />
-                <span className="text-[15px] font-bold text-white">Upgrade to Premium</span>
-              </div>
-              <p className="text-xs text-white/80 mb-4 leading-relaxed">
-                Unlock all features and get better matches.
-              </p>
-              {[
-                "See who likes you",
-                "Unlimited messaging",
-                "Advanced search filters",
-                "Priority in recommendations",
-                "Browse privately",
-              ].map(f => (
-                <div key={f} className="flex items-center gap-2 mb-2">
-                  <div className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center shrink-0">
-                    <Check size={10} className="text-white" strokeWidth={3} />
+              {subscription?.isPremium ? (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown size={18} className="text-white" />
+                    <span className="text-[15px] font-bold text-white">{subscription.plan_name || "Premium"}</span>
                   </div>
-                  <span className="text-xs text-white/90 font-medium">{f}</span>
-                </div>
-              ))}
-              <Link to="/subscription" className="block text-center mt-4 py-3 text-[13px] font-bold no-underline bg-white hover:bg-pink-50 text-[#E91E63] rounded-xl shadow-sm hover:scale-105 transition-all">
-                Upgrade Now →
-              </Link>
+                  <p className="text-xs text-white/80 mb-4 leading-relaxed">
+                    {subscription.ends_at
+                      ? `Active until ${new Date(subscription.ends_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.`
+                      : "Your subscription is active."}
+                  </p>
+                  <Link to="/packages" className="block text-center mt-4 py-3 text-[13px] font-bold no-underline bg-white hover:bg-pink-50 text-[#E91E63] rounded-xl shadow-sm hover:scale-105 transition-all">
+                    Manage Plan →
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown size={18} className="text-white" />
+                    <span className="text-[15px] font-bold text-white">Upgrade to Premium</span>
+                  </div>
+                  <p className="text-xs text-white/80 mb-4 leading-relaxed">
+                    Unlock all features and get better matches.
+                  </p>
+                  {[
+                    "See who likes you",
+                    "Unlimited messaging",
+                    "Advanced search filters",
+                    "Priority in recommendations",
+                    "Browse privately",
+                  ].map(f => (
+                    <div key={f} className="flex items-center gap-2 mb-2">
+                      <div className="w-4 h-4 rounded-full bg-white/30 flex items-center justify-center shrink-0">
+                        <Check size={10} className="text-white" strokeWidth={3} />
+                      </div>
+                      <span className="text-xs text-white/90 font-medium">{f}</span>
+                    </div>
+                  ))}
+                  <Link to="/subscription" className="block text-center mt-4 py-3 text-[13px] font-bold no-underline bg-white hover:bg-pink-50 text-[#E91E63] rounded-xl shadow-sm hover:scale-105 transition-all">
+                    Upgrade Now →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

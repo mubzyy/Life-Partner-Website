@@ -1,18 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Shield, Users, Headphones, Send, Gem, Star, Crown,
   Check, X, Gift, Eye, Heart, MessageCircle
 } from "lucide-react";
 
-// ── Plan Data ─────────────────────────────────────────────────────────────────
-const PLANS = [
+const API_URL = import.meta.env.VITE_API_URL;
+
+// ── Static presentation content only (icon/description/feature bullets) —
+//    every number (price, plan id, duration) comes from GET /api/subscriptions/plans,
+//    the single source of truth also used by CheckoutPage and the backend.
+//    `id` here must match the tier prefix of the real plan ids (e.g. "basic-1mo").
+const TIERS_META = [
   {
     id: "basic",
     name: "Basic",
     desc: "Try premium features",
     icon: <Send size={26} className="text-[#E91E63]" />,
-    basePrice: 999,
     popular: false,
     features: [
       { text: "See who likes you",              included: true  },
@@ -29,7 +33,6 @@ const PLANS = [
     name: "Premium",
     desc: "Perfect for serious matches",
     icon: <Gem size={26} className="text-[#E91E63]" />,
-    basePrice: 1999,
     popular: true,
     features: [
       { text: "See who likes you",    included: true },
@@ -45,7 +48,6 @@ const PLANS = [
     name: "Premium Plus",
     desc: "Maximum visibility & connections",
     icon: <Star size={26} className="text-[#E91E63]" />,
-    basePrice: 3499,
     popular: false,
     features: [
       { text: "Everything in Premium",    included: true },
@@ -61,7 +63,6 @@ const PLANS = [
     name: "Ultimate",
     desc: "The best experience",
     icon: <Crown size={26} className="text-[#E91E63]" />,
-    basePrice: 5999,
     popular: false,
     features: [
       { text: "Everything in Premium Plus",    included: true },
@@ -74,12 +75,7 @@ const PLANS = [
   },
 ];
 
-const DURATIONS = [
-  { id: 1,  label: "1 Month",   months: 1,  discount: 0,  discountLabel: "No discount" },
-  { id: 3,  label: "3 Months",  months: 3,  discount: 10, discountLabel: "10% OFF"     },
-  { id: 6,  label: "6 Months",  months: 6,  discount: 20, discountLabel: "20% OFF"     },
-  { id: 12, label: "12 Months", months: 12, discount: 30, discountLabel: "30% OFF"     },
-];
+const DURATION_LABELS = { 1: "1 Month", 3: "3 Months", 6: "6 Months", 12: "12 Months" };
 
 const BENEFITS = [
   { icon: <Eye size={22} className="text-[#E91E63]" />,         title: "More Visibility",          desc: "Your profile will be seen by more potential matches." },
@@ -93,112 +89,40 @@ const HEADER_BADGES = [
   { icon: <Headphones size={20} className="text-[#E91E63]" />, title: "24/7 Support",     desc: "We're here to help"             },
 ];
 
-// ── Checkout Modal ─────────────────────────────────────────────────────────────
-const CheckoutModal = ({ plan, duration, totalPrice, onClose }) => {
-  const [confirmed, setConfirmed] = useState(false);
-
-  if (confirmed) {
-    return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-[28px] p-10 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
-            <Check size={32} className="text-green-600" strokeWidth={3} />
-          </div>
-          <h2 className="text-[22px] font-bold text-slate-800 mb-2">Plan Selected!</h2>
-          <p className="text-[14px] text-slate-500 mb-2">
-            You've selected the <span className="font-bold text-[#E91E63]">{plan.name}</span> plan for {duration.label}.
-          </p>
-          <p className="text-[13px] text-slate-400 mb-8">In a live app, payment processing would happen here. Your selection has been saved.</p>
-          <button onClick={onClose} className="w-full py-3 bg-[#E91E63] hover:bg-[#d81557] text-white font-bold rounded-[14px] text-[14px] transition-colors border-none cursor-pointer">
-            Done
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-[28px] p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[20px] font-bold text-slate-800">Confirm Your Plan</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 border-none cursor-pointer">
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Plan Details */}
-        <div className="bg-[#fff0f5] rounded-[20px] p-5 mb-5 border border-pink-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-pink-100 shadow-sm">
-              {plan.icon}
-            </div>
-            <div>
-              <div className="text-[17px] font-bold text-slate-800">{plan.name}</div>
-              <div className="text-[13px] text-slate-500">{plan.desc}</div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between border-t border-pink-100 pt-4">
-            <div>
-              <div className="text-[13px] text-slate-500 mb-0.5">Billing Period</div>
-              <div className="text-[14px] font-bold text-slate-800">{duration.label}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[13px] text-slate-500 mb-0.5">Total Amount</div>
-              <div className="text-[22px] font-extrabold text-[#E91E63]">PKR {totalPrice.toLocaleString()}</div>
-            </div>
-          </div>
-          {duration.discount > 0 && (
-            <div className="mt-3 text-[12px] font-bold text-green-600 bg-green-50 rounded-xl px-3 py-1.5 inline-block">
-              You save {duration.discount}% — PKR {Math.round(plan.basePrice * duration.months * duration.discount / 100).toLocaleString()} off
-            </div>
-          )}
-        </div>
-
-        {/* Features */}
-        <div className="mb-6">
-          <p className="text-[13px] font-bold text-slate-700 mb-3">Included Features:</p>
-          <div className="grid grid-cols-1 gap-2">
-            {plan.features.filter(f => f.included).map(f => (
-              <div key={f.text} className="flex items-center gap-2 text-[13px] text-slate-600">
-                <Check size={14} className="text-[#E91E63] shrink-0" strokeWidth={3} />
-                {f.text}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-[11px] text-slate-400 mb-5 text-center">By confirming, you agree to our Terms of Service. No real payment will be processed.</p>
-
-        <button
-          onClick={() => setConfirmed(true)}
-          className="w-full py-3.5 bg-[#E91E63] hover:bg-[#d81557] text-white font-bold rounded-[14px] text-[14px] transition-colors border-none cursor-pointer shadow-md">
-          Confirm &amp; Activate Plan
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 const PricingPage = () => {
   const navigate = useNavigate();
   const [selectedPlanId, setSelectedPlanId] = useState("premium");
-  const [selectedDurationId, setSelectedDurationId] = useState(1);
+  const [selectedDuration, setSelectedDuration] = useState(1);
   const [activeTab, setActiveTab] = useState("plans");
+  const [plans, setPlans] = useState([]); // real rows from GET /api/subscriptions/plans
+  const [plansLoading, setPlansLoading] = useState(true);
 
-  const selectedDuration = DURATIONS.find(d => d.id === selectedDurationId);
+  useEffect(() => {
+    fetch(`${API_URL}/api/subscriptions/plans`)
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setPlans(data); })
+      .catch(console.error)
+      .finally(() => setPlansLoading(false));
+  }, []);
 
-  const getPrice = (basePrice) => {
-    const monthly = basePrice * (1 - selectedDuration.discount / 100);
-    return Math.round(monthly);
+  const durations = [...new Set(plans.map(p => p.duration_months))].sort((a, b) => a - b);
+
+  // Real plan row for a given tier at the currently selected duration.
+  const planFor = (tierId) => plans.find(p => p.id === `${tierId}-${selectedDuration}mo`);
+
+  const discountFor = (tierId, months = selectedDuration) => {
+    const plan = plans.find(p => p.id === `${tierId}-${months}mo`);
+    const oneMonth = plans.find(p => p.id === `${tierId}-1mo`);
+    if (!plan || !oneMonth || months === 1) return 0;
+    const fullPrice = oneMonth.price_cents * months;
+    return Math.round((1 - plan.price_cents / fullPrice) * 100);
   };
 
-  const openCheckout = (plan) => {
-    navigate("/checkout", {
-      state: { planId: plan.id, duration: selectedDuration.months }
-    });
+  const openCheckout = (tierId) => {
+    const plan = planFor(tierId);
+    if (!plan) return;
+    navigate("/checkout", { state: { planId: plan.id } });
   };
 
   return (
@@ -255,19 +179,24 @@ const PricingPage = () => {
               <h2 className="text-[20px] font-bold text-slate-800 mb-2">Add-on Boosts Coming Soon</h2>
               <p className="text-[14px] text-slate-500">Individual profile boosts and feature add-ons will be available soon.</p>
             </div>
+          ) : plansLoading ? (
+            <div className="text-center py-16 text-slate-400 text-sm">Loading plans…</div>
           ) : (
             <>
               {/* ── PRICING CARDS ──────────────────────────────────────────── */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
-                {PLANS.map(plan => {
-                  const isSelected = selectedPlanId === plan.id;
-                  const price = getPrice(plan.basePrice);
+                {TIERS_META.map(tier => {
+                  const isSelected = selectedPlanId === tier.id;
+                  const dbPlan = planFor(tier.id);
+                  if (!dbPlan) return null; // that tier/duration combo isn't offered
+                  const monthlyPrice = Math.round(dbPlan.price_cents / selectedDuration);
+                  const discount = discountFor(tier.id);
                   return (
                     <div
-                      key={plan.id}
-                      onClick={() => setSelectedPlanId(plan.id)}
+                      key={tier.id}
+                      onClick={() => setSelectedPlanId(tier.id)}
                       className={`relative flex flex-col rounded-[24px] border-2 transition-all duration-200 cursor-pointer overflow-hidden
-                        ${plan.popular
+                        ${tier.popular
                           ? "border-[#E91E63] shadow-[0_8px_40px_rgba(233,30,99,0.18)]"
                           : isSelected
                           ? "border-[#E91E63] shadow-[0_4px_20px_rgba(233,30,99,0.10)]"
@@ -275,7 +204,7 @@ const PricingPage = () => {
                         }`}
                     >
                       {/* Most Popular badge */}
-                      {plan.popular && (
+                      {tier.popular && (
                         <div className="absolute top-0 left-0 right-0 flex justify-center">
                           <div className="bg-[#E91E63] text-white text-[10px] font-extrabold tracking-widest uppercase px-5 py-1.5 rounded-b-xl shadow-sm">
                             MOST POPULAR
@@ -283,28 +212,28 @@ const PricingPage = () => {
                         </div>
                       )}
 
-                      <div className={`flex flex-col flex-1 p-6 ${plan.popular ? "pt-10" : "pt-6"}`}>
+                      <div className={`flex flex-col flex-1 p-6 ${tier.popular ? "pt-10" : "pt-6"}`}>
                         {/* Plan name & desc */}
                         <div className="text-center mb-5">
-                          <h2 className="text-[18px] font-bold text-slate-800 mb-1">{plan.name}</h2>
-                          <p className="text-[12px] text-slate-500 m-0">{plan.desc}</p>
+                          <h2 className="text-[18px] font-bold text-slate-800 mb-1">{tier.name}</h2>
+                          <p className="text-[12px] text-slate-500 m-0">{tier.desc}</p>
                         </div>
 
                         {/* Icon */}
                         <div className="flex justify-center mb-5">
                           <div className="w-16 h-16 rounded-full bg-[#fff0f5] border border-pink-100 flex items-center justify-center">
-                            {plan.icon}
+                            {tier.icon}
                           </div>
                         </div>
 
                         {/* Price */}
                         <div className="text-center mb-5">
                           <div className="text-[13px] text-slate-500 font-medium mb-1">PKR</div>
-                          <div className="text-[36px] font-extrabold text-slate-800 leading-none mb-1">{price.toLocaleString()}</div>
+                          <div className="text-[36px] font-extrabold text-slate-800 leading-none mb-1">{monthlyPrice.toLocaleString()}</div>
                           <div className="text-[12px] text-slate-500">/ month</div>
-                          {selectedDuration.discount > 0 && (
+                          {discount > 0 && (
                             <div className="mt-2 text-[11px] font-bold text-green-600 bg-green-50 rounded-full px-2.5 py-0.5 inline-block">
-                              {selectedDuration.discount}% OFF
+                              {discount}% OFF
                             </div>
                           )}
                         </div>
@@ -314,7 +243,7 @@ const PricingPage = () => {
 
                         {/* Features */}
                         <ul className="flex flex-col gap-2.5 flex-1 mb-6">
-                          {plan.features.map(f => (
+                          {tier.features.map(f => (
                             <li key={f.text} className={`flex items-start gap-2.5 text-[13px] ${f.included ? "text-slate-700" : "text-slate-400"}`}>
                               {f.included
                                 ? <Check size={15} className="text-[#E91E63] shrink-0 mt-0.5" strokeWidth={3} />
@@ -327,9 +256,9 @@ const PricingPage = () => {
 
                         {/* CTA */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedPlanId(plan.id); openCheckout(plan); }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedPlanId(tier.id); openCheckout(tier.id); }}
                           className={`w-full py-3 rounded-[14px] text-[14px] font-bold transition-all border-2 cursor-pointer
-                            ${plan.popular
+                            ${tier.popular
                               ? "bg-[#E91E63] border-[#E91E63] text-white hover:bg-[#d81557] shadow-md"
                               : "bg-white border-[#E91E63] text-[#E91E63] hover:bg-[#fff0f5]"
                             }`}>
@@ -354,20 +283,24 @@ const PricingPage = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-3 sm:ml-auto">
-                  {DURATIONS.map(d => {
-                    const active = selectedDurationId === d.id;
+                  {durations.map(months => {
+                    const active = selectedDuration === months;
+                    // Discount % is the same across every tier at a given duration
+                    // (by construction — see server/db_migrate_audit.js), so any
+                    // tier's real price works to derive it.
+                    const discount = discountFor(TIERS_META[0].id, months);
                     return (
                       <button
-                        key={d.id}
-                        onClick={() => setSelectedDurationId(d.id)}
+                        key={months}
+                        onClick={() => setSelectedDuration(months)}
                         className={`px-5 py-3 rounded-[14px] border-2 text-center min-w-[100px] transition-all cursor-pointer
                           ${active
                             ? "bg-[#E91E63] border-[#E91E63] text-white shadow-md"
                             : "bg-white border-slate-200 text-slate-700 hover:border-pink-200 hover:bg-[#fff9fb]"
                           }`}>
-                        <div className={`text-[13px] font-bold ${active ? "text-white" : "text-slate-800"}`}>{d.label}</div>
-                        <div className={`text-[11px] font-semibold mt-0.5 ${active ? "text-pink-200" : d.discount > 0 ? "text-[#E91E63]" : "text-slate-400"}`}>
-                          {d.discountLabel}
+                        <div className={`text-[13px] font-bold ${active ? "text-white" : "text-slate-800"}`}>{DURATION_LABELS[months] || `${months} Months`}</div>
+                        <div className={`text-[11px] font-semibold mt-0.5 ${active ? "text-pink-200" : discount > 0 ? "text-[#E91E63]" : "text-slate-400"}`}>
+                          {discount > 0 ? `${discount}% OFF` : "No discount"}
                         </div>
                       </button>
                     );

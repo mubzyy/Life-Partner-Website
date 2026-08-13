@@ -106,7 +106,7 @@ const VisitorsPage = () => {
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
       <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
 
           {/* ── MAIN COLUMN ─────────────────────────────────────────────────── */}
           <div className="flex-1 flex flex-col gap-6 min-w-0 w-full">
@@ -139,8 +139,8 @@ const VisitorsPage = () => {
                     <div className={`w-12 h-12 rounded-[14px] ${s.iconBg} flex items-center justify-center shrink-0`}>
                       {s.icon}
                     </div>
-                    <div>
-                      <div className="text-[12px] text-slate-500 font-medium mb-0.5">{s.label}</div>
+                    <div className="min-w-0">
+                      <div className="text-[12px] text-slate-500 font-medium mb-0.5 break-words">{s.label}</div>
                       <div className="text-[28px] font-extrabold text-slate-800 leading-none">{s.value}</div>
                     </div>
                   </div>

@@ -22,6 +22,7 @@ import PricingPage from "./pages/PricingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import SettingsPage from "./pages/SettingsPage";
 import BlockedUsersPage from "./pages/BlockedUsersPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PlaceholderPage from "./components/PlaceholderPage";
 
@@ -115,6 +116,7 @@ const AppRoutes = () => (
         <Route path="/profile/:id" element={<ProfileViewPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/blocked-users" element={<BlockedUsersPage />} />
+        <Route path="/settings/change-password" element={<ChangePasswordPage />} />
       </Route>
 
       {/* Catch-all */}

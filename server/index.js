@@ -21,6 +21,9 @@ const settingsRoutes = require("./routes/settings");
 const blocksRoutes = require("./routes/blocks");
 const subscriptionsRoutes = require("./routes/subscriptions");
 const dashboardRoutes = require("./routes/dashboard");
+const accountRoutes = require("./routes/account");
+const supportRoutes = require("./routes/support");
+const reportsRoutes = require("./routes/reports");
 
 const app = express();
 
@@ -30,7 +33,7 @@ app.use(
       "https://life-partner-website-in8u.vercel.app",
       "http://localhost:5173",
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
     optionsSuccessStatus: 200,
   })
@@ -55,6 +58,27 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/blocks", blocksRoutes);
 app.use("/api/subscriptions", subscriptionsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/account", accountRoutes);
+app.use("/api/support", supportRoutes);
+app.use("/api/reports", reportsRoutes);
+
+// Generic error handler — must be registered last, after every route. Without
+// this, Express's default handler sends the raw error (stack trace, internal
+// file paths, dependency internals) as the HTTP response body for anything
+// that throws before reaching a route's own try/catch — e.g. malformed JSON
+// or an oversized body, both rejected by body-parser before any route runs.
+// The real error is still logged server-side; the client only ever sees a
+// generic message.
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    if (err.type === "entity.too.large" || err.status === 413) {
+        return res.status(413).json({ message: "Request body is too large." });
+    }
+    if (err.type === "entity.parse.failed" || err instanceof SyntaxError) {
+        return res.status(400).json({ message: "Malformed request body." });
+    }
+    res.status(err.status || 500).json({ message: "Server error." });
+});
 
 const PORT = process.env.PORT || 5000;
 

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const authMiddleware = require("../middleware/auth");
+const { isOnline } = require("../lib/presence");
 
 
 // Get all favorites for the logged in user
@@ -9,17 +10,19 @@ router.get("/", authMiddleware, async (req, res) => {
     try {
         const userId = req.user.id;
         const query = `
-            SELECT 
-                u.id as target_profile_id, u.first_name, u.last_name, 
-                up.profile_photo_url as image, 
-                up.gender, up.date_of_birth, up.marital_status, 
+            SELECT
+                u.id as target_profile_id, u.first_name, u.last_name,
+                up.profile_photo_url as image,
+                up.gender, up.date_of_birth, up.marital_status,
                 up.city, up.state, up.nationality,
-                up.occupation as profession, up.education, 
+                up.occupation as profession, up.education,
                 up.religion, up.sect, up.about_me,
+                u.last_login, COALESCE(us.online_status, true) AS online_status_enabled,
                 f.created_at
             FROM favorites f
             JOIN users u ON f.target_profile_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN user_settings us ON us.user_id = u.id
             WHERE f.user_id = $1
             ORDER BY f.created_at DESC
         `;
@@ -46,7 +49,7 @@ router.get("/", authMiddleware, async (req, res) => {
                 city: profile.city || "Not specified",
                 edu: profile.education || "Not specified",
                 image: profile.image || null,
-                online: false
+                online: isOnline(profile.last_login, profile.online_status_enabled)
             };
         });
 
@@ -77,6 +80,19 @@ router.post("/toggle", authMiddleware, async (req, res) => {
         } else {
             // Add it
             await pool.query(`INSERT INTO favorites (user_id, target_profile_id) VALUES ($1, $2)`, [userId, target_profile_id]);
+
+            // Notify the target — best-effort, never blocks the toggle itself.
+            try {
+                const actor = await pool.query("SELECT first_name FROM users WHERE id = $1", [userId]);
+                const actorName = actor.rows[0]?.first_name || "Someone";
+                await pool.query(`
+                    INSERT INTO notifications (user_id, title, message, type, action_url)
+                    VALUES ($1, 'New Favorite', $2, 'favorite', '/visitors')
+                `, [target_profile_id, `${actorName} added you to their favorites.`]);
+            } catch (e) {
+                console.error("Error creating favorite notification", e);
+            }
+
             return res.json({ action: "added", target_profile_id });
         }
     } catch (err) {

@@ -59,7 +59,7 @@ const SiteHeader = () => {
       <Container className="flex items-center justify-between py-4">
         <div className="flex items-center gap-4 lg:gap-12">
           <Link to="/" className="no-underline shrink-0">
-            <BrandMark compact={true} />
+            <BrandMark compact={true} hideTextOnMobile={true} />
           </Link>
 
           <nav className="hidden items-center gap-8 xl:flex">

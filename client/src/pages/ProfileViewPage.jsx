@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart, MapPin, Lock, MessageCircle, ChevronLeft, ChevronRight, Shield, Eye } from "lucide-react";
+import { ArrowLeft, Heart, MapPin, Lock, MessageCircle, ChevronLeft, ChevronRight, Shield, Eye, Ban, Crown, Flag } from "lucide-react";
 import { authFetch } from "../lib/authFetch";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
+import ReportUserModal from "../components/ReportUserModal";
 import { photoUrl } from "../lib/photoUrl";
+import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -71,29 +73,50 @@ const InfoSection = ({ title, icon, data }) => {
 const ProfileViewPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("About");
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [similarProfiles, setSimilarProfiles] = useState([]);
 
   const loadProfile = () => {
     setLoading(true);
     setError(false);
-    fetch(`${API_URL}/api/profile/${id}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Not found");
+    // authFetch (not plain fetch): this profile may be visibility-restricted
+    // to matches only, which the backend can only honor if it knows who's asking.
+    authFetch(`${API_URL}/api/profile/${id}`)
+      .then(async res => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || "We couldn't find this profile.");
+        }
         return res.json();
       })
       .then(data => { setProfile(data); setLoading(false); })
-      .catch(() => { setError(true); setLoading(false); });
+      .catch(err => { setErrorMessage(err.message); setError(true); setLoading(false); });
   };
 
   useEffect(() => {
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Record a real profile view — never for your own profile. Fire-and-forget:
+  // a failure here shouldn't block viewing the profile itself.
+  useEffect(() => {
+    const viewedId = parseInt(id, 10);
+    if (!viewedId || !user?.id || viewedId === user.id) return;
+    authFetch(`${API_URL}/api/visitors`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ viewed_id: viewedId }),
+    }).catch(console.error);
+  }, [id, user?.id]);
 
   useEffect(() => {
     authFetch(`${API_URL}/api/favorites`)
@@ -102,6 +125,15 @@ const ProfileViewPage = () => {
         if (Array.isArray(data)) {
           const found = data.find(f => String(f.target_profile_id) === String(id));
           setIsFavorited(!!found);
+        }
+      })
+      .catch(console.error);
+
+    authFetch(`${API_URL}/api/blocks`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setIsBlocked(data.some(b => String(b.id) === String(id)));
         }
       })
       .catch(console.error);
@@ -134,6 +166,27 @@ const ProfileViewPage = () => {
     }
   };
 
+  const toggleBlock = async () => {
+    const targetId = parseInt(id);
+    if (!targetId) return;
+    try {
+      if (isBlocked) {
+        const res = await authFetch(`${API_URL}/api/blocks/${targetId}`, { method: "DELETE" });
+        if (res.ok) setIsBlocked(false);
+      } else {
+        if (!window.confirm("Block this user? They won't appear in your search or matches, and you won't be able to message each other.")) return;
+        const res = await authFetch(`${API_URL}/api/blocks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blocked_id: targetId }),
+        });
+        if (res.ok) setIsBlocked(true);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-68px)] bg-background">
@@ -145,7 +198,7 @@ const ProfileViewPage = () => {
   if (error || !profile) {
     return (
       <div className="min-h-[calc(100vh-68px)] bg-background">
-        <ErrorState onRetry={loadProfile} message="We couldn't find this profile." />
+        <ErrorState onRetry={loadProfile} message={errorMessage || "We couldn't find this profile."} />
       </div>
     );
   }
@@ -162,6 +215,20 @@ const ProfileViewPage = () => {
   const sections = buildInfoSections(profile);
   const primaryPhoto = photoUrl(profile.profile_photo_url);
 
+  // Only present when the backend decided this viewer is allowed to see it
+  // (respects the profile owner's Last Seen privacy setting server-side).
+  const lastActiveLabel = (() => {
+    if (!profile.last_login) return null;
+    const diffMs = Date.now() - new Date(profile.last_login).getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 5) return "Active now";
+    if (minutes < 60) return `Active ${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Active ${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `Active ${days}d ago`;
+  })();
+
   return (
     <div className="min-h-[calc(100vh-68px)] bg-background px-4 md:px-6 py-6 md:py-12">
       <div className="w-full max-w-[1400px] mx-auto">
@@ -173,7 +240,7 @@ const ProfileViewPage = () => {
         </button>
 
         {/* ── 2-column layout ── */}
-        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-6 lg:items-start">
 
           {/* ── LEFT MAIN ── */}
           <div className="flex flex-col gap-5 min-w-0">
@@ -196,12 +263,24 @@ const ProfileViewPage = () => {
                 <div className="flex flex-col md:block items-center w-full min-w-0">
                   <h1 className="text-[28px] font-extrabold text-text-primary mb-1 flex flex-wrap justify-center md:justify-start items-center gap-2 text-center md:text-left break-words">
                     {name}{age ? `, ${age}` : ""}
+                    {/* Real premium status — from GET /api/profile/:userId (isPremium), backed by an active subscriptions row. */}
+                    {profile.isPremium && (
+                      <span className="inline-flex items-center gap-1 bg-[#fff0f5] border border-pink-100 rounded-full px-2.5 py-0.5 align-middle">
+                        <Crown size={12} className="text-[#E91E63]" />
+                        <span className="text-[11px] font-bold text-[#E91E63]">Premium</span>
+                      </span>
+                    )}
                   </h1>
                   <p className="text-[15px] text-text-secondary mb-2.5">{profile.occupation || "Occupation not specified"}</p>
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-4 mb-4 flex-wrap justify-center md:justify-start">
                     <span className="flex items-center gap-1 text-[13px] text-text-secondary">
                       <MapPin size={14} /> {location}
                     </span>
+                    {profile.last_login && (
+                      <span className="flex items-center gap-1.5 text-[13px] text-green-600 font-semibold">
+                        <span className="w-[7px] h-[7px] rounded-full bg-green-500" /> {lastActiveLabel}
+                      </span>
+                    )}
                   </div>
 
                   {/* Attribute chips */}
@@ -219,12 +298,20 @@ const ProfileViewPage = () => {
                       <Heart size={15} fill={isFavorited ? "currentColor" : "none"} />
                       {isFavorited ? "Favorited" : "Favorite"}
                     </button>
-                    <button className="flex items-center gap-1.5 bg-primary border-none rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer text-white hover:from-primary-hover hover:to-primary-light transition-colors">
+                    <button disabled={isBlocked} className="flex items-center gap-1.5 bg-primary border-none rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer text-white hover:from-primary-hover hover:to-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                       <MessageCircle size={15} />
                       Send Message
                     </button>
+                    <button onClick={toggleBlock} className={`flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] ${isBlocked ? "border-rose-600 text-rose-600" : "border-border-light text-text-primary hover:bg-background"}`}>
+                      <Ban size={15} />
+                      {isBlocked ? "Blocked" : "Block"}
+                    </button>
+                    <button onClick={() => setShowReportModal(true)} className="flex items-center gap-1.5 bg-card rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer transition-colors border-[1.5px] border-border-light text-text-primary hover:bg-background">
+                      <Flag size={15} />
+                      Report
+                    </button>
                   </div>
-                  <p className="text-[11px] text-text-muted mt-2">Become Premium to start conversation</p>
+                  <p className="text-[11px] text-text-muted mt-2">{isBlocked ? "You've blocked this user." : "Become Premium to start conversation"}</p>
                 </div>
               </div>
 
@@ -367,6 +454,13 @@ const ProfileViewPage = () => {
           </div>
         </div>
       </div>
+
+      <ReportUserModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportedId={parseInt(id)}
+        reportedName={name}
+      />
     </div>
   );
 };

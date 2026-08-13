@@ -24,15 +24,19 @@ import {
 import { useAuth } from "../context/AuthContext";
 import EmptyState from "./EmptyState";
 import { photoUrl } from "../lib/photoUrl";
+import { authFetch } from "../lib/authFetch";
 
-// ── Nav items matching the design exactly ─────────────────────────────────
-const navItems = [
+const API_URL = import.meta.env.VITE_API_URL;
+
+// ── Nav items matching the design exactly — badge counts are filled in with
+//    real numbers at render time, never hardcoded. ─────────────────────────
+const NAV_ITEMS = [
   { to: "/dashboard",    label: "Dashboard"  },
   { to: "/search",       label: "Search"     },
   { to: "/matches",      label: "Matches"    },
-  { to: "/messages",     label: "Messages",  badge: 3  },
-  { to: "/favorites",  label: "Favorites", badge: 5 },
-  { to: "/visitors",     label: "Visitors",  badge: 12 },
+  { to: "/messages",     label: "Messages",  badgeKey: "messages" },
+  { to: "/favorites",    label: "Favorites", badgeKey: "favorites" },
+  { to: "/visitors",     label: "Visitors",  badgeKey: "visitors" },
   { to: "/subscription", label: "Packages"  },
 ];
 
@@ -47,11 +51,12 @@ const AppLayout = () => {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [navBadges, setNavBadges] = useState({ messages: 0, favorites: 0, visitors: 0 });
 
   const fetchNotifications = async () => {
     if (!user?.id) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${user.id}`);
+      const res = await authFetch(`${API_URL}/api/notifications`);
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -62,16 +67,40 @@ const AppLayout = () => {
     }
   };
 
+  const fetchNavBadges = async () => {
+    if (!user?.id) return;
+    try {
+      const [conversationsRes, favoritesRes, visitorsRes] = await Promise.all([
+        authFetch(`${API_URL}/api/messages/conversations`),
+        authFetch(`${API_URL}/api/favorites`),
+        authFetch(`${API_URL}/api/visitors`),
+      ]);
+      const [conversations, favorites, visitors] = await Promise.all([
+        conversationsRes.ok ? conversationsRes.json() : [],
+        favoritesRes.ok ? favoritesRes.json() : [],
+        visitorsRes.ok ? visitorsRes.json() : [],
+      ]);
+      setNavBadges({
+        messages: Array.isArray(conversations) ? conversations.reduce((sum, c) => sum + (c.unread || 0), 0) : 0,
+        favorites: Array.isArray(favorites) ? favorites.length : 0,
+        visitors: Array.isArray(visitors) ? visitors.length : 0,
+      });
+    } catch (err) {
+      console.error("Failed to fetch nav badges", err);
+    }
+  };
+
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    fetchNavBadges();
+    const interval = setInterval(() => { fetchNotifications(); fetchNavBadges(); }, 60000);
     return () => clearInterval(interval);
   }, [user?.id]);
 
   const markAsRead = async (id, actionUrl) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
-    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`, { method: "PATCH" }); } catch (e) {}
+    try { await authFetch(`${API_URL}/api/notifications/${id}/read`, { method: "PATCH" }); } catch (e) {}
     if (actionUrl) {
       navigate(actionUrl);
       setNotifOpen(false);
@@ -82,7 +111,7 @@ const AppLayout = () => {
     e.stopPropagation();
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     setUnreadCount(0);
-    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/user/${user.id}/read-all`, { method: "PATCH" }); } catch (e) {}
+    try { await authFetch(`${API_URL}/api/notifications/read-all`, { method: "PATCH" }); } catch (e) {}
   };
 
   const deleteNotification = async (e, id) => {
@@ -91,14 +120,14 @@ const AppLayout = () => {
     if (!notification) return;
     setNotifications(prev => prev.filter(n => n.id !== id));
     if (!notification.is_read) setUnreadCount(prev => Math.max(0, prev - 1));
-    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}`, { method: "DELETE" }); } catch (e) {}
+    try { await authFetch(`${API_URL}/api/notifications/${id}`, { method: "DELETE" }); } catch (e) {}
   };
 
   const clearAllNotifications = async (e) => {
     e.stopPropagation();
     setNotifications([]);
     setUnreadCount(0);
-    try { await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/user/${user.id}`, { method: "DELETE" }); } catch (e) {}
+    try { await authFetch(`${API_URL}/api/notifications`, { method: "DELETE" }); } catch (e) {}
   };
 
   const getRelativeTime = (dateStr) => {
@@ -138,12 +167,17 @@ const AppLayout = () => {
 
           {/* ── Logo ── */}
           <Link to="/dashboard" className="no-underline shrink-0">
-            <BrandMark compact={true} />
+            <BrandMark compact={true} hideTextOnMobile={true} />
           </Link>
 
-          {/* ── Desktop nav tabs ── */}
-          <nav className="hidden lg:flex items-center gap-[2px] flex-1 justify-center">
-            {navItems.map((item) => (
+          {/* ── Desktop nav tabs ──
+              xl (1280px), not lg (1024px): with 7 items + the full right-side
+              action cluster, the row doesn't actually fit at 1024px — verified
+              via rendered-viewport testing, not just the lg breakpoint's name. */}
+          <nav className="hidden xl:flex items-center gap-[2px] flex-1 justify-center">
+            {NAV_ITEMS.map((item) => {
+              const badge = item.badgeKey ? navBadges[item.badgeKey] : 0;
+              return (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -156,15 +190,16 @@ const AppLayout = () => {
                 {({ isActive }) => (
                   <>
                     {item.label}
-                    {item.badge && (
+                    {badge > 0 && (
                       <span className={`text-white rounded-full text-[10px] font-bold py-[1px] px-[6px] leading-[16px] min-w-[18px] text-center ${isActive ? "bg-primary" : "bg-primary-light text-primary"}`}>
-                        {item.badge}
+                        {badge}
                       </span>
                     )}
                   </>
                 )}
               </NavLink>
-            ))}
+              );
+            })}
           </nav>
 
           {/* ── Right side actions ── */}
@@ -196,7 +231,14 @@ const AppLayout = () => {
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 top-[50px] w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
+                // Fixed (not absolute) + anchored to the header's own right
+                // padding, not the bell button: the bell sits left of the
+                // avatar and hamburger, so anchoring to it let a 320px-wide
+                // panel run off the left edge of narrow viewports. Anchoring
+                // to the viewport/header edge instead keeps it fully on-screen
+                // at every width without changing how it looks on desktop,
+                // where it already had room to spare.
+                <div className="fixed right-4 lg:right-8 top-[80px] w-[320px] max-w-[calc(100vw-2rem)] bg-card border border-border-light shadow-sm rounded-[16px] p-4 z-[100]">
                   <div className="flex justify-between mb-3 items-center">
                     <span className="font-bold text-[14px] text-text-primary">Notifications</span>
                     <div className="flex gap-2 items-center">
@@ -292,7 +334,7 @@ const AppLayout = () => {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(v => !v)}
-              className="lg:hidden w-[40px] h-[40px] rounded-full border-[1.5px] border-border-light bg-white flex items-center justify-center cursor-pointer text-text-secondary"
+              className="xl:hidden w-[40px] h-[40px] rounded-full border-[1.5px] border-border-light bg-white flex items-center justify-center cursor-pointer text-text-secondary"
               aria-label="Menu"
             >
               {mobileOpen ? <X size={17} /> : <Menu size={17} />}
@@ -302,8 +344,10 @@ const AppLayout = () => {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="absolute top-full left-0 w-full border-b border-border-light bg-white p-[12px_20px_16px] lg:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
-            {navItems.map(item => (
+          <div className="absolute top-full left-0 w-full border-b border-border-light bg-white p-[12px_20px_16px] xl:hidden max-h-[calc(100vh-72px)] overflow-y-auto shadow-lg">
+            {NAV_ITEMS.map(item => {
+              const badge = item.badgeKey ? navBadges[item.badgeKey] : 0;
+              return (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -315,13 +359,14 @@ const AppLayout = () => {
                 }
               >
                 <span>{item.label}</span>
-                {item.badge && (
+                {badge > 0 && (
                   <span className="bg-primary text-white rounded-full text-[10px] font-bold py-[1px] px-[7px]">
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </NavLink>
-            ))}
+              );
+            })}
           </div>
         )}
       </header>

@@ -15,6 +15,7 @@ const MatchesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [heartedCards, setHeartedCards] = useState({});
+  const [likedCards, setLikedCards] = useState({});
 
   const fetchMatches = () => {
     setLoading(true);
@@ -63,33 +64,70 @@ const MatchesPage = () => {
     }
   };
 
+  // Real Like/Pass — persisted via /api/interactions, not local-only state.
+  // A pass on a recommended candidate removes them from this list, since
+  // matches.js only recommends people with no existing interaction.
+  const interact = async (id, action) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/interactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_id: id, action })
+      });
+      if (!res.ok) return;
+      if (action === 'like') {
+        setLikedCards(h => ({ ...h, [id]: true }));
+      } else {
+        setMatches(prev => prev.filter(m => m.id !== id));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const [dashboardStats, setDashboardStats] = useState({ matches: 0, views: 0 });
+  const [activity, setActivity] = useState([]);
+
   useEffect(() => {
     fetchMatches();
     fetchFavorites();
+
+    // Same endpoint the Dashboard uses — one source of truth for real match
+    // counts, view counts, and recent activity, instead of a second,
+    // independently-hardcoded copy living in this page.
+    authFetch(`${import.meta.env.VITE_API_URL}/api/dashboard`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        setDashboardStats(data.stats || { matches: 0, views: 0 });
+        setActivity((data.recentActivity || []).map((a, i) => ({
+          id: i,
+          user: a.name,
+          action: a.action,
+          time: new Date(a.time).toLocaleString(),
+          status: a.online ? "green" : "grey",
+          image: a.image,
+        })));
+      })
+      .catch(console.error);
   }, []);
-  
-  // Dummy data matching screenshot
+
+  // Real counts: confirmed mutual matches and profile views come from the
+  // dashboard endpoint; the compatibility buckets are computed from the
+  // actual matchScore already returned by /api/matches for each candidate.
+  const highCompatibility = matches.filter(m => m.matchScore >= 90).length;
+  const goodCompatibility = matches.filter(m => m.matchScore >= 60 && m.matchScore < 90).length;
   const stats = [
-    { label: "Total Matches", value: "24", sub: "↑ 6 new this week", subColor: "text-green-600", icon: <Users size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
-    { label: "High Compatibility", value: "12", sub: "90% and above", subColor: "text-slate-500", icon: <Heart size={22} className="text-[#E91E63]" fill="currentColor" />, iconBg: "bg-pink-50" },
-    { label: "Good Compatibility", value: "18", sub: "60% - 89%", subColor: "text-slate-500", icon: <Star size={22} className="text-orange-500" fill="currentColor" />, iconBg: "bg-orange-50" },
-    { label: "Viewed You", value: "15", sub: "People interested in you", subColor: "text-slate-500", icon: <Eye size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
-  ];
-
-  // matches is state now
-
-  const activity = [
-    { id: 1, user: "Ayesha Khan", action: "viewed your profile", time: "2 minutes ago", status: "green", image: "/images/profile_f1.jpg" },
-    { id: 2, user: "Fatima Ali", action: "sent you a message", time: "15 minutes ago", status: "green", image: "/images/profile_f2.jpg" },
-    { id: 3, user: "Zainab Malik", action: "liked your profile", time: "1 hour ago", status: "grey", image: "/images/profile_f3.jpg" },
-    { id: 4, user: "Hira Ahmed", action: "favorited you", time: "2 hours ago", status: "grey", image: "/images/profile_f4.jpg" },
-    { id: 5, user: "Sarah Batool", action: "viewed your profile", time: "3 hours ago", status: "grey", image: "/images/profile_f6.jpg" },
+    { label: "Total Matches", value: String(dashboardStats.matches ?? 0), sub: "Mutual likes", subColor: "text-green-600", icon: <Users size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
+    { label: "High Compatibility", value: String(highCompatibility), sub: "90% and above", subColor: "text-slate-500", icon: <Heart size={22} className="text-[#E91E63]" fill="currentColor" />, iconBg: "bg-pink-50" },
+    { label: "Good Compatibility", value: String(goodCompatibility), sub: "60% - 89%", subColor: "text-slate-500", icon: <Star size={22} className="text-orange-500" fill="currentColor" />, iconBg: "bg-orange-50" },
+    { label: "Viewed You", value: String(dashboardStats.views ?? 0), sub: "People interested in you", subColor: "text-slate-500", icon: <Eye size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
   ];
 
   return (
     <div className="min-h-[calc(100vh-72px)] bg-[#f9fafb] px-4 md:px-6 py-6 md:py-8">
       <div className="w-full max-w-[1920px] 2xl:px-8 mx-auto">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:items-start">
           
           {/* ── LEFT COLUMN ── */}
           <div className="flex-1 flex flex-col gap-6 min-w-0 w-full">
@@ -120,8 +158,8 @@ const MatchesPage = () => {
                     <div className={`w-12 h-12 rounded-[14px] ${s.iconBg} flex items-center justify-center shrink-0`}>
                       {s.icon}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[13px] text-slate-500 font-medium mb-0.5">{s.label}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[13px] text-slate-500 font-medium mb-0.5 break-words">{s.label}</span>
                       <span className="text-[28px] font-bold text-slate-800 leading-none">{s.value}</span>
                     </div>
                   </div>
@@ -202,6 +240,8 @@ const MatchesPage = () => {
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="font-bold text-[16px] text-slate-800">{m.name}, {m.age}</span>
                         <CheckCircle2 size={15} className="text-[#E91E63]" fill="#E91E63" color="white" />
+                        {/* Real premium status — from GET /api/matches (isPremium), backed by an active subscriptions row. */}
+                        {m.isPremium && <Crown size={14} className="text-[#E91E63]" fill="#E91E63" />}
                       </div>
                       <div className="text-[13px] text-slate-600 mb-1">{m.profession}</div>
                       <div className="text-[12px] text-slate-400 mb-4 flex items-center gap-1">
@@ -220,10 +260,10 @@ const MatchesPage = () => {
                         <Link to={`/profile/${m.id}`} className="flex-1 text-center py-2 text-[13px] font-bold bg-[#E91E63] hover:bg-[#d81557] text-white rounded-[10px] transition-colors no-underline">
                           View Profile
                         </Link>
-                        <button onClick={() => toggleHeart(m.id)} className="w-9 h-9 rounded-[10px] border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-pink-50 cursor-pointer transition-colors group">
-                          <Heart size={16} className={heartedCards[m.id] ? "text-[#E91E63]" : "text-slate-400 group-hover:text-[#E91E63]"} fill={heartedCards[m.id] ? "currentColor" : "none"} />
+                        <button onClick={() => interact(m.id, 'like')} title="Like" className="w-9 h-9 rounded-[10px] border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-pink-50 cursor-pointer transition-colors group">
+                          <Heart size={16} className={likedCards[m.id] ? "text-[#E91E63]" : "text-slate-400 group-hover:text-[#E91E63]"} fill={likedCards[m.id] ? "currentColor" : "none"} />
                         </button>
-                        <button className="w-9 h-9 rounded-[10px] border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50 cursor-pointer transition-colors group">
+                        <button onClick={() => interact(m.id, 'pass')} title="Pass" className="w-9 h-9 rounded-[10px] border border-slate-200 bg-white flex items-center justify-center shrink-0 hover:bg-slate-50 cursor-pointer transition-colors group">
                           <X size={16} className="text-slate-700 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
                         </button>
                       </div>
@@ -307,7 +347,7 @@ const MatchesPage = () => {
                 {activity.map(a => (
                   <div key={a.id} className="flex items-center justify-between gap-3 group cursor-pointer">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={a.image} alt={a.user} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" />
+                      <img src={photoUrl(a.image)} alt={a.user} className="w-[38px] h-[38px] rounded-full object-cover shrink-0" />
                       <div className="min-w-0">
                         <div className="text-[12px] text-slate-700 truncate">
                           <span className="font-bold">{a.user}</span> {a.action}

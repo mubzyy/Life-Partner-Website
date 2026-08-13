@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import EmptyState from "../components/EmptyState";
+import ReportUserModal from "../components/ReportUserModal";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
 
@@ -30,7 +31,7 @@ const EmojiPicker = ({ onSelect, onClose }) => (
 );
 
 // ── Context Menu ──────────────────────────────────────────────────────────────
-const ConvoContextMenu = ({ x, y, chat, onClose, onArchive, onDelete, onMute, onMark }) => {
+const ConvoContextMenu = ({ x, y, chat, onClose, onArchive, onDelete, onMute, onMark, onReport }) => {
   const ref = useRef(null);
   useEffect(() => {
     const handle = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
@@ -42,9 +43,9 @@ const ConvoContextMenu = ({ x, y, chat, onClose, onArchive, onDelete, onMute, on
       className="bg-white border border-slate-100 rounded-[14px] shadow-xl py-1.5 w-[180px]">
       {[
         { icon: <Inbox size={14} />, label: chat.unread > 0 ? "Mark as Read" : "Mark as Unread", action: onMark },
-        { icon: <BellOff size={14} />, label: "Mute", action: onMute },
+        { icon: <BellOff size={14} />, label: chat.muted ? "Unmute" : "Mute", action: onMute },
         { icon: <Archive size={14} />, label: chat.archived ? "Unarchive" : "Archive", action: onArchive },
-        { icon: <Flag size={14} />, label: "Report", action: onClose },
+        { icon: <Flag size={14} />, label: "Report", action: onReport },
         { icon: <Trash2 size={14} />, label: "Delete Chat", action: onDelete, danger: true },
       ].map((item) => (
         <button key={item.label} onClick={() => { item.action?.(); onClose(); }}
@@ -74,6 +75,7 @@ const MessagesPage = () => {
   const [inputText, setInputText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [contextMenu, setContextMenu] = useState(null); // { x, y, chat }
+  const [reportTarget, setReportTarget] = useState(null); // chat being reported
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -229,15 +231,59 @@ const MessagesPage = () => {
   };
 
   // ── Context menu actions ─────────────────────────────────────────────────
+  // Every one of these persists via PATCH/DELETE /api/messages/conversations/:id
+  // — the local setConversations call only reflects what the backend already
+  // confirmed, it never invents state the server doesn't have.
   const handleContextMenu = (e, chat) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, chat });
   };
 
-  const ctxArchive = (chat) => setConversations((prev) => prev.map((c) => c.userId === chat.userId ? { ...c, archived: !c.archived } : c));
-  const ctxDelete = (chat) => { setConversations((prev) => prev.filter((c) => c.userId !== chat.userId)); if (activeChatId === chat.userId) setActiveChatId(conversations[0]?.userId); };
-  const ctxMark = (chat) => setConversations((prev) => prev.map((c) => c.userId === chat.userId ? { ...c, unread: c.unread > 0 ? 0 : 1 } : c));
-  const ctxMute = () => {}; // visual-only
+  const patchConversation = async (chat, patch) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/messages/conversations/${chat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error("Failed to update conversation");
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  const ctxArchive = async (chat) => {
+    const next = !chat.archived;
+    if (await patchConversation(chat, { archived: next })) {
+      setConversations((prev) => prev.map((c) => c.userId === chat.userId ? { ...c, archived: next } : c));
+    }
+  };
+
+  const ctxDelete = async (chat) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/messages/conversations/${chat.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete conversation");
+      setConversations((prev) => prev.filter((c) => c.userId !== chat.userId));
+      if (activeChatId === chat.userId) setActiveChatId(conversations.find((c) => c.userId !== chat.userId)?.userId ?? null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const ctxMark = async (chat) => {
+    const nextUnread = !(chat.unread > 0);
+    if (await patchConversation(chat, { unread: nextUnread })) {
+      setConversations((prev) => prev.map((c) => c.userId === chat.userId ? { ...c, unread: nextUnread ? 1 : 0 } : c));
+    }
+  };
+  const ctxMute = async (chat) => {
+    const next = !chat.muted;
+    if (await patchConversation(chat, { muted: next })) {
+      setConversations((prev) => prev.map((c) => c.userId === chat.userId ? { ...c, muted: next } : c));
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-72px)] bg-white overflow-hidden relative w-full">
@@ -249,10 +295,18 @@ const MessagesPage = () => {
           onClose={() => setContextMenu(null)}
           onArchive={() => ctxArchive(contextMenu.chat)}
           onDelete={() => ctxDelete(contextMenu.chat)}
-          onMute={ctxMute}
+          onMute={() => ctxMute(contextMenu.chat)}
           onMark={() => ctxMark(contextMenu.chat)}
+          onReport={() => setReportTarget(contextMenu.chat)}
         />
       )}
+
+      <ReportUserModal
+        isOpen={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        reportedId={reportTarget?.userId}
+        reportedName={reportTarget?.name}
+      />
 
       {/* ── LEFT COLUMN ─────────────────────────────────────────────────────── */}
       <div className={`w-full md:w-[320px] lg:w-[340px] bg-white border-r border-slate-100 flex flex-col shrink-0 transition-transform duration-300 z-10 absolute md:relative top-0 bottom-0 left-0

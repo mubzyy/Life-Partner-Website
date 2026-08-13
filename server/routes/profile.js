@@ -1,12 +1,15 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const jwt = require("jsonwebtoken");
 const pool = require("../db");
 const authMiddleware = require("../middleware/auth");
 const { upload, PHOTOS_DIR } = require("../middleware/upload");
 const { STEP_IDS } = require("../lib/profileFields");
 const { validateStep, validatePartnerCountryIds } = require("../lib/profileValidation");
 const { calculateCompletion } = require("../lib/profileCompletion");
+const { isMatched } = require("../lib/matching");
+const { isUserPremium } = require("../lib/premium");
 
 const router = express.Router();
 
@@ -18,7 +21,7 @@ async function loadFullProfile(userId) {
   const result = await pool.query(
     `
     SELECT
-      u.id AS user_id, u.first_name, u.last_name, u.email,
+      u.id AS user_id, u.first_name, u.last_name, u.email, u.last_login,
       up.profile_photo_url, up.gender, up.date_of_birth, up.marital_status,
       up.height, up.weight, up.religion, up.sect, up.mother_tongue,
       up.nationality, up.nationality_id, n.nationality AS nationality_name,
@@ -55,12 +58,14 @@ async function loadFullProfile(userId) {
   ]);
 
   const completion = calculateCompletion(row, countriesResult.rows.length);
+  const isPremium = await isUserPremium(pool, userId);
 
   return {
     ...row,
     partner_countries: countriesResult.rows,
     photos: photosResult.rows,
     completion,
+    isPremium,
   };
 }
 
@@ -322,10 +327,36 @@ router.delete("/me/photos/:photoId", authMiddleware, async (req, res) => {
   }
 });
 
+// Reads the JWT if one is present, but never rejects the request for having
+// none — this endpoint is public, but knowing who's asking (if anyone) is
+// what lets it honor profile_visibility below.
+function getOptionalViewerId(req) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) return null;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET).id;
+  } catch {
+    return null;
+  }
+}
+
+// Delegates to the real matches table (server/lib/matching.js) — the same
+// authoritative record interactions.js writes to, instead of re-deriving a
+// mutual-like via a self-join here.
+async function isMutualMatch(userAId, userBId) {
+  return isMatched(pool, userAId, userBId);
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // GET /api/profile/:userId — public read of any user's profile (used when
 // browsing other members: Search, Matches, Profile View, Messages headers).
 // Read-only, no ownership implied — writes always go through /me.
+//
+// Honors the profile owner's profile_visibility setting (Settings > Privacy):
+//   everyone → anyone can view
+//   matches  → only a mutual match (or the owner) can view
+//   private  → only the owner can view
 // ─────────────────────────────────────────────────────────────────────────
 router.get("/:userId", async (req, res) => {
   const userId = Number(req.params.userId);
@@ -333,10 +364,54 @@ router.get("/:userId", async (req, res) => {
     return res.status(400).json({ message: "Invalid user id." });
   }
   try {
+    const viewerId = getOptionalViewerId(req);
+    const isOwner = viewerId === userId;
+
+    const settingsResult = await pool.query(
+      "SELECT profile_visibility, last_seen_visibility FROM user_settings WHERE user_id = $1",
+      [userId]
+    );
+    const profileVisibility = settingsResult.rows[0]?.profile_visibility || "everyone";
+    const lastSeenVisibility = settingsResult.rows[0]?.last_seen_visibility || "matches";
+
+    let mutual = null; // computed lazily, reused for both checks below
+    const checkMutual = async () => {
+      if (mutual === null) mutual = viewerId ? await isMutualMatch(viewerId, userId) : false;
+      return mutual;
+    };
+
+    if (!isOwner) {
+      if (viewerId) {
+        const blockResult = await pool.query(
+          `SELECT id FROM blocks WHERE (blocker_id = $1 AND blocked_id = $2) OR (blocker_id = $2 AND blocked_id = $1)`,
+          [viewerId, userId]
+        );
+        if (blockResult.rows.length > 0) {
+          return res.status(403).json({ message: "This profile is not available." });
+        }
+      }
+      if (profileVisibility === "private") {
+        return res.status(403).json({ message: "This profile is private." });
+      }
+      if (profileVisibility === "matches" && !(await checkMutual())) {
+        return res.status(403).json({ message: "This profile is only visible to matches." });
+      }
+    }
+
     const full = await loadFullProfile(userId);
     if (!full) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Redact last_login (used for "last active") unless the viewer is allowed
+    // to see it — enforced server-side, not just hidden in the UI.
+    if (!isOwner) {
+      const canSeeLastSeen =
+        lastSeenVisibility === "everyone" ||
+        (lastSeenVisibility === "matches" && (await checkMutual()));
+      if (!canSeeLastSeen) full.last_login = null;
+    }
+
     res.json(full);
   } catch (err) {
     console.error("GET /profile/:userId error:", err);

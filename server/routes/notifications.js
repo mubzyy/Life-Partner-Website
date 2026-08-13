@@ -1,15 +1,19 @@
 const express = require("express");
 const pool = require("../db");
+const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/notifications/:userId - Fetch all notifications for a user
-router.get("/:userId", async (req, res) => {
+// Every route below is authenticated and scoped to req.user.id — there is no
+// way to read, mark-read, or delete another user's notifications by passing
+// a different id, because no id is ever taken from the client for ownership.
+
+// GET /api/notifications — the authenticated user's own notifications.
+router.get("/", authMiddleware, async (req, res) => {
     try {
-        const { userId } = req.params;
         const result = await pool.query(
             "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC",
-            [userId]
+            [req.user.id]
         );
         res.json(result.rows);
     } catch (err) {
@@ -18,14 +22,16 @@ router.get("/:userId", async (req, res) => {
     }
 });
 
-// PATCH /api/notifications/:id/read - Mark a single notification as read
-router.patch("/:id/read", async (req, res) => {
+// PATCH /api/notifications/:id/read — mark one of MY notifications as read.
+router.patch("/:id/read", authMiddleware, async (req, res) => {
     try {
-        const { id } = req.params;
-        await pool.query(
-            "UPDATE notifications SET is_read = true WHERE id = $1",
-            [id]
+        const result = await pool.query(
+            "UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2 RETURNING id",
+            [req.params.id, req.user.id]
         );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Notification not found." });
+        }
         res.json({ message: "Notification marked as read" });
     } catch (err) {
         console.error("Error updating notification:", err);
@@ -33,14 +39,10 @@ router.patch("/:id/read", async (req, res) => {
     }
 });
 
-// PATCH /api/notifications/user/:userId/read-all - Mark all notifications as read for a user
-router.patch("/user/:userId/read-all", async (req, res) => {
+// PATCH /api/notifications/read-all — mark all of MY notifications as read.
+router.patch("/read-all", authMiddleware, async (req, res) => {
     try {
-        const { userId } = req.params;
-        await pool.query(
-            "UPDATE notifications SET is_read = true WHERE user_id = $1",
-            [userId]
-        );
+        await pool.query("UPDATE notifications SET is_read = true WHERE user_id = $1", [req.user.id]);
         res.json({ message: "All notifications marked as read" });
     } catch (err) {
         console.error("Error marking all notifications as read:", err);
@@ -48,14 +50,16 @@ router.patch("/user/:userId/read-all", async (req, res) => {
     }
 });
 
-// DELETE /api/notifications/:id - Delete a single notification
-router.delete("/:id", async (req, res) => {
+// DELETE /api/notifications/:id — delete one of MY notifications.
+router.delete("/:id", authMiddleware, async (req, res) => {
     try {
-        const { id } = req.params;
-        await pool.query(
-            "DELETE FROM notifications WHERE id = $1",
-            [id]
+        const result = await pool.query(
+            "DELETE FROM notifications WHERE id = $1 AND user_id = $2 RETURNING id",
+            [req.params.id, req.user.id]
         );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Notification not found." });
+        }
         res.json({ message: "Notification deleted" });
     } catch (err) {
         console.error("Error deleting notification:", err);
@@ -63,14 +67,10 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-// DELETE /api/notifications/user/:userId - Delete all notifications for a user
-router.delete("/user/:userId", async (req, res) => {
+// DELETE /api/notifications — clear all of MY notifications.
+router.delete("/", authMiddleware, async (req, res) => {
     try {
-        const { userId } = req.params;
-        await pool.query(
-            "DELETE FROM notifications WHERE user_id = $1",
-            [userId]
-        );
+        await pool.query("DELETE FROM notifications WHERE user_id = $1", [req.user.id]);
         res.json({ message: "All notifications deleted" });
     } catch (err) {
         console.error("Error deleting all notifications:", err);
