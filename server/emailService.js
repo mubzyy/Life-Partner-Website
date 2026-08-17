@@ -1,51 +1,14 @@
-const nodemailer = require("nodemailer");
+const { sendEmail } = require("./lib/mail");
 
 /**
- * Email service layer — Nodemailer/SMTP, configured entirely via environment
- * variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM). This is
- * the single place any route sends email from; nothing else in the app
- * touches nodemailer or SMTP directly.
+ * Email service layer — owns the templates and wording for every email the app
+ * sends. Delivery itself is handled by lib/mail.js (the Core-Gate transport),
+ * which is the only module that talks to a mail provider.
  *
- * Replaces the previous Resend-based implementation. The exported function
+ * Replaces the previous Nodemailer/SMTP implementation. The exported function
  * signature (sendOtpEmail(to, otp, purpose)) and the HTML it sends are
  * unchanged, so every caller (server/routes/auth.js) needed zero changes.
  */
-
-const REQUIRED_VARS = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"];
-
-// The transporter is created lazily (on first send) and cached — not at
-// module load — so a server without SMTP configured can still boot and
-// serve every other route. Only the first attempt to actually send an email
-// pays the cost of discovering the misconfiguration, and it fails with a
-// clear, specific message instead of a generic crash or a silent no-op.
-let cachedTransporter = null;
-
-function getTransporter() {
-    const missing = REQUIRED_VARS.filter((name) => !process.env[name]);
-    if (missing.length > 0) {
-        throw new Error(
-            `Email service is not configured: missing environment variable(s) ${missing.join(", ")}. ` +
-            `Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM before sending email.`
-        );
-    }
-
-    if (cachedTransporter) return cachedTransporter;
-
-    const port = Number(process.env.SMTP_PORT);
-    cachedTransporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port,
-        // 465 is implicit TLS; every other port (587, 25, ...) negotiates
-        // STARTTLS instead — this matches how every mainstream SMTP provider
-        // (Gmail, Outlook, Zoho, Mailtrap) expects to be dialed.
-        secure: port === 465,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
-    });
-    return cachedTransporter;
-}
 
 /**
  * Send a beautifully styled OTP email
@@ -121,16 +84,9 @@ const sendOtpEmail = async (to, otp, purpose = "verification") => {
     </html>
   `;
 
-  const transporter = getTransporter();
+  await sendEmail(to, subject, html, true);
 
-  const info = await transporter.sendMail({
-    from: process.env.SMTP_FROM,
-    to,
-    subject,
-    html,
-  });
-
-  console.log("Email sent successfully via SMTP. Message ID:", info.messageId);
+  console.log(`OTP email (${purpose}) sent successfully to ${to}.`);
 };
 
 module.exports = { sendOtpEmail };
