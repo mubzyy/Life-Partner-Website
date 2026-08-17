@@ -1,6 +1,51 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Email service layer — Nodemailer/SMTP, configured entirely via environment
+ * variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM). This is
+ * the single place any route sends email from; nothing else in the app
+ * touches nodemailer or SMTP directly.
+ *
+ * Replaces the previous Resend-based implementation. The exported function
+ * signature (sendOtpEmail(to, otp, purpose)) and the HTML it sends are
+ * unchanged, so every caller (server/routes/auth.js) needed zero changes.
+ */
+
+const REQUIRED_VARS = ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"];
+
+// The transporter is created lazily (on first send) and cached — not at
+// module load — so a server without SMTP configured can still boot and
+// serve every other route. Only the first attempt to actually send an email
+// pays the cost of discovering the misconfiguration, and it fails with a
+// clear, specific message instead of a generic crash or a silent no-op.
+let cachedTransporter = null;
+
+function getTransporter() {
+    const missing = REQUIRED_VARS.filter((name) => !process.env[name]);
+    if (missing.length > 0) {
+        throw new Error(
+            `Email service is not configured: missing environment variable(s) ${missing.join(", ")}. ` +
+            `Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM before sending email.`
+        );
+    }
+
+    if (cachedTransporter) return cachedTransporter;
+
+    const port = Number(process.env.SMTP_PORT);
+    cachedTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port,
+        // 465 is implicit TLS; every other port (587, 25, ...) negotiates
+        // STARTTLS instead — this matches how every mainstream SMTP provider
+        // (Gmail, Outlook, Zoho, Mailtrap) expects to be dialed.
+        secure: port === 465,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+    return cachedTransporter;
+}
 
 /**
  * Send a beautifully styled OTP email
@@ -34,7 +79,7 @@ const sendOtpEmail = async (to, otp, purpose = "verification") => {
         <tr>
           <td align="center">
             <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-              
+
               <!-- Header -->
               <tr>
                 <td style="background:linear-gradient(135deg,#0f5d52,#1a7a6e);padding:36px 40px;text-align:center;">
@@ -76,19 +121,16 @@ const sendOtpEmail = async (to, otp, purpose = "verification") => {
     </html>
   `;
 
-  const { data, error } = await resend.emails.send({
-    from: "Life Partner <onboarding@resend.dev>",
-    to: [to],
+  const transporter = getTransporter();
+
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to,
     subject,
     html,
   });
 
-  if (error) {
-    console.error("Resend API Error:", error);
-    throw new Error(error.message);
-  }
-
-  console.log("Email sent successfully via Resend API. ID:", data.id);
+  console.log("Email sent successfully via SMTP. Message ID:", info.messageId);
 };
 
 module.exports = { sendOtpEmail };

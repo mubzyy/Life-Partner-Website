@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ShieldCheck, CheckCircle2, Heart, ChevronDown, Search, Mail, Lock, User, UserPlus, MapPin } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, CheckCircle2, Heart, ChevronDown, Search, Mail, Lock, User, UserPlus, MapPin, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import BrandMark from "../components/BrandMark";
 
@@ -403,15 +403,22 @@ const RegisterPage = () => {
 
       <BackgroundShowcase />
 
-      {/* Header (Absolute top left) */}
-      <div className="hidden md:block absolute top-0 left-0 px-6 py-6 z-20">
+      {/* Header (Absolute top left) — back to home, visible at every viewport width */}
+      <div className="absolute top-0 left-0 px-6 py-6 z-20 flex flex-col items-start gap-2">
         <Link to="/" className="inline-flex items-center gap-3.5 no-underline transition-opacity hover:opacity-90">
-          <BrandMark />
+          <BrandMark hideTextOnMobile={true} />
+        </Link>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 no-underline text-text-secondary text-[13px] font-semibold hover:text-primary transition-colors"
+        >
+          <ArrowLeft size={16} /> Back to Home
         </Link>
       </div>
 
-      {/* Form Container */}
-      <div className="flex flex-col items-center justify-center px-4 py-8 lg:py-12 z-10 relative w-full">
+      {/* Form Container — extra top clearance below sm so the header's stacked
+          logo + "Back to Home" link never overlaps the heading text. */}
+      <div className="flex flex-col items-center justify-center px-4 pt-32 pb-8 sm:pt-28 md:pt-8 lg:py-12 z-10 relative w-full">
         
         <div className="w-full max-w-3xl">
           <div className="bg-card rounded-[32px] p-6 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">

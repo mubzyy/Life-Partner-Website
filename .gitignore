@@ -1,0 +1,3 @@
+# Claude Code local settings — tool permissions for this machine only,
+# not part of the app, never wanted in the repo.
+.claude/

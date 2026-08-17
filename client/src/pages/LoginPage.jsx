@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import BrandMark from "../components/BrandMark";
@@ -229,10 +229,16 @@ const LoginPage = () => {
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
 
-      {/* Header */}
-      <div className="hidden md:block absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20">
+      {/* Header — back to home, visible at every viewport width */}
+      <div className="absolute top-0 left-0 px-6 py-4 md:px-8 md:py-6 z-20 flex flex-col items-start gap-2">
         <Link to="/" className="inline-flex items-center gap-2 no-underline transition-opacity hover:opacity-90">
-          <BrandMark />
+          <BrandMark hideTextOnMobile={true} />
+        </Link>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 no-underline text-text-secondary text-[13px] font-semibold hover:text-primary transition-colors"
+        >
+          <ArrowLeft size={16} /> Back to Home
         </Link>
       </div>
 
