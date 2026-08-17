@@ -30,6 +30,7 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "https://life-partner.ast.com.pk",
       "https://life-partner-website-in8u.vercel.app",
       "http://localhost:5173",
     ],
