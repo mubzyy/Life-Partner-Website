@@ -1,14 +1,33 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, Users, Crown } from "lucide-react";
+import { Search, Heart, MessageCircle, Bookmark, X, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, Users, Crown, Check, Trash2 } from "lucide-react";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
+import SimpleDropdown from "../components/SimpleDropdown";
+import { useAuth } from "../context/AuthContext";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const RESULTS_PER_PAGE = 20;
+
+const SORT_OPTIONS = [
+  { value: "recent",   label: "Recently Joined" },
+  { value: "oldest",   label: "Oldest Profiles" },
+  { value: "age_asc",  label: "Age: Youngest First" },
+  { value: "age_desc", label: "Age: Oldest First" },
+];
+
+// Saved searches are real and persisted, just client-side (per logged-in
+// user, in localStorage) rather than backed by a new DB table — there's no
+// server-side "saved_searches" feature, so this doesn't pretend to sync
+// across devices, it only remembers your filters on this browser.
+const savedSearchesKey = (userId) => `savedSearches:${userId || "anon"}`;
+const loadSavedSearches = (userId) => {
+  try { return JSON.parse(localStorage.getItem(savedSearchesKey(userId)) || "[]"); }
+  catch { return []; }
+};
 
 const DEFAULT_FILTERS = {
   minAge: 18,
@@ -33,6 +52,7 @@ const FILTER_OPTIONS = {
 };
 
 const SearchPage = () => {
+  const { user } = useAuth();
   const [queryInput, setQueryInput] = useState("");   // what's typed
   const [query, setQuery] = useState("");              // what was actually searched
   const [heartedCards, setHeartedCards] = useState({});
@@ -44,9 +64,19 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [sort, setSort] = useState("recent");
   const [showPremiumBanner, setShowPremiumBanner] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [savedSearches, setSavedSearches] = useState(() => loadSavedSearches(user?.id));
+  const [showSavedMenu, setShowSavedMenu] = useState(false);
+  const savedMenuRef = useRef(null);
   const requestIdRef = useRef(0); // guards against out-of-order responses
+
+  useEffect(() => {
+    const handle = (e) => { if (savedMenuRef.current && !savedMenuRef.current.contains(e.target)) setShowSavedMenu(false); };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
 
   const fetchFavorites = async () => {
     try {
@@ -62,9 +92,9 @@ const SearchPage = () => {
     }
   };
 
-  // Real server-side search: filters, text query, and pagination all travel
-  // in one request — nothing is fetched-then-filtered-in-React.
-  const fetchProfiles = async (targetPage = page, activeFilters = filters, activeQuery = query) => {
+  // Real server-side search: filters, text query, sort, and pagination all
+  // travel in one request — nothing is fetched-then-filtered-in-React.
+  const fetchProfiles = async (targetPage = page, activeFilters = filters, activeQuery = query, activeSort = sort) => {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(false);
@@ -72,7 +102,7 @@ const SearchPage = () => {
       const res = await authFetch(`${API_URL}/api/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...activeFilters, query: activeQuery, page: targetPage, limit: RESULTS_PER_PAGE })
+        body: JSON.stringify({ ...activeFilters, query: activeQuery, sort: activeSort, page: targetPage, limit: RESULTS_PER_PAGE })
       });
       if (requestId !== requestIdRef.current) return; // a newer request superseded this one
       if (!res.ok) throw new Error("Search failed");
@@ -171,6 +201,44 @@ const SearchPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleSortChange = (value) => {
+    setSort(value);
+    fetchProfiles(1, filters, query, value);
+  };
+
+  // Saved searches — real persistence (localStorage, per logged-in user),
+  // not just a button that toasts and forgets.
+  const persistSavedSearches = (next) => {
+    setSavedSearches(next);
+    try { localStorage.setItem(savedSearchesKey(user?.id), JSON.stringify(next)); } catch (e) {}
+  };
+
+  const saveCurrentSearch = () => {
+    const activeCount = getActiveFilters().length;
+    const label = queryInput.trim()
+      ? `"${queryInput.trim()}"${activeCount ? ` +${activeCount} filter${activeCount !== 1 ? "s" : ""}` : ""}`
+      : activeCount
+      ? `${activeCount} filter${activeCount !== 1 ? "s" : ""}`
+      : "All profiles";
+    const entry = { id: Date.now(), label, query: queryInput, filters, sort };
+    persistSavedSearches([entry, ...savedSearches].slice(0, 10));
+    setShowSavedMenu(true);
+  };
+
+  const applySavedSearch = (s) => {
+    setQueryInput(s.query || "");
+    setQuery(s.query || "");
+    setFilters(s.filters);
+    setSort(s.sort || "recent");
+    fetchProfiles(1, s.filters, s.query || "", s.sort || "recent");
+    setShowSavedMenu(false);
+  };
+
+  const deleteSavedSearch = (e, id) => {
+    e.stopPropagation();
+    persistSavedSearches(savedSearches.filter(s => s.id !== id));
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / RESULTS_PER_PAGE));
 
   return (
@@ -191,10 +259,7 @@ const SearchPage = () => {
               <SlidersHorizontal size={14} className="text-text-muted" />
               <span className="text-[13px] text-slate-700 font-bold">Filters</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-card rounded-lg py-2 px-3.5 border border-border-light cursor-pointer hover:bg-slate-50 transition-colors">
-              <span className="text-[13px] text-slate-700">Sort by: <strong>Recently Joined</strong></span>
-              <ChevronDown size={14} className="text-text-muted" />
-            </div>
+            <SimpleDropdown label="Sort by:" options={SORT_OPTIONS} value={sort} onChange={handleSortChange} />
           </div>
         </div>
 
@@ -219,7 +284,11 @@ const SearchPage = () => {
                   type="number"
                   min="18" max="60"
                   value={filters.minAge}
-                  onChange={e => setFilters(f => ({ ...f, minAge: Number(e.target.value) }))}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    if (raw === "") return setFilters(f => ({ ...f, minAge: "" }));
+                    setFilters(f => ({ ...f, minAge: Math.min(60, Math.max(18, Number(raw))) }));
+                  }}
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
                 <span className="text-slate-400">-</span>
@@ -227,7 +296,11 @@ const SearchPage = () => {
                   type="number"
                   min="18" max="60"
                   value={filters.maxAge}
-                  onChange={e => setFilters(f => ({ ...f, maxAge: Number(e.target.value) }))}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    if (raw === "") return setFilters(f => ({ ...f, maxAge: "" }));
+                    setFilters(f => ({ ...f, maxAge: Math.min(60, Math.max(18, Number(raw))) }));
+                  }}
                   className="w-full text-center text-sm py-1.5 border border-border-light rounded-md bg-slate-50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -260,6 +333,7 @@ const SearchPage = () => {
                   value={filters[f.key]}
                   onChange={e => setFilters(prev => ({ ...prev, [f.key]: e.target.value }))}
                   placeholder={f.placeholder}
+                  maxLength={100}
                   className="w-full bg-slate-50 rounded-lg py-2 px-3 border border-border-light text-[13px] text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
               </div>
@@ -307,6 +381,7 @@ const SearchPage = () => {
                   onChange={e => setQueryInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && runSearch()}
                   placeholder="Search by name or profession..."
+                  maxLength={100}
                   className="flex-1 border-none outline-none text-sm text-slate-700 bg-transparent py-3"
                 />
               </div>
@@ -314,10 +389,36 @@ const SearchPage = () => {
                 <button onClick={runSearch} className="flex-1 sm:flex-none px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all font-bold cursor-pointer text-sm">
                   Search
                 </button>
-                <button className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 rounded-xl border border-border-light border-border-light bg-card text-[13px] font-bold text-slate-700 cursor-pointer whitespace-nowrap hover:bg-slate-50 transition-colors">
-                  <Bookmark size={14} />
-                  Save Search
-                </button>
+                <div className="relative" ref={savedMenuRef}>
+                  <button
+                    onClick={() => setShowSavedMenu(v => !v)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-3 sm:py-0 rounded-xl border border-border-light bg-card text-[13px] font-bold text-slate-700 cursor-pointer whitespace-nowrap hover:bg-slate-50 transition-colors h-full">
+                    <Bookmark size={14} />
+                    Saved Searches{savedSearches.length > 0 ? ` (${savedSearches.length})` : ""}
+                  </button>
+                  {showSavedMenu && (
+                    <div className="absolute right-0 top-[calc(100%+6px)] z-20 w-[260px] max-w-[calc(100vw-2rem)] bg-white border border-border-light rounded-xl shadow-lg py-2">
+                      <button
+                        onClick={saveCurrentSearch}
+                        className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[13px] font-bold text-primary bg-transparent border-none cursor-pointer hover:bg-slate-50">
+                        <Check size={14} /> Save current search
+                      </button>
+                      {savedSearches.length > 0 && <div className="my-1 border-t border-border-light" />}
+                      {savedSearches.map(s => (
+                        <div key={s.id} onClick={() => applySavedSearch(s)}
+                          className="flex items-center justify-between gap-2 px-4 py-2.5 text-[13px] text-slate-700 cursor-pointer hover:bg-slate-50">
+                          <span className="truncate">{s.label}</span>
+                          <button onClick={(e) => deleteSavedSearch(e, s.id)} className="shrink-0 text-slate-400 hover:text-red-500 bg-transparent border-none cursor-pointer p-0.5">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ))}
+                      {savedSearches.length === 0 && (
+                        <p className="px-4 py-2 text-[12px] text-text-muted m-0">No saved searches yet.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -429,7 +530,7 @@ const SearchPage = () => {
 
                     {/* Action buttons: Message, Pass, Like, View Profile */}
                     <div className="flex items-center gap-2">
-                      <Link to={`/messages`} title="Message" className="w-8 h-8 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
+                      <Link to={`/messages?user=${p.id}`} title="Message" className="w-8 h-8 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors shrink-0">
                         <MessageCircle size={14} className="text-text-secondary" />
                       </Link>
                       <button onClick={() => interact(p.id, 'pass')} title="Pass"

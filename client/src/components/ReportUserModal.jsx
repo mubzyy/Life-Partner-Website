@@ -93,10 +93,11 @@ const ReportUserModal = ({ isOpen, onClose, reportedId, reportedName, onSubmitte
 
             <label className="block text-[12px] font-bold text-slate-700 mb-1.5">Details (optional)</label>
             <textarea
-              rows={3} value={details} onChange={e => setDetails(e.target.value)}
+              rows={3} maxLength={1000} value={details} onChange={e => setDetails(e.target.value)}
               placeholder="Add any extra context..."
-              className="w-full p-3 mb-4 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none"
+              className="w-full p-3 mb-1 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none"
             />
+            <p className="mt-0 mb-4 text-[11px] text-slate-400 text-right">{details.length}/1000</p>
 
             <div className="flex gap-3">
               <button type="button" onClick={close} className="flex-1 py-2.5 rounded-[12px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">

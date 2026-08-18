@@ -115,9 +115,9 @@ const FavoritesPage = () => {
                     <Link to={`/profile/${p.id}`} className="flex-1 text-center py-2 text-[13px] font-bold text-[#E91E63] bg-pink-50 hover:bg-pink-100 rounded-xl transition-colors no-underline">
                       View Profile
                     </Link>
-                    <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors shrink-0">
+                    <Link to={`/messages?user=${p.id}`} className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors shrink-0 no-underline">
                       <MessageCircle size={18} />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

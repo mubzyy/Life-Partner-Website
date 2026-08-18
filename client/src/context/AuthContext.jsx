@@ -91,6 +91,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Real "Sign in with Google": POST /api/auth/google with the ID token
+  // Google's own button hands back. Same response shape as signIn, so it
+  // persists exactly the same way.
+  const signInWithGoogle = async (credential) => {
+    try {
+      const response = await fetch(`${API_BASE}/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { data: null, error: { message: data.message || "Google sign-in failed." } };
+      }
+
+      const userData = { ...data };
+      persistUser(userData);
+      return { data: { user: userData }, error: null };
+    } catch {
+      return { data: null, error: { message: "Unable to connect to the server." } };
+    }
+  };
+
   const signOut = () => {
     setUser(null);
     setProfile(null);
@@ -99,7 +124,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = useMemo(
-    () => ({ user, loading, profile, profileLoading, signIn, signOut, refreshProfile }),
+    () => ({ user, loading, profile, profileLoading, signIn, signInWithGoogle, signOut, refreshProfile }),
     [user, loading, profile, profileLoading, refreshProfile]
   );
 

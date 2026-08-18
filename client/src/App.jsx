@@ -18,6 +18,7 @@ import ProfileViewPage from "./pages/ProfileViewPage";
 import MyProfilePage from "./pages/MyProfilePage";
 import FavoritesPage from "./pages/FavoritesPage";
 import VisitorsPage from "./pages/VisitorsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import PricingPage from "./pages/PricingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -109,6 +110,7 @@ const AppRoutes = () => (
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/visitors" element={<VisitorsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/subscription" element={<PricingPage />} />
         <Route path="/packages" element={<PricingPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

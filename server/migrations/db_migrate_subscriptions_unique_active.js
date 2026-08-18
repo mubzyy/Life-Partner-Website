@@ -4,7 +4,7 @@
 // `matches` and `conversations.pair_key`. Never drops or truncates anything;
 // safe to re-run (CREATE ... IF NOT EXISTS).
 
-const pool = require("./db");
+const pool = require("../db");
 
 async function migrate() {
     try {

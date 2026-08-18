@@ -6,8 +6,19 @@ import {
   BarChart2, CheckCircle2, RefreshCw
 } from "lucide-react";
 import EmptyState from "../components/EmptyState";
+import SimpleDropdown from "../components/SimpleDropdown";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
+
+const PERIOD_OPTIONS = [
+  { value: "all", label: "All Time" },
+  { value: "7d", label: "Last 7 Days" },
+  { value: "30d", label: "Last 30 Days" },
+];
+const SORT_OPTIONS = [
+  { value: "recent", label: "Most Recent" },
+  { value: "oldest", label: "Oldest First" },
+];
 
 const BOOST_TIPS = [
   { icon: <Zap size={16} className="text-[#E91E63]" />,   title: "Increase Profile Visibility", desc: "Reach more potential matches" },
@@ -28,6 +39,8 @@ const VisitorsPage = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [likedIds, setLikedIds] = useState(new Set());
   const [visibleCount, setVisibleCount] = useState(7);
+  const [period, setPeriod] = useState("all");
+  const [sortOrder, setSortOrder] = useState("recent");
 
   const [visitors, setVisitors] = useState([]);
   const [stats, setStats] = useState([
@@ -97,7 +110,21 @@ const VisitorsPage = () => {
     }
   };
 
-  const filteredVisitors = visitors; // Assuming all visitors are returned
+  const now = Date.now();
+  const withinPeriod = (v) => {
+    if (period === "all") return true;
+    const days = period === "7d" ? 7 : 30;
+    return now - new Date(v.time).getTime() <= days * 24 * 60 * 60 * 1000;
+  };
+
+  const filteredVisitors = visitors
+    .filter(withinPeriod)
+    .filter(v => activeTab === "new" ? (now - new Date(v.time).getTime() <= 7 * 24 * 60 * 60 * 1000) : true)
+    .sort((a, b) => sortOrder === "recent"
+      ? new Date(b.time) - new Date(a.time)
+      : new Date(a.time) - new Date(b.time));
+
+  const newThisWeekCount = visitors.filter(v => now - new Date(v.time).getTime() <= 7 * 24 * 60 * 60 * 1000).length;
 
   const visibleVisitors = filteredVisitors.slice(0, visibleCount);
   const maxChart = Math.max(...chartData.map(d => d.value), 10); // Ensure maxChart is at least 10 to avoid division by zero
@@ -123,11 +150,7 @@ const VisitorsPage = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-slate-50 shadow-sm">
-                  <BarChart2 size={15} className="text-slate-500" />
-                  <span className="text-[13px] font-medium text-slate-700">All Time</span>
-                  <ChevronDown size={14} className="text-slate-400" />
-                </div>
+                <SimpleDropdown icon={BarChart2} options={PERIOD_OPTIONS} value={period} onChange={(v) => { setPeriod(v); setVisibleCount(7); }} />
               </div>
             </div>
 
@@ -154,7 +177,7 @@ const VisitorsPage = () => {
               <div className="flex items-center gap-0 border-b border-slate-200 overflow-x-auto no-scrollbar">
                 {[
                   { id: "all",        label: "All Visitors",      count: visitors.length },
-                  { id: "new",        label: "New This Week",     count: visitors.length }, // Ideally filtered by date
+                  { id: "new",        label: "New This Week",     count: newThisWeekCount },
                 ].map(tab => (
                   <button key={tab.id} onClick={() => { setActiveTab(tab.id); setVisibleCount(7); }}
                     className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors cursor-pointer bg-transparent
@@ -168,10 +191,7 @@ const VisitorsPage = () => {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[13px] text-slate-500">Sort by:</span>
-                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 cursor-pointer hover:bg-slate-50 shadow-sm">
-                  <span className="text-[13px] font-medium text-slate-700">Most Recent</span>
-                  <ChevronDown size={14} className="text-slate-400" />
-                </div>
+                <SimpleDropdown options={SORT_OPTIONS} value={sortOrder} onChange={setSortOrder} />
               </div>
             </div>
 
@@ -275,7 +295,7 @@ const VisitorsPage = () => {
                   <div key={d.day} className="flex-1 text-center text-[10px] text-slate-400 font-medium">{d.day}</div>
                 ))}
               </div>
-              <button className="w-full mt-5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#E91E63] border border-pink-200 rounded-xl py-2.5 hover:bg-[#fff0f5] transition-colors cursor-pointer bg-white">
+              <button onClick={() => navigate("/dashboard")} className="w-full mt-5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#E91E63] border border-pink-200 rounded-xl py-2.5 hover:bg-[#fff0f5] transition-colors cursor-pointer bg-white">
                 <TrendingUp size={15} /> View Analytics
               </button>
             </div>
@@ -315,8 +335,8 @@ const VisitorsPage = () => {
                   </div>
                 ))}
               </div>
-              <button className="w-full flex items-center justify-center gap-1.5 text-[13px] font-bold text-[#E91E63] border-t border-slate-100 pt-4 bg-transparent border-x-0 border-b-0 cursor-pointer hover:opacity-80 transition-opacity">
-                View Profile Tips <ArrowRight size={14} />
+              <button onClick={() => navigate("/profile-setup")} className="w-full flex items-center justify-center gap-1.5 text-[13px] font-bold text-[#E91E63] border-t border-slate-100 pt-4 bg-transparent border-x-0 border-b-0 cursor-pointer hover:opacity-80 transition-opacity">
+                Act on These Tips <ArrowRight size={14} />
               </button>
             </div>
 

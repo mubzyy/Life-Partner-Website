@@ -106,6 +106,7 @@ const ChangePasswordPage = () => {
                     value={currentPassword}
                     onChange={e => setCurrentPassword(e.target.value)}
                     placeholder="••••••••"
+                    maxLength={72}
                     className={inputCls}
                   />
                   <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#E91E63] bg-transparent border-none cursor-pointer p-1">
@@ -123,12 +124,16 @@ const ChangePasswordPage = () => {
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     placeholder="Min. 6 characters"
+                    maxLength={72}
                     className={inputCls}
                   />
                   <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#E91E63] bg-transparent border-none cursor-pointer p-1">
                     {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {newPassword.length > 0 && newPassword.length < 6 && (
+                  <p className="mt-1 text-[12px] text-amber-600">At least 6 characters</p>
+                )}
               </div>
 
               <div>
@@ -139,8 +144,14 @@ const ChangePasswordPage = () => {
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
+                  maxLength={72}
                   className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 text-[14px] text-slate-800 outline-none transition-all focus:border-[#E91E63] focus:bg-white focus:ring-1 focus:ring-[#E91E63]"
                 />
+                {confirmPassword.length > 0 && (
+                  <p className={`mt-1 text-[12px] ${confirmPassword === newPassword ? "text-green-600" : "text-red-500"}`}>
+                    {confirmPassword === newPassword ? "Passwords match" : "Passwords do not match"}
+                  </p>
+                )}
               </div>
 
               <button

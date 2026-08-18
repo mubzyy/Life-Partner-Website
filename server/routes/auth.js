@@ -1,12 +1,35 @@
 const express = require("express");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const pool = require("../db");
 const { sendOtpEmail } = require("../emailService");
 const authMiddleware = require("../middleware/auth");
 const { loginLimiter, otpVerifyLimiter, otpSendLimiter } = require("../middleware/rateLimit");
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Builds the same login-response shape POST /login returns, so the frontend
+// can handle a Google sign-in exactly like a password sign-in.
+const signToken = (user) => jwt.sign(
+    { id: user.id, email: user.email, pwdChangedAt: user.password_changed_at.getTime() },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+);
+const userResponse = (user, token) => ({
+    token,
+    id: user.id,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    country_id: user.country_id,
+    phone_code: user.phone_code,
+    phone_number: user.phone_number,
+    email_verified: user.email_verified,
+    is_active: user.is_active,
+});
 
 // ─── In-memory OTP store ──────────────────────────────────────────────────────
 // Structure: { email: { otp, expiresAt, data } }
@@ -33,6 +56,17 @@ router.post("/send-verification", otpSendLimiter, async (req, res) => {
     const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
     if (existing.rows.length > 0) {
       return res.status(400).json({ message: "An account with this email already exists." });
+    }
+
+    // Check if phone number already registered. Matched on (phone_code,
+    // phone_number) together — the local digits alone aren't a real
+    // identifier since two different countries can share the same ones.
+    const existingPhone = await pool.query(
+      "SELECT id FROM users WHERE phone_code = $1 AND phone_number = $2",
+      [phone_code, phone_number]
+    );
+    if (existingPhone.rows.length > 0) {
+      return res.status(400).json({ message: "An account with this phone number already exists." });
     }
 
     const otp = generateOtp();
@@ -90,6 +124,17 @@ router.post("/verify-and-signup", otpVerifyLimiter, async (req, res) => {
 
     res.status(201).json({ message: "Account created successfully." });
   } catch (err) {
+    // A concurrent signup (two requests racing between the pre-checks above
+    // and this insert) can still slip past send-verification's checks — the
+    // real DB constraints (users_email_key, users_phone_code_phone_number_key)
+    // are the actual authority and catch it here instead.
+    if (err.code === "23505") {
+      delete otpStore[req.body.email];
+      if (err.constraint === "users_phone_code_phone_number_key") {
+        return res.status(400).json({ message: "An account with this phone number already exists." });
+      }
+      return res.status(400).json({ message: "An account with this email already exists." });
+    }
     console.error("verify-and-signup error:", err);
     res.status(500).json({ message: "Server error. Please try again." });
   }
@@ -208,28 +253,91 @@ router.post("/login", loginLimiter, async (req, res) => {
       [user.id]
     );
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, pwdChangedAt: user.password_changed_at.getTime() },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(200).json({
-      token,
-      id: user.id,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      email: user.email,
-      country_id: user.country_id,
-      phone_code: user.phone_code,
-      phone_number: user.phone_number,
-      email_verified: user.email_verified,
-      is_active: user.is_active,
-    });
+    res.status(200).json(userResponse(user, signToken(user)));
 
   } catch (err) {
     console.error("login error:", err);
     res.status(500).json({ message: "Server Error" });
+  }
+});
+
+
+// ─── POST /api/auth/google ─────────────────────────────────────────────────────
+// Real "Sign in with Google": verifies the ID token Google's own Identity
+// Services button hands back, then either logs into a matching account,
+// links Google to an existing password account with the same email, or
+// creates a brand new one. No OTP step — Google has already verified the
+// email address itself.
+router.post("/google", loginLimiter, async (req, res) => {
+  try {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ message: "Google sign-in is not configured on this server." });
+    }
+
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: "Missing Google credential." });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      return res.status(401).json({ message: "Invalid Google credential." });
+    }
+
+    if (!payload.email_verified) {
+      return res.status(401).json({ message: "This Google account's email is not verified." });
+    }
+
+    // 1) Already linked to this exact Google account.
+    let result = await pool.query("SELECT * FROM users WHERE google_id = $1", [payload.sub]);
+    let user = result.rows[0];
+
+    if (!user) {
+      // 2) An existing password-based account with the same email — link
+      //    Google to it instead of creating a duplicate account for the
+      //    same person.
+      result = await pool.query("SELECT * FROM users WHERE email = $1", [payload.email]);
+      user = result.rows[0];
+
+      if (user) {
+        const linked = await pool.query(
+          "UPDATE users SET google_id = $1 WHERE id = $2 RETURNING *",
+          [payload.sub, user.id]
+        );
+        user = linked.rows[0];
+      } else {
+        // 3) Brand new account. The password column is NOT NULL, but this
+        //    account can only ever be signed into via Google (or by using
+        //    "Forgot password" to set a real one later) — the random value
+        //    here is never shown to anyone and never usable as a typed
+        //    password since it's hashed the same as any real one.
+        const randomPassword = crypto.randomBytes(32).toString("hex");
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const inserted = await pool.query(
+          `INSERT INTO users (first_name, last_name, email, password, email_verified, google_id)
+           VALUES ($1, $2, $3, $4, true, $5) RETURNING *`,
+          [payload.given_name || "Member", payload.family_name || "", payload.email, hashedPassword, payload.sub]
+        );
+        user = inserted.rows[0];
+      }
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({ message: "This account has been deactivated." });
+    }
+
+    await pool.query("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", [user.id]);
+
+    res.status(200).json(userResponse(user, signToken(user)));
+  } catch (err) {
+    console.error("google sign-in error:", err);
+    res.status(500).json({ message: "Server error. Please try again." });
   }
 });
 

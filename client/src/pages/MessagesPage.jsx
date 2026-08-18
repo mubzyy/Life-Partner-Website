@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   MessageCircle, Edit, Search, Filter, Archive,
-  Phone, Video, MoreVertical, Paperclip, Smile, Send,
+  MoreVertical, Paperclip, Smile, Send,
   User, Heart, Star, MoreHorizontal, GraduationCap, MapPin, CheckCircle2,
   ChevronLeft, ChevronRight, Book, Coffee, X, Inbox, BellOff, Trash2, Flag
 } from "lucide-react";
@@ -11,6 +11,10 @@ import EmptyState from "../components/EmptyState";
 import ReportUserModal from "../components/ReportUserModal";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
+
+// Mirrors the server-side cap added to POST /api/messages/:otherUserId —
+// there was previously no limit at all on either side.
+const MAX_MESSAGE_LENGTH = 2000;
 
 // ── Emoji Picker (simple) ─────────────────────────────────────────────────────
 const EMOJIS = ["😊","😄","😂","🥰","😍","🙏","👍","❤️","✨","🌹","😇","🤗","💕","🌺","😘","💖","🎉","🌙","⭐","😌","🙌","💐","🥹","😢","😭","🤲","💪","👏","🌸","🦋"];
@@ -61,26 +65,36 @@ const ConvoContextMenu = ({ x, y, chat, onClose, onArchive, onDelete, onMute, on
 const MessagesPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Coming from "Message" on Search/Matches/Favorites/a profile — open that
+  // specific person's chat (starting a brand new one if there's no history
+  // yet) instead of always defaulting to whichever conversation is newest.
+  const deepLinkUserIdRef = useRef(parseInt(searchParams.get("user"), 10) || null);
 
   const [mobileView, setMobileView] = useState("list");
   const [activeTab, setActiveTab] = useState("all"); // 'all' | 'unread' | 'archive'
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [onlineOnly, setOnlineOnly] = useState(false);
+
   const [conversations, setConversations] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null); // active user ID (target user)
   const [messages, setMessages] = useState([]);
   const [activeProfile, setActiveProfile] = useState({});
+  const [deepLinkProfile, setDeepLinkProfile] = useState(null); // fallback header info for a brand-new (not-yet-in-list) chat
   const [loadingChats, setLoadingChats] = useState(true);
 
   const [inputText, setInputText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   const [contextMenu, setContextMenu] = useState(null); // { x, y, chat }
   const [reportTarget, setReportTarget] = useState(null); // chat being reported
+  const [showChatSearch, setShowChatSearch] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
   useEffect(() => {
     fetchConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchConversations = async () => {
@@ -89,10 +103,14 @@ const MessagesPage = () => {
       if (res.ok) {
         const data = await res.json();
         setConversations(data.map(c => ({
-            ...c, 
+            ...c,
             time: c.time ? new Date(c.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "New"
         })));
-        if (data.length > 0 && !activeChatId) {
+        const deepLinkUserId = deepLinkUserIdRef.current;
+        if (deepLinkUserId && deepLinkUserId !== activeChatId) {
+            deepLinkUserIdRef.current = null; // only honor it once
+            handleSelectChat(deepLinkUserId);
+        } else if (data.length > 0 && !activeChatId) {
             handleSelectChat(data[0].userId);
         }
       }
@@ -126,7 +144,7 @@ const MessagesPage = () => {
           const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/profile/${userId}`);
           if (res.ok) {
               const data = await res.json();
-              
+
               // Calculate age from date_of_birth
               let age = null;
               if (data.date_of_birth) {
@@ -148,6 +166,17 @@ const MessagesPage = () => {
                   age: age || "N/A",
                   media: media
               });
+
+              // A brand-new conversation (opened via a deep link from Search /
+              // a profile page) has no entry in `conversations` yet — this
+              // fills the chat header in the meantime, and gets replaced by
+              // the real conversation row on the next fetchConversations().
+              setDeepLinkProfile({
+                  userId,
+                  name: data.first_name ? `${data.first_name} ${data.last_name || ""}`.trim() : "Unknown",
+                  image: data.profile_photo_url || null,
+                  online: false,
+              });
           } else {
               setActiveProfile({});
           }
@@ -161,16 +190,18 @@ const MessagesPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeChatId]);
 
-  const activeUser = conversations.find((c) => c.userId === activeChatId);
+  const activeUser = conversations.find((c) => c.userId === activeChatId)
+    || (deepLinkProfile?.userId === activeChatId ? deepLinkProfile : undefined);
 
   const totalUnread = conversations.filter((c) => !c.archived).reduce((a, c) => a + c.unread, 0);
   const unreadCount = conversations.filter((c) => !c.archived && c.unread > 0).length;
 
-  // ── Filter conversations by tab & search ─────────────────────────────────
+  // ── Filter conversations by tab, search & online-only ────────────────────
   const visibleConversations = conversations.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchSearch) return false;
+    if (onlineOnly && !c.online) return false;
     if (activeTab === "unread") return !c.archived && c.unread > 0;
     if (activeTab === "archive") return c.archived;
     return !c.archived; // 'all'
@@ -178,6 +209,7 @@ const MessagesPage = () => {
 
   // ── Select chat ──────────────────────────────────────────────────────────
   const handleSelectChat = (userId) => {
+    const isNewConversation = !conversations.some((c) => c.userId === userId);
     setActiveChatId(userId);
     setMobileView("chat");
     setShowEmoji(false);
@@ -185,9 +217,13 @@ const MessagesPage = () => {
     setConversations((prev) =>
       prev.map((c) => (c.userId === userId ? { ...c, unread: 0 } : c))
     );
-    
+
     fetchMessages(userId);
     fetchProfile(userId);
+    // GET /api/messages/:userId (above) auto-creates the conversation on the
+    // backend for a person with no prior history — refresh the sidebar so it
+    // actually shows up there instead of only existing in the URL.
+    if (isNewConversation) fetchConversations();
   };
 
   // ── Send message ─────────────────────────────────────────────────────────
@@ -222,6 +258,22 @@ const MessagesPage = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  // Real "Interest" — same POST /api/interactions the Search/Matches pages
+  // use, scoped to whoever the active chat is with.
+  const [interestedIds, setInterestedIds] = useState(new Set());
+  const sendInterest = async (userId) => {
+    try {
+      const res = await authFetch(`${import.meta.env.VITE_API_URL}/api/interactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_id: userId, action: "like" }),
+      });
+      if (res.ok) setInterestedIds(prev => new Set(prev).add(userId));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleEmojiSelect = (emoji) => {
@@ -321,7 +373,7 @@ const MessagesPage = () => {
               <span className="bg-[#E91E63] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none min-w-[18px] text-center">{totalUnread}</span>
             )}
           </div>
-          <button className="w-8 h-8 rounded-[8px] border border-pink-100 flex items-center justify-center text-[#E91E63] hover:bg-pink-50 transition-colors cursor-pointer bg-white">
+          <button onClick={() => navigate("/search")} title="Find someone to message" className="w-8 h-8 rounded-[8px] border border-pink-100 flex items-center justify-center text-[#E91E63] hover:bg-pink-50 transition-colors cursor-pointer bg-white">
             <Edit size={16} />
           </button>
         </div>
@@ -333,6 +385,7 @@ const MessagesPage = () => {
             <input
               type="text" placeholder="Search conversations..."
               value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              maxLength={100}
               className="w-full bg-[#f8f9fa] border border-transparent rounded-[12px] py-2.5 pl-9 pr-4 text-[13px] text-slate-700 focus:outline-none focus:border-slate-200 focus:bg-white transition-colors placeholder:text-slate-400"
             />
             {searchQuery && (
@@ -341,7 +394,10 @@ const MessagesPage = () => {
               </button>
             )}
           </div>
-          <button className="w-[38px] h-[38px] shrink-0 rounded-[12px] border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 cursor-pointer bg-white">
+          <button
+            onClick={() => setOnlineOnly(v => !v)}
+            title={onlineOnly ? "Showing online only — click to show all" : "Show online only"}
+            className={`w-[38px] h-[38px] shrink-0 rounded-[12px] border flex items-center justify-center cursor-pointer transition-colors ${onlineOnly ? "border-[#E91E63] bg-[#fff0f5] text-[#E91E63]" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}>
             <Filter size={16} />
           </button>
         </div>
@@ -457,13 +513,39 @@ const MessagesPage = () => {
                 </div>
               </div>
               <div className="flex items-center gap-0.5 sm:gap-1">
-                {[Search, Phone, Video, MoreVertical].map((Icon, i) => (
-                  <button key={i} className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer bg-transparent border-none">
-                    <Icon size={18} strokeWidth={2} />
-                  </button>
-                ))}
+                <button
+                  onClick={() => setShowChatSearch(v => !v)}
+                  title="Search this conversation"
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer bg-transparent border-none ${showChatSearch ? "text-[#E91E63] bg-pink-50" : "text-slate-600 hover:bg-slate-50"}`}>
+                  <Search size={18} strokeWidth={2} />
+                </button>
+                <button
+                  onClick={(e) => setContextMenu({ x: e.clientX, y: e.clientY, chat: activeUser })}
+                  title="More options"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer bg-transparent border-none">
+                  <MoreVertical size={18} strokeWidth={2} />
+                </button>
               </div>
             </div>
+
+            {/* In-chat message search — real, client-side over the loaded thread */}
+            {showChatSearch && (
+              <div className="px-4 md:px-6 py-2.5 bg-white border-b border-slate-100 flex items-center gap-2 shrink-0">
+                <Search size={14} className="text-slate-400 shrink-0" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={chatSearchQuery}
+                  onChange={(e) => setChatSearchQuery(e.target.value)}
+                  placeholder="Search messages in this conversation..."
+                  maxLength={100}
+                  className="flex-1 border-none outline-none text-[13px] text-slate-700 bg-transparent"
+                />
+                <button onClick={() => { setShowChatSearch(false); setChatSearchQuery(""); }} className="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
 
             {/* Message Feed */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar flex flex-col gap-3">
@@ -471,7 +553,7 @@ const MessagesPage = () => {
                 <span className="bg-white border border-slate-100 text-slate-500 text-[11px] font-medium px-4 py-1.5 rounded-full shadow-sm">Conversation Started</span>
               </div>
 
-              {messages.map((msg) => {
+              {(chatSearchQuery.trim() ? messages.filter(m => m.text.toLowerCase().includes(chatSearchQuery.trim().toLowerCase())) : messages).map((msg) => {
                 const isMe = msg.sender === "me";
                 return (
                   <div key={msg.id} className={`flex flex-col max-w-[80%] md:max-w-[68%] ${isMe ? "self-end items-end" : "self-start items-start"}`}>
@@ -498,16 +580,19 @@ const MessagesPage = () => {
             <div className="p-3 bg-white border-t border-slate-100 relative">
               {showEmoji && <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setShowEmoji(false)} />}
               <div className="flex items-end gap-2">
-                <button className="w-10 h-10 shrink-0 flex items-center justify-center text-slate-400 hover:text-[#E91E63] mb-1 cursor-pointer bg-transparent border-none transition-colors">
+                {/* No attachment upload endpoint exists yet — disabled with a
+                    clear reason instead of pretending it works. */}
+                <button disabled title="Photo attachments coming soon" className="w-10 h-10 shrink-0 flex items-center justify-center text-slate-300 mb-1 cursor-not-allowed bg-transparent border-none">
                   <Paperclip size={20} className="rotate-45" />
                 </button>
                 <div className="flex-1 relative">
                   <textarea
                     ref={textareaRef}
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={(e) => setInputText(e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
+                    maxLength={MAX_MESSAGE_LENGTH}
                     className="w-full bg-[#f8f9fa] border border-slate-100 rounded-2xl py-3 pl-4 pr-12 text-[14px] text-slate-700 focus:outline-none focus:border-slate-300 focus:bg-white resize-none min-h-[48px] max-h-[120px] transition-colors"
                     rows={1}
                   />
@@ -556,9 +641,9 @@ const MessagesPage = () => {
           <div className="flex items-center justify-center gap-4 w-full">
             {[
               { icon: <User size={17} strokeWidth={2.5} />, label: "View Profile", pink: true, action: () => navigate(`/profile/${activeChatId}`) },
-              { icon: <Heart size={17} />, label: "Interest", action: () => {} },
+              { icon: <Heart size={17} fill={interestedIds.has(activeChatId) ? "currentColor" : "none"} />, label: interestedIds.has(activeChatId) ? "Interested" : "Interest", pink: interestedIds.has(activeChatId), action: () => sendInterest(activeChatId) },
               { icon: <Star size={17} />, label: "Favorites", action: () => navigate("/favorites") },
-              { icon: <MoreHorizontal size={17} />, label: "More", action: () => {} },
+              { icon: <MoreHorizontal size={17} />, label: "More", action: (e) => setContextMenu({ x: e.clientX, y: e.clientY, chat: activeUser }) },
             ].map((btn) => (
               <div key={btn.label} className="flex flex-col items-center gap-1.5">
                 <button onClick={btn.action}
@@ -615,7 +700,7 @@ const MessagesPage = () => {
               <div className="bg-[#fafbfc] rounded-[20px] p-4 border border-slate-100">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-[13px] font-bold text-slate-800 m-0">Media</h3>
-                  <button className="text-[11px] font-bold text-[#E91E63] bg-transparent border-none cursor-pointer hover:opacity-80">View All</button>
+                  <button onClick={() => navigate(`/profile/${activeChatId}`)} className="text-[11px] font-bold text-[#E91E63] bg-transparent border-none cursor-pointer hover:opacity-80">View All</button>
                 </div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {(activeProfile.media || []).map((src, i) => (

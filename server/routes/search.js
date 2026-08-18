@@ -16,7 +16,7 @@ router.post("/", authMiddleware, async (req, res) => {
         const userId = req.user.id;
         const {
             query: searchText, minAge, maxAge, gender, religion, sect,
-            maritalStatus, city, education, profession,
+            maritalStatus, city, education, profession, sort,
         } = req.body;
 
         const page = Math.max(1, parseInt(req.body.page, 10) || 1);
@@ -102,6 +102,16 @@ router.post("/", authMiddleware, async (req, res) => {
         const countResult = await pool.query(`SELECT COUNT(*) ${fromClause}`, params);
         const total = parseInt(countResult.rows[0].count, 10);
 
+        // Premium always surfaces first (the boost advertised on Pricing) —
+        // "sort" only controls the ordering within that, never displaces it.
+        const SORT_CLAUSES = {
+            recent: "u.created_at DESC",
+            oldest: "u.created_at ASC",
+            age_asc: "up.date_of_birth DESC NULLS LAST",  // younger = more recent DOB
+            age_desc: "up.date_of_birth ASC NULLS LAST",  // older = earlier DOB
+        };
+        const orderBy = SORT_CLAUSES[sort] || SORT_CLAUSES.recent;
+
         const dataParams = [...params, limit, offset];
         const result = await pool.query(
             `SELECT
@@ -117,7 +127,7 @@ router.post("/", authMiddleware, async (req, res) => {
                     WHERE s.user_id = u.id AND s.status = 'active' AND s.ends_at > CURRENT_TIMESTAMP
                 ) AS is_premium
              ${fromClause}
-             ORDER BY is_premium DESC, u.created_at DESC
+             ORDER BY is_premium DESC, ${orderBy}
              LIMIT $${i} OFFSET $${i + 1}`,
             dataParams
         );

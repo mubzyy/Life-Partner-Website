@@ -1,6 +1,9 @@
 const { Pool } = require("pg");
-require("dotenv").config({ path: ".env.local", override: false });
-require("dotenv").config();
+const path = require("path");
+// Anchored to server/ (one level up from this migrations/ folder), not
+// process.cwd() — resolves correctly no matter where this script is run from.
+require("dotenv").config({ path: path.join(__dirname, "..", ".env.local"), override: false });
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const isProduction = process.env.NODE_ENV === "production";
 

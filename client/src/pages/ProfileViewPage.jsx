@@ -298,7 +298,7 @@ const ProfileViewPage = () => {
                       <Heart size={15} fill={isFavorited ? "currentColor" : "none"} />
                       {isFavorited ? "Favorited" : "Favorite"}
                     </button>
-                    <button disabled={isBlocked} className="flex items-center gap-1.5 bg-primary border-none rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer text-white hover:from-primary-hover hover:to-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={() => navigate(`/messages?user=${id}`)} disabled={isBlocked} className="flex items-center gap-1.5 bg-primary border-none rounded-lg py-2.5 px-4 text-[13px] font-bold cursor-pointer text-white hover:from-primary-hover hover:to-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                       <MessageCircle size={15} />
                       Send Message
                     </button>
@@ -311,7 +311,7 @@ const ProfileViewPage = () => {
                       Report
                     </button>
                   </div>
-                  <p className="text-[11px] text-text-muted mt-2">{isBlocked ? "You've blocked this user." : "Become Premium to start conversation"}</p>
+                  {isBlocked && <p className="text-[11px] text-text-muted mt-2">You've blocked this user.</p>}
                 </div>
               </div>
 

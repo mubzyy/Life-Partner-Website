@@ -5,6 +5,11 @@ const authMiddleware = require("../middleware/auth");
 const { isOnline } = require("../lib/presence");
 const { messageSendLimiter } = require("../middleware/rateLimit");
 
+// There was previously no cap at all — `messages.content` is an unbounded
+// TEXT column, so nothing stopped an arbitrarily large message from being
+// stored and re-rendered. Mirrored on the frontend (MessagesPage.jsx).
+const MAX_MESSAGE_LENGTH = 2000;
+
 // Helper to ensure a conversation exists between two users.
 // pair_key ("<lowUserId>_<highUserId>") is backed by a partial UNIQUE index
 // (see db_migrate_conversations_pairkey.js) — the same canonical-pair pattern
@@ -291,6 +296,9 @@ router.post("/:otherUserId", authMiddleware, messageSendLimiter, async (req, res
 
         if (!text || !text.trim()) {
             return res.status(400).json({ message: "Message text is required" });
+        }
+        if (text.length > MAX_MESSAGE_LENGTH) {
+            return res.status(400).json({ message: `Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.` });
         }
 
         const otherUserId = await resolveOtherUserId(req, res, userId);

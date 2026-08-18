@@ -18,6 +18,8 @@ const DashboardPage = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [matches, setMatches] = useState([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
+  const [matchesPage, setMatchesPage] = useState(0);
+  const MATCHES_PER_PAGE = 4;
   const [heartedCards, setHeartedCards] = useState({});
   const [dashboardData, setDashboardData] = useState({ stats: {}, recentActivity: [], weeklyActivity: EMPTY_WEEKLY_ACTIVITY, weeklyTotals: EMPTY_WEEKLY_TOTALS });
   const [dashboardError, setDashboardError] = useState(false);
@@ -47,7 +49,10 @@ const DashboardPage = () => {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setMatches(data.slice(0, 4));
+          // Keep the full recommendation list (already sorted best-first by
+          // the backend) so the chevrons below can page through more than
+          // just the first 4 instead of being permanently dead.
+          setMatches(data.slice(0, 20));
         }
         setMatchesLoading(false);
       })
@@ -226,10 +231,16 @@ const DashboardPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Link to="/matches" className="text-[13px] font-bold text-primary no-underline hover:text-primary-dark transition-colors">View All Matches</Link>
-                  <button className="w-7 h-7 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
+                  <button
+                    onClick={() => setMatchesPage(p => Math.max(0, p - 1))}
+                    disabled={matchesPage === 0}
+                    className="w-7 h-7 rounded-full border border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronLeft size={14} className="text-text-muted" />
                   </button>
-                  <button className="w-7 h-7 rounded-full border border-border-light border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 transition-colors">
+                  <button
+                    onClick={() => setMatchesPage(p => (p + 1) * MATCHES_PER_PAGE < matches.length ? p + 1 : p)}
+                    disabled={(matchesPage + 1) * MATCHES_PER_PAGE >= matches.length}
+                    className="w-7 h-7 rounded-full border border-border-light bg-card cursor-pointer flex items-center justify-center hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronRight size={14} className="text-text-muted" />
                   </button>
                 </div>
@@ -246,7 +257,7 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {matches.map((m, i) => (
+                {matches.slice(matchesPage * MATCHES_PER_PAGE, matchesPage * MATCHES_PER_PAGE + MATCHES_PER_PAGE).map((m, i) => (
                   <div key={m.id} className="rounded-2xl border border-border-light  overflow-hidden bg-card hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                     {/* Photo */}
                     <div className={`h-[140px] relative flex items-center justify-center bg-primary-very-light overflow-hidden`}>

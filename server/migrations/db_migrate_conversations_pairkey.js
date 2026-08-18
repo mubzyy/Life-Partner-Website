@@ -8,7 +8,7 @@
 // the same pair can no longer both succeed. Never drops or truncates
 // anything; safe to re-run (all steps are IF NOT EXISTS / idempotent).
 
-const pool = require("./db");
+const pool = require("../db");
 
 async function migrate() {
     const client = await pool.connect();

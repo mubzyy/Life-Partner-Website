@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authFetch } from "../lib/authFetch";
@@ -394,6 +394,14 @@ const HelpTab = () => {
   const [formError, setFormError] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const faqSearchRef = useRef(null);
+  const contactFormRef = useRef(null);
+
+  // "View FAQs" and "Start Chat" both point at the real, already-working
+  // sections directly below on this same page — there's no separate Help
+  // Center or live-chat feature to send them to, so honesty > pretending.
+  const scrollToFaqs = () => faqSearchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToContact = () => contactFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
 
   // My Requests — real tickets from GET /api/support, so a submitted
   // request's status can actually be tracked instead of vanishing after submit.
@@ -453,18 +461,18 @@ const HelpTab = () => {
             <HelpCircle size={24} className="text-[#E91E63] mb-3" />
             <h3 className="font-bold text-slate-800 text-[15px] mb-1">Help Center</h3>
             <p className="text-[12px] text-slate-600 mb-3">Browse our articles and FAQs</p>
-            <button className="text-[13px] font-bold text-[#E91E63] hover:underline">View FAQs →</button>
+            <button onClick={scrollToFaqs} className="text-[13px] font-bold text-[#E91E63] hover:underline bg-transparent border-none cursor-pointer p-0">View FAQs →</button>
           </div>
           <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-[16px] border border-slate-200">
             <MessageSquare size={24} className="text-slate-600 mb-3" />
-            <h3 className="font-bold text-slate-800 text-[15px] mb-1">Live Chat</h3>
-            <p className="text-[12px] text-slate-600 mb-3">Talk to our support team</p>
-            <button className="text-[13px] font-bold text-slate-700 hover:underline">Start Chat →</button>
+            <h3 className="font-bold text-slate-800 text-[15px] mb-1">Contact Support</h3>
+            <p className="text-[12px] text-slate-600 mb-3">Send our team a message directly</p>
+            <button onClick={scrollToContact} className="text-[13px] font-bold text-slate-700 hover:underline bg-transparent border-none cursor-pointer p-0">Send a Message →</button>
           </div>
         </div>
 
         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Frequently Asked Questions</h3>
-        <div className="relative mb-4">
+        <div ref={faqSearchRef} className="relative mb-4">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text" placeholder="Search FAQs..."
@@ -493,7 +501,7 @@ const HelpTab = () => {
           ))}
         </div>
 
-        <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Contact Support</h3>
+        <h3 ref={contactFormRef} className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Contact Support</h3>
         <div className="bg-white border border-slate-200 rounded-[16px] p-5">
           {formStatus === "success" ? (
             <div className="text-center py-8 animate-fade-in">
@@ -523,7 +531,8 @@ const HelpTab = () => {
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-slate-700 mb-1">Message</label>
-                <textarea required rows={4} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe your issue in detail..." className="w-full p-3 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none" />
+                <textarea required rows={4} maxLength={2000} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe your issue in detail..." className="w-full p-3 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none" />
+                <p className="mt-1 text-[11px] text-slate-400 text-right">{message.length}/2000</p>
               </div>
               <button
                 type="submit"

@@ -6,7 +6,7 @@
 // matches/conversations/subscriptions in this codebase. Never drops or
 // truncates anything; safe to re-run (CREATE ... IF NOT EXISTS).
 
-const pool = require("./db");
+const pool = require("../db");
 
 async function migrate() {
     try {
