@@ -66,6 +66,18 @@ async function getPasswordById(userId) {
     return result.rows[0]?.password || null;
 }
 
+// Used by middleware/auth.js on every authenticated request to enforce:
+//  - account deactivation (is_active)
+//  - password-change session invalidation (password_changed_at)
+// Returns null if the user no longer exists.
+async function getAuthStatus(userId) {
+    const result = await pool.query(
+        "SELECT is_active, password_changed_at FROM users WHERE id = $1",
+        [userId]
+    );
+    return result.rows[0] || null;
+}
+
 async function updatePasswordById(userId, hashedPassword) {
     // password_changed_at invalidates every token issued before now (see
     // middleware/auth.js) — including the one used for this very request, so
@@ -81,4 +93,5 @@ async function updatePasswordById(userId, hashedPassword) {
 module.exports = {
     findByEmail, findByPhone, createUser, updatePasswordByEmail, updateLastLogin,
     findByGoogleId, linkGoogleId, createGoogleUser, getPasswordById, updatePasswordById,
+    getAuthStatus,
 };

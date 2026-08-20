@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../db");
+const userModel = require("../models/userModel");
 
 /**
  * Auth middleware — reads JWT from the Authorization: Bearer <token> header.
@@ -36,14 +36,11 @@ const authMiddleware = async (req, res, next) => {
     }
 
     try {
-        const result = await pool.query(
-            "SELECT is_active, password_changed_at FROM users WHERE id = $1",
-            [decoded.id]
-        );
-        if (result.rows.length === 0 || !result.rows[0].is_active) {
+        const authStatus = await userModel.getAuthStatus(decoded.id);
+        if (!authStatus || !authStatus.is_active) {
             return res.status(401).json({ message: "This account is deactivated." });
         }
-        const currentPwdChangedAt = result.rows[0].password_changed_at?.getTime();
+        const currentPwdChangedAt = authStatus.password_changed_at?.getTime();
         if (decoded.pwdChangedAt !== undefined && currentPwdChangedAt !== decoded.pwdChangedAt) {
             return res.status(401).json({ message: "Your session has expired. Please log in again." });
         }
