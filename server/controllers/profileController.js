@@ -3,6 +3,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const profileModel = require("../models/profileModel");
 const matchModel = require("../models/matchModel");
+const platformSettingsModel = require("../models/platformSettingsModel");
 const { PHOTOS_DIR } = require("../middleware/upload");
 const { STEP_IDS } = require("../lib/profileFields");
 const { validateStep, validatePartnerCountryIds } = require("../lib/profileValidation");
@@ -56,7 +57,13 @@ async function updateMyProfile(req, res) {
         return res.status(400).json({ message: "Invalid step.", errors: ["step must be between 1 and 5."] });
     }
 
-    const { errors, cleaned } = validateStep(step, data);
+    // Real, admin-configurable minimum age (platform_settings.min_age) —
+    // not a hardcoded 18. Falls back to 18 if the settings row is somehow
+    // missing, matching the previous fixed behavior.
+    const settings = await platformSettingsModel.getSettings().catch(() => null);
+    const minAge = settings?.min_age ?? 18;
+
+    const { errors, cleaned } = validateStep(step, data, minAge);
 
     let partnerCountryIds = null;
     if (step === 5) {
@@ -128,6 +135,16 @@ async function uploadPhoto(req, res) {
     const makePrimary = req.body.primary !== "false"; // defaults to true
 
     try {
+        // Real, admin-configurable photo cap (platform_settings.max_photos)
+        // — enforced here, not just displayed as a number in the CRM.
+        const settings = await platformSettingsModel.getSettings().catch(() => null);
+        const maxPhotos = settings?.max_photos ?? 10;
+        const currentCount = await profileModel.countPhotos(userId);
+        if (currentCount >= maxPhotos) {
+            fs.unlink(req.file.path, () => {});
+            return res.status(400).json({ message: `You've reached the maximum of ${maxPhotos} photos. Delete one before adding another.` });
+        }
+
         const photo = await profileModel.savePhoto({ userId, relativeUrl, makePrimary });
         const full = await profileModel.loadFullProfile(userId);
         res.status(201).json({ photo, profile: full });

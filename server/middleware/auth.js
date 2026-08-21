@@ -16,6 +16,10 @@ const userModel = require("../models/userModel");
  *    in the database), the token is stale and rejected — this is what makes
  *    "change password" actually sign out other sessions, without needing a
  *    separate token-blacklist table.
+ *
+ * This is the customer/user auth path only. Admins are a completely
+ * separate identity system (see middleware/adminSessionAuth.js) — a
+ * customer JWT verified here can never touch an /api/admin/* route.
  */
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -35,8 +39,9 @@ const authMiddleware = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid token" });
     }
 
+    let authStatus;
     try {
-        const authStatus = await userModel.getAuthStatus(decoded.id);
+        authStatus = await userModel.getAuthStatus(decoded.id);
         if (!authStatus || !authStatus.is_active) {
             return res.status(401).json({ message: "This account is deactivated." });
         }

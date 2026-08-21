@@ -338,6 +338,16 @@ const LoginPage = () => {
               <Link to="/register" className="text-primary font-bold no-underline hover:underline">Create one</Link>
             </p>
           </div>
+
+          <p className="text-center mt-4 mb-0">
+            <button
+              type="button"
+              onClick={() => navigate("/admin")}
+              className="text-[11px] text-text-muted/50 hover:text-text-muted transition-colors cursor-pointer bg-transparent border-none"
+            >
+              Mod?
+            </button>
+          </p>
         </div>
       </div>
     </div>

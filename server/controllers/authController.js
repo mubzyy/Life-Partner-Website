@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const userModel = require("../models/userModel");
+const platformSettingsModel = require("../models/platformSettingsModel");
 const { sendOtpEmail } = require("../emailService");
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -45,6 +46,14 @@ async function sendVerification(req, res) {
 
         if (!first_name || !last_name || !email || !password || !country_id || !phone_number) {
             return res.status(400).json({ message: "All required fields must be filled." });
+        }
+
+        // Real platform-settings enforcement — checked here (not just
+        // reflected as a toggle) so closing registration actually stops new
+        // accounts from being created, not just from displaying.
+        const settings = await platformSettingsModel.getSettings();
+        if (!settings.registration_open) {
+            return res.status(403).json({ message: "New registrations are temporarily closed. Please check back later." });
         }
 
         if (await userModel.findByEmail(email)) {
@@ -209,6 +218,17 @@ async function login(req, res) {
             return res.status(403).json({ message: "This account has been deactivated." });
         }
 
+        // Maintenance mode blocks customer logins — checked after credentials
+        // are confirmed valid, so a wrong password still looks identical
+        // whether or not maintenance mode is on. Admins are a completely
+        // separate login system (see adminAuthController.js) and are never
+        // affected by this — that's the whole point of maintenance mode:
+        // admins can still get into the CRM while customers are locked out.
+        const settings = await platformSettingsModel.getSettings();
+        if (settings.maintenance_mode) {
+            return res.status(503).json({ message: "The platform is currently undergoing maintenance. Please try again soon." });
+        }
+
         await userModel.updateLastLogin(user.id);
 
         res.status(200).json(userResponse(user, signToken(user)));
@@ -281,6 +301,11 @@ async function googleSignIn(req, res) {
 
         if (!user.is_active) {
             return res.status(403).json({ message: "This account has been deactivated." });
+        }
+
+        const settings = await platformSettingsModel.getSettings();
+        if (settings.maintenance_mode) {
+            return res.status(503).json({ message: "The platform is currently undergoing maintenance. Please try again soon." });
         }
 
         await userModel.updateLastLogin(user.id);

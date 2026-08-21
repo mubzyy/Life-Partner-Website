@@ -28,6 +28,9 @@ const dashboardRoutes = require("./routes/dashboard");
 const accountRoutes = require("./routes/account");
 const supportRoutes = require("./routes/support");
 const reportsRoutes = require("./routes/reports");
+const verificationsRoutes = require("./routes/verifications");
+const adminRoutes = require("./routes/admin");
+const adminAuthRoutes = require("./routes/adminAuth");
 
 const app = express();
 
@@ -66,6 +69,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/verifications", verificationsRoutes);
+app.use("/api/admin-auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Generic error handler — must be registered last, after every route. Without
 // this, Express's default handler sends the raw error (stack trace, internal

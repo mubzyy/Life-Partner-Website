@@ -1,4 +1,6 @@
 const messageModel = require("../models/messageModel");
+const platformSettingsModel = require("../models/platformSettingsModel");
+const subscriptionModel = require("../models/subscriptionModel");
 const { isOnline } = require("../lib/presence");
 
 // There was previously no cap at all — `messages.content` is an unbounded
@@ -154,6 +156,19 @@ async function sendMessage(req, res) {
 
         if (await messageModel.isBlockedEitherWay(userId, otherUserId)) {
             return res.status(403).json({ message: "You can't message this user." });
+        }
+
+        // Real, admin-configurable "Premium Required to Message" (platform_
+        // settings.premium_required_to_message) — only gates STARTING a new
+        // conversation, never a reply in one that already exists, so
+        // toggling it on never retroactively breaks a chat two people are
+        // already having.
+        const existingConvoId = await messageModel.findExistingConversation(userId, otherUserId);
+        if (!existingConvoId) {
+            const settings = await platformSettingsModel.getSettings().catch(() => null);
+            if (settings?.premium_required_to_message && !(await subscriptionModel.isUserPremium(userId))) {
+                return res.status(402).json({ message: "A Premium subscription is required to start a new conversation." });
+            }
         }
 
         const convoId = await messageModel.getOrCreateConversation(userId, otherUserId);

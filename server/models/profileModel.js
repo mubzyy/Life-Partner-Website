@@ -129,6 +129,13 @@ async function saveStep({ userId, step, cleaned, partnerCountryIds, markComplete
     }
 }
 
+// Backs the real, admin-configurable platform_settings.max_photos limit —
+// checked by the controller BEFORE savePhoto is called.
+async function countPhotos(userId) {
+    const result = await pool.query(`SELECT COUNT(*) FROM user_photos WHERE user_id = $1`, [userId]);
+    return parseInt(result.rows[0].count, 10);
+}
+
 // Multipart photo upload write: ensures a user_profiles row exists, demotes
 // any existing primary photo (if this one is becoming primary), inserts the
 // new photo row, and updates the profile's headline photo_url — together or
@@ -239,5 +246,5 @@ async function isBlockedEitherWay(userAId, userBId) {
 
 module.exports = {
     loadFullProfile, countryExists, findNationality, countriesExistById,
-    saveStep, savePhoto, deletePhoto, getVisibilitySettings, isBlockedEitherWay,
+    saveStep, savePhoto, deletePhoto, getVisibilitySettings, isBlockedEitherWay, countPhotos,
 };
