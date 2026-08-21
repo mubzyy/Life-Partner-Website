@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../db");
+const userModel = require("../models/userModel");
 
 /**
  * Auth middleware — reads JWT from the Authorization: Bearer <token> header.
@@ -16,6 +16,10 @@ const pool = require("../db");
  *    in the database), the token is stale and rejected — this is what makes
  *    "change password" actually sign out other sessions, without needing a
  *    separate token-blacklist table.
+ *
+ * This is the customer/user auth path only. Admins are a completely
+ * separate identity system (see middleware/adminSessionAuth.js) — a
+ * customer JWT verified here can never touch an /api/admin/* route.
  */
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -35,15 +39,13 @@ const authMiddleware = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid token" });
     }
 
+    let authStatus;
     try {
-        const result = await pool.query(
-            "SELECT is_active, password_changed_at FROM users WHERE id = $1",
-            [decoded.id]
-        );
-        if (result.rows.length === 0 || !result.rows[0].is_active) {
+        authStatus = await userModel.getAuthStatus(decoded.id);
+        if (!authStatus || !authStatus.is_active) {
             return res.status(401).json({ message: "This account is deactivated." });
         }
-        const currentPwdChangedAt = result.rows[0].password_changed_at?.getTime();
+        const currentPwdChangedAt = authStatus.password_changed_at?.getTime();
         if (decoded.pwdChangedAt !== undefined && currentPwdChangedAt !== decoded.pwdChangedAt) {
             return res.status(401).json({ message: "Your session has expired. Please log in again." });
         }

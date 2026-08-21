@@ -207,6 +207,7 @@ const AppLayout = () => {
 
             {/* Upgrade to Premium button */}
             <button
+              onClick={() => navigate("/subscription")}
               className="hidden min-[901px]:flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all py-[6px] px-[12px] text-xs font-bold cursor-pointer whitespace-nowrap"
             >
               <Crown size={14} />

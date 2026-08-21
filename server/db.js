@@ -1,7 +1,12 @@
 const { Pool } = require("pg");
-// Load .env.local first (local dev override), then fall back to .env
-require("dotenv").config({ path: ".env.local", override: false });
-require("dotenv").config();
+const path = require("path");
+// Load .env.local first (local dev override), then fall back to .env.
+// Anchored to this file's own folder (server/), not process.cwd() — so this
+// resolves correctly no matter where the caller's working directory is (e.g.
+// running a script from server/migrations/, or launching the app as
+// `node server/index.js` from the repo root instead of `cd server && node index.js`).
+require("dotenv").config({ path: path.join(__dirname, ".env.local"), override: false });
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 
 const isProduction = process.env.NODE_ENV === "production";

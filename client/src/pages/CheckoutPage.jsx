@@ -385,7 +385,8 @@ const CheckoutPage = () => {
                               <input
                                 type="text" placeholder="Name on card"
                                 value={card.name}
-                                onChange={e => setCard(p => ({ ...p, name: e.target.value }))}
+                                onChange={e => setCard(p => ({ ...p, name: e.target.value.replace(/[^a-zA-Z\s\-'.]/g, '') }))}
+                                maxLength={50}
                                 className={inputCls("name")}
                               />
                               {errors.name && <p className="text-[11px] text-red-500 mt-1">{errors.name}</p>}

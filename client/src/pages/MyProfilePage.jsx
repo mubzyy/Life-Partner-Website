@@ -143,7 +143,7 @@ const MyProfilePage = () => {
                   className="flex items-center gap-2 bg-white border-2 border-[#E91E63] text-[#E91E63] hover:bg-[#fff0f5] font-bold rounded-[12px] px-4 py-2 text-[13px] transition-colors cursor-pointer">
                   <Edit3 size={15} /> Edit Profile
                 </button>
-                <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-[12px] px-4 py-2 text-[13px] transition-colors cursor-pointer">
+                <button onClick={() => navigate("/profile-setup")} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold rounded-[12px] px-4 py-2 text-[13px] transition-colors cursor-pointer">
                   <Camera size={15} /> Edit Photos
                 </button>
               </div>

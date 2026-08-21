@@ -1,8 +1,8 @@
 const steps = [
-  { num: 1, title: "Register",         desc: "Create your profile in just a few minutes"       },
-  { num: 2, title: "Complete Profile",  desc: "Add details about yourself and your preferences"  },
-  { num: 3, title: "Find Matches",      desc: "We'll show you compatible matches"                },
-  { num: 4, title: "Start Journey",     desc: "Connect, communicate and start your journey"      },
+  { num: 1, title: "Register",         desc: "Create your profile in just a few minutes",        icon: "clipboard.png"        },
+  { num: 2, title: "Complete Profile",  desc: "Add details about yourself and your preferences",  icon: "check_mark.png"       },
+  { num: 3, title: "Find Matches",      desc: "We'll show you compatible matches",                icon: "magnifying_glass.png" },
+  { num: 4, title: "Start Journey",     desc: "Connect, communicate and start your journey",      icon: "speech_balloon.png"   },
 ];
 
 const HowItWorks = () => (
@@ -29,9 +29,7 @@ const HowItWorks = () => (
                   ? "bg-primary text-white shadow-sm border-none" 
                   : "bg-card border-2 border-border-light shadow-sm"
               }`}>
-                <span className="text-[20px]">
-                  {["📋", "✅", "🔍", "💬"][i]}
-                </span>
+                <img src={`/images/icons3d/${step.icon}`} alt="" className="w-8 h-8 object-contain" />
               </div>
               <h3 className="font-bold text-[15px] text-text-primary m-0 mb-2">
                 {step.num}. {step.title}

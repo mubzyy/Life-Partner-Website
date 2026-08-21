@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authFetch } from "../lib/authFetch";
@@ -7,7 +7,8 @@ import {
   User, Shield, Headphones, LogOut, ChevronRight,
   Lock, Bell, Globe, Image as ImageIcon, CreditCard,
   Eye, Clock, MessageSquare, UserX, Key, Smartphone,
-  AlertCircle, HelpCircle, FileText, Send, Check, X, Crown, Search
+  AlertCircle, HelpCircle, FileText, Send, Check, X, Crown, Search,
+  BadgeCheck, ScanFace, Upload,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -394,6 +395,14 @@ const HelpTab = () => {
   const [formError, setFormError] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const faqSearchRef = useRef(null);
+  const contactFormRef = useRef(null);
+
+  // "View FAQs" and "Start Chat" both point at the real, already-working
+  // sections directly below on this same page — there's no separate Help
+  // Center or live-chat feature to send them to, so honesty > pretending.
+  const scrollToFaqs = () => faqSearchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToContact = () => contactFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
 
   // My Requests — real tickets from GET /api/support, so a submitted
   // request's status can actually be tracked instead of vanishing after submit.
@@ -453,18 +462,18 @@ const HelpTab = () => {
             <HelpCircle size={24} className="text-[#E91E63] mb-3" />
             <h3 className="font-bold text-slate-800 text-[15px] mb-1">Help Center</h3>
             <p className="text-[12px] text-slate-600 mb-3">Browse our articles and FAQs</p>
-            <button className="text-[13px] font-bold text-[#E91E63] hover:underline">View FAQs →</button>
+            <button onClick={scrollToFaqs} className="text-[13px] font-bold text-[#E91E63] hover:underline bg-transparent border-none cursor-pointer p-0">View FAQs →</button>
           </div>
           <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-[16px] border border-slate-200">
             <MessageSquare size={24} className="text-slate-600 mb-3" />
-            <h3 className="font-bold text-slate-800 text-[15px] mb-1">Live Chat</h3>
-            <p className="text-[12px] text-slate-600 mb-3">Talk to our support team</p>
-            <button className="text-[13px] font-bold text-slate-700 hover:underline">Start Chat →</button>
+            <h3 className="font-bold text-slate-800 text-[15px] mb-1">Contact Support</h3>
+            <p className="text-[12px] text-slate-600 mb-3">Send our team a message directly</p>
+            <button onClick={scrollToContact} className="text-[13px] font-bold text-slate-700 hover:underline bg-transparent border-none cursor-pointer p-0">Send a Message →</button>
           </div>
         </div>
 
         <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Frequently Asked Questions</h3>
-        <div className="relative mb-4">
+        <div ref={faqSearchRef} className="relative mb-4">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text" placeholder="Search FAQs..."
@@ -493,7 +502,7 @@ const HelpTab = () => {
           ))}
         </div>
 
-        <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Contact Support</h3>
+        <h3 ref={contactFormRef} className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Contact Support</h3>
         <div className="bg-white border border-slate-200 rounded-[16px] p-5">
           {formStatus === "success" ? (
             <div className="text-center py-8 animate-fade-in">
@@ -523,7 +532,8 @@ const HelpTab = () => {
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-slate-700 mb-1">Message</label>
-                <textarea required rows={4} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe your issue in detail..." className="w-full p-3 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none" />
+                <textarea required rows={4} maxLength={2000} value={message} onChange={e => setMessage(e.target.value)} placeholder="Describe your issue in detail..." className="w-full p-3 rounded-[12px] bg-slate-50 border border-slate-200 text-[14px] text-slate-800 focus:outline-none focus:border-[#E91E63] focus:ring-1 focus:ring-[#E91E63] resize-none" />
+                <p className="mt-1 text-[11px] text-slate-400 text-right">{message.length}/2000</p>
               </div>
               <button
                 type="submit"
@@ -563,6 +573,156 @@ const HelpTab = () => {
   );
 };
 
+// ── Verification Tab ─────────────────────────────────────────────────────────
+// Real submission flow — persists to verification_requests, reviewed by a
+// real admin in the CRM. No fake "instant verified" state anywhere here.
+const VERIF_TYPES = [
+  { type: "cnic", label: "CNIC", desc: "Upload a photo of your national ID card.", icon: BadgeCheck, needsFile: true },
+  { type: "selfie", label: "Selfie", desc: "Upload a clear selfie to confirm it's really you.", icon: ScanFace, needsFile: true },
+  { type: "profile_photo", label: "Profile Photo", desc: "Ask an admin to confirm your existing profile photo is genuine.", icon: ImageIcon, needsFile: false },
+];
+const VERIF_STATUS_STYLES = {
+  pending: "bg-blue-50 text-blue-600 border-blue-100",
+  approved: "bg-green-50 text-green-600 border-green-100",
+  rejected: "bg-red-50 text-red-600 border-red-100",
+};
+
+const VerificationTab = () => {
+  const [requests, setRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [submitting, setSubmitting] = useState(null); // which type is mid-submit
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+  const pendingTypeRef = useRef(null);
+
+  const loadRequests = () => {
+    authFetch(`${API_URL}/api/verifications/me`)
+      .then(res => res.ok ? res.json() : [])
+      .then(setRequests)
+      .catch(console.error)
+      .finally(() => setLoadingRequests(false));
+  };
+
+  useEffect(() => { loadRequests(); }, []);
+
+  const latestStatusFor = (type) => {
+    const mine = requests.filter(r => r.type === type);
+    if (mine.length === 0) return null;
+    return mine[0]; // /me already orders most-recent-first
+  };
+
+  const submit = async (type, file) => {
+    setSubmitting(type);
+    setError("");
+    try {
+      let res;
+      if (file) {
+        const form = new FormData();
+        form.append("type", type);
+        form.append("document", file);
+        res = await authFetch(`${API_URL}/api/verifications`, { method: "POST", body: form });
+      } else {
+        res = await authFetch(`${API_URL}/api/verifications`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to submit.");
+      loadRequests();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(null);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file && pendingTypeRef.current) submit(pendingTypeRef.current, file);
+  };
+
+  const handleRequestClick = (item, status) => {
+    if (status?.status === "pending") return;
+    if (item.needsFile) {
+      pendingTypeRef.current = item.type;
+      fileInputRef.current?.click();
+    } else {
+      submit(item.type, null);
+    }
+  };
+
+  return (
+    <div className="animate-fade-in space-y-8">
+      <SectionHeader title="Identity Verification" subtitle="Get a verified badge on your profile — reviewed by our team." />
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFileChange} />
+
+      {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-[13px] text-red-600">{error}</div>}
+
+      <div className="space-y-3">
+        {VERIF_TYPES.map(item => {
+          const status = latestStatusFor(item.type);
+          const isPending = status?.status === "pending";
+          const isApproved = status?.status === "approved";
+          return (
+            <div key={item.type} className="bg-white border border-slate-100 rounded-[14px] p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isApproved ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-600"}`}>
+                  <item.icon size={18} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[14px] font-bold text-slate-800">{item.label}</div>
+                  <div className="text-[12px] text-slate-500">{item.desc}</div>
+                  {status && (
+                    <span className={`inline-block mt-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full border ${VERIF_STATUS_STYLES[status.status]}`}>
+                      {status.status.charAt(0).toUpperCase() + status.status.slice(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {!isApproved && (
+                <button
+                  onClick={() => handleRequestClick(item, status)}
+                  disabled={isPending || submitting === item.type}
+                  className="shrink-0 flex items-center gap-1.5 py-2 px-4 rounded-full font-bold text-[12px] text-white bg-[#E91E63] hover:bg-pink-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting === item.type ? "Submitting…" : isPending ? "Pending Review" : (
+                    <><Upload size={13} /> {item.needsFile ? "Upload" : "Request Review"}</>
+                  )}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div>
+        <h3 className="text-[12px] font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">History</h3>
+        {loadingRequests ? (
+          <p className="text-[13px] text-slate-400 px-2 py-4">Loading…</p>
+        ) : requests.length === 0 ? (
+          <p className="text-[13px] text-slate-400 px-2 py-4">No verification requests submitted yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {requests.map(r => (
+              <div key={r.id} className="bg-white border border-slate-100 rounded-[14px] p-4 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[13px] font-bold text-slate-800 capitalize">{r.type.replace("_", " ")}</div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">Submitted {new Date(r.submitted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                  {r.review_note && <div className="text-[12px] text-slate-500 mt-1">"{r.review_note}"</div>}
+                </div>
+                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border shrink-0 ${VERIF_STATUS_STYLES[r.status]}`}>
+                  {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ── Main Layout ───────────────────────────────────────────────────────────────
 
 const SettingsPage = () => {
@@ -573,6 +733,7 @@ const SettingsPage = () => {
   const TABS = [
     { id: "account", label: "Account", icon: User },
     { id: "privacy", label: "Privacy & Security", icon: Shield },
+    { id: "verification", label: "Verification", icon: BadgeCheck },
     { id: "help", label: "Help & Support", icon: Headphones },
   ];
 
@@ -642,6 +803,7 @@ const SettingsPage = () => {
           <div className="w-full flex-1">
             {activeTab === "account" && <AccountTab user={user} navigate={navigate} setActiveTab={setActiveTab} />}
             {activeTab === "privacy" && <PrivacyTab navigate={navigate} onDeactivated={handleDeactivated} />}
+            {activeTab === "verification" && <VerificationTab />}
             {activeTab === "help" && <HelpTab />}
           </div>
 

@@ -1,31 +1,31 @@
 const features = [
   {
-    icon: "🛡️",
+    icon: "shield.png",
     title: "Verified Profiles",
     desc: "Every profile is manually verified for authenticity",
   },
   {
-    icon: "🔒",
+    icon: "locked.png",
     title: "Privacy First",
     desc: "Your privacy is our priority. You're in safe hands",
   },
   {
-    icon: "🤝",
+    icon: "handshake.png",
     title: "Smart Matching",
     desc: "Advanced algorithm to find compatible life partners",
   },
   {
-    icon: "🕌",
+    icon: "mosque.png",
     title: "Islamic Values",
     desc: "Built on Islamic values and family principles",
   },
   {
-    icon: "🔐",
+    icon: "locked_key.png",
     title: "Secure Platform",
     desc: "Enterprise-grade security for your peace of mind",
   },
   {
-    icon: "🤍",
+    icon: "white_heart.png",
     title: "Trusted by Families",
     desc: "Thousands of families trust us worldwide",
   },
@@ -50,7 +50,7 @@ const FeatureGrid = () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {features.map(f => (
           <div key={f.title} className="bg-card border border-border-light shadow-sm rounded-2xl py-6 px-4 text-center transition-all duration-200 cursor-default hover:shadow-md hover:-translate-y-1">
-            <div className="text-[32px] mb-3">{f.icon}</div>
+            <img src={`/images/icons3d/${f.icon}`} alt="" className="w-11 h-11 object-contain mx-auto mb-3" />
             <div className="font-bold text-[13px] text-text-primary mb-2">{f.title}</div>
             <div className="text-[11px] text-text-secondary font-medium leading-relaxed">{f.desc}</div>
           </div>

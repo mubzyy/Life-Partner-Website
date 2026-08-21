@@ -11,8 +11,12 @@ const isBlank = (v) => v === undefined || v === null || (typeof v === "string" &
  * Returns { errors: string[], cleaned: {} }. `cleaned` only ever contains
  * whitelisted column names — the caller can safely use its keys as SQL
  * identifiers because they are drawn from STEP_COLUMNS, not from req.body.
+ *
+ * `minAge` is the real, admin-configurable platform_settings.min_age value
+ * (profileController.js fetches it and passes it through) — defaults to 18
+ * so any caller that doesn't pass one keeps the previous fixed behavior.
  */
-function validateStep(step, body) {
+function validateStep(step, body, minAge = 18) {
   const columns = STEP_COLUMNS[step];
   const required = REQUIRED_COLUMNS[step] || [];
   const errors = [];
@@ -53,8 +57,8 @@ function validateStep(step, body) {
         const age = ageMs / (1000 * 60 * 60 * 24 * 365.25);
         if (dob > new Date()) {
           errors.push("Date of birth cannot be in the future.");
-        } else if (age < 18) {
-          errors.push("You must be at least 18 years old.");
+        } else if (age < minAge) {
+          errors.push(`You must be at least ${minAge} years old.`);
         } else if (age > 100) {
           errors.push("Date of birth is invalid.");
         } else {

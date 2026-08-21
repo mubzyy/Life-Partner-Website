@@ -90,11 +90,14 @@ const SiteHeader = () => {
 
         {authenticated ? (
           <div className="flex items-center gap-4">
-            <button className="hidden sm:inline-flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all px-[12px] py-[6px] text-xs font-semibold border-none cursor-pointer whitespace-nowrap">
+            <button
+              onClick={() => navigate("/subscription")}
+              className="hidden sm:inline-flex items-center gap-[6px] bg-primary hover:bg-primary-hover text-white rounded-lg shadow-sm hover:scale-105 transition-all px-[12px] py-[6px] text-xs font-semibold border-none cursor-pointer whitespace-nowrap">
               <Crown className="h-[14px] w-[14px]" />
               Premium
             </button>
             <button
+              onClick={() => navigate("/notifications")}
               className="rounded-full border border-border-light p-2.5 text-text-secondary hover:text-primary transition-colors cursor-pointer bg-white"
               aria-label="Notifications"
             >
@@ -111,7 +114,7 @@ const SiteHeader = () => {
                 </div>
                 <div className="text-left hidden sm:block">
                   <p className="text-sm font-semibold text-text-primary">
-                    {user?.name ?? "Mubashir Mustafa"}
+                    {user?.name || (user?.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : "My Account")}
                   </p>
                   <p className="text-xs text-text-secondary">Profile</p>
                 </div>

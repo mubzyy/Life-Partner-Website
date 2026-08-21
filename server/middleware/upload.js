@@ -38,8 +38,21 @@ const UPLOADS_ROOT = process.env.UPLOADS_DIR
   : path.join(__dirname, "..", "uploads");
 const PHOTOS_DIR = path.join(UPLOADS_ROOT, "photos");
 
-// Ensure the directory exists on boot — safe to call every start, no-op if present.
+// Identity-verification documents (CNIC, selfie) live OUTSIDE UPLOADS_ROOT —
+// index.js only ever statically-serves UPLOADS_ROOT at /uploads, so nothing
+// under this separate directory is ever reachable by a plain URL. The only
+// way to read one back is controllers/verificationController.js, which
+// streams the file after checking the requester is either the owning user
+// or an admin (adminAuth). ID documents are sensitive PII; they get the same
+// "never publicly served" treatment real photos deliberately don't need.
+const PRIVATE_UPLOADS_ROOT = process.env.PRIVATE_UPLOADS_DIR
+  ? path.resolve(process.env.PRIVATE_UPLOADS_DIR)
+  : path.join(__dirname, "..", "private-uploads");
+const VERIFICATIONS_DIR = path.join(PRIVATE_UPLOADS_ROOT, "verifications");
+
+// Ensure the directories exist on boot — safe to call every start, no-op if present.
 fs.mkdirSync(PHOTOS_DIR, { recursive: true });
+fs.mkdirSync(VERIFICATIONS_DIR, { recursive: true });
 
 const MIME_TO_EXT = {
   "image/jpeg": ".jpg",
@@ -71,4 +84,23 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE_BYTES, files: 1 },
 });
 
-module.exports = { upload, PHOTOS_DIR, UPLOADS_ROOT, MAX_FILE_SIZE_BYTES };
+// Same safety rules as the photo uploader (random UUID filename, fixed
+// mimetype whitelist, 5MB cap) — the only difference is WHERE it writes.
+const verificationStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, VERIFICATIONS_DIR),
+  filename: (req, file, cb) => {
+    const ext = MIME_TO_EXT[file.mimetype];
+    cb(null, `${crypto.randomUUID()}${ext || ""}`);
+  },
+});
+
+const uploadVerificationDoc = multer({
+  storage: verificationStorage,
+  fileFilter,
+  limits: { fileSize: MAX_FILE_SIZE_BYTES, files: 1 },
+});
+
+module.exports = {
+  upload, PHOTOS_DIR, UPLOADS_ROOT, MAX_FILE_SIZE_BYTES,
+  uploadVerificationDoc, VERIFICATIONS_DIR,
+};

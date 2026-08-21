@@ -1,4 +1,4 @@
-import { Heart, Shield, Users, Clock } from "lucide-react";
+import { Heart, Shield, Users, Clock, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Hero = () => (
@@ -50,23 +50,39 @@ const Hero = () => (
 
       {/* ── Right column — hero image + Quran verse card ── */}
       <div className="relative flex justify-center w-full">
-        <div className="w-full max-w-[500px] aspect-[4/3.2] rounded-2xl overflow-hidden bg-card border border-border-light flex items-center justify-center relative shadow-sm">
+        {/* Soft glow behind the photo for depth */}
+        <div className="absolute w-[85%] h-[85%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary/20 rounded-full blur-[80px] -z-10" />
+
+        <div className="w-full max-w-[500px] aspect-[4/3.2] rounded-2xl overflow-hidden bg-card border border-border-light flex items-center justify-center relative shadow-lg">
           {/* Hero Image */}
           <div className="absolute inset-0 w-full h-full">
-            <img 
-              src="/images/couple_hero.jpg" 
-              alt="Beautiful Muslim couple" 
+            <img
+              src="/images/couple_hero.jpg"
+              alt="Beautiful Muslim couple"
               className="w-full h-full object-cover"
             />
           </div>
         </div>
 
         {/* Quran verse card */}
-        <div className="absolute -bottom-5 -left-2.5 bg-card rounded-2xl py-5 px-6 shadow-md max-w-[280px] border border-border-light hidden sm:block z-20">
-          <p className="font-serif text-[20px] md:text-[22px] text-primary italic mb-2 leading-relaxed font-bold">
-            "And We created you in pairs"
-          </p>
-          <p className="text-[12px] md:text-[13px] text-text-secondary font-bold m-0">— Qur'an 78:8 ✦</p>
+        <div className="absolute -bottom-8 -left-4 md:-left-8 max-w-[290px] hidden sm:block z-20">
+          <div className="relative bg-gradient-to-br from-card to-primary-very-light rounded-[22px] py-6 px-6 pt-8 shadow-[0_20px_45px_-12px_rgba(233,30,99,0.35)] border border-primary-light/40">
+            {/* Gold ornamental rule */}
+            <div className="absolute top-4 right-6 h-px w-10 bg-gradient-to-r from-transparent to-[#d4af37]" />
+
+            {/* Icon seal, pinned to the card's top edge */}
+            <div className="absolute -top-5 left-6 w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-[0_6px_16px_-2px_rgba(233,30,99,0.55)] ring-4 ring-card">
+              <Sparkles size={18} className="text-white" />
+            </div>
+
+            {/* Decorative background quote mark */}
+            <span className="absolute top-1 left-4 text-[64px] leading-none font-serif text-primary/10 select-none pointer-events-none">"</span>
+
+            <p className="relative font-serif text-[20px] md:text-[22px] text-primary italic mb-2 leading-relaxed font-bold">
+              And We created you in pairs
+            </p>
+            <p className="relative text-[12px] md:text-[13px] text-text-secondary font-bold m-0 tracking-wide">— Qur'an 78:8 ✦</p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,21 +1,32 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Users, Eye, Heart, Star, ChevronDown, Filter, CheckCircle2, MapPin, X, Calendar, GraduationCap, Briefcase, Book, Lightbulb, Crown, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Users, Eye, Heart, Star, Filter, CheckCircle2, MapPin, X, Calendar, GraduationCap, Book, Lightbulb, Crown, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
+import SimpleDropdown from "../components/SimpleDropdown";
 import { authFetch } from "../lib/authFetch";
 import { photoUrl } from "../lib/photoUrl";
 
+const SORT_OPTIONS = [
+  { value: "best",    label: "Best Match" },
+  { value: "newest",  label: "Newest" },
+  { value: "online",  label: "Online First" },
+];
+const PAGE_SIZE = 12;
+
 const MatchesPage = () => {
-  const { user } = useAuth();
-  
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [heartedCards, setHeartedCards] = useState({});
   const [likedCards, setLikedCards] = useState({});
+  const [sortOrder, setSortOrder] = useState("best");
+  const [page, setPage] = useState(1);
 
   const fetchMatches = () => {
     setLoading(true);
@@ -117,6 +128,19 @@ const MatchesPage = () => {
   // actual matchScore already returned by /api/matches for each candidate.
   const highCompatibility = matches.filter(m => m.matchScore >= 90).length;
   const goodCompatibility = matches.filter(m => m.matchScore >= 60 && m.matchScore < 90).length;
+
+  // /api/matches already returns the full recommendation list sorted
+  // best-first — "Sort by" re-orders that same real data client-side,
+  // and pagination pages through it instead of only ever showing page 1.
+  const sortedMatches = [...matches].sort((a, b) => {
+    if (sortOrder === "online") return (b.online - a.online) || (b.matchScore - a.matchScore);
+    if (sortOrder === "newest") return b.id - a.id;
+    return b.matchScore - a.matchScore; // "best"
+  });
+  const totalPages = Math.max(1, Math.ceil(sortedMatches.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedMatches = sortedMatches.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const stats = [
     { label: "Total Matches", value: String(dashboardStats.matches ?? 0), sub: "Mutual likes", subColor: "text-green-600", icon: <Users size={22} className="text-[#E91E63]" />, iconBg: "bg-pink-50" },
     { label: "High Compatibility", value: String(highCompatibility), sub: "90% and above", subColor: "text-slate-500", icon: <Heart size={22} className="text-[#E91E63]" fill="currentColor" />, iconBg: "bg-pink-50" },
@@ -143,10 +167,7 @@ const MatchesPage = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[13px] text-slate-500">Sort by:</span>
-                <div className="flex items-center justify-between gap-6 bg-white rounded-lg py-2 px-3 border border-slate-200 cursor-pointer hover:bg-slate-50 shadow-sm">
-                  <span className="text-[13px] font-medium text-slate-700">Best Match</span>
-                  <ChevronDown size={14} className="text-slate-400" />
-                </div>
+                <SimpleDropdown options={SORT_OPTIONS} value={sortOrder} onChange={(v) => { setSortOrder(v); setPage(1); }} />
               </div>
             </div>
 
@@ -168,21 +189,16 @@ const MatchesPage = () => {
               ))}
             </div>
 
-            {/* Filters Row */}
+            {/* Filters Row — Matches is a recommendation feed (already scored
+                against your saved Partner Preferences below), not a manual
+                filter tool. "Filter Matches" hands off to Search, which has
+                the real, working filter set (age/location/education/etc). */}
             <div className="flex flex-wrap items-center justify-between gap-3 my-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="bg-[#E91E63] text-white text-[13px] font-bold py-2 px-5 rounded-[12px] shadow-sm">
-                  All Matches
-                </div>
-                {["Age", "Location", "Education", "Profession", "Sect"].map(filter => (
-                  <div key={filter} className="bg-white text-slate-600 border border-slate-200 text-[13px] font-medium py-2 px-4 rounded-[12px] flex items-center gap-2 cursor-pointer hover:bg-slate-50 shadow-sm">
-                    {filter}
-                    <ChevronDown size={14} className="text-slate-400" />
-                  </div>
-                ))}
+              <div className="bg-[#E91E63] text-white text-[13px] font-bold py-2 px-5 rounded-[12px] shadow-sm">
+                All Matches ({sortedMatches.length})
               </div>
-              <button className="flex items-center gap-2 text-[#E91E63] text-[13px] font-bold cursor-pointer bg-transparent border-none hover:opacity-80">
-                More Filters
+              <button onClick={() => navigate("/search")} className="flex items-center gap-2 text-[#E91E63] text-[13px] font-bold cursor-pointer bg-transparent border-none hover:opacity-80">
+                Filter Matches
                 <Filter size={16} />
               </button>
             </div>
@@ -208,7 +224,7 @@ const MatchesPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5">
-                {matches.map(m => (
+                {pagedMatches.map(m => (
                   <div key={m.id} className="bg-white rounded-[20px] border border-slate-200 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all">
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 shrink-0 p-3 flex flex-col justify-between">
                       <img
@@ -273,14 +289,25 @@ const MatchesPage = () => {
               </div>
             )}
 
-            {/* Pagination */}
-            {matches.length > 0 && (
+            {/* Pagination — real, pages through the actual matches array */}
+            {sortedMatches.length > PAGE_SIZE && (
               <div className="flex items-center justify-center gap-2 mt-4 mb-2">
-                <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 cursor-pointer bg-transparent border-none"><ChevronLeft size={18} /></button>
-                <button className="w-8 h-8 rounded-full bg-[#E91E63] text-white font-bold text-[13px] flex items-center justify-center border-none shadow-sm cursor-pointer">1</button>
-                <button className="w-8 h-8 rounded-full text-slate-600 font-bold text-[13px] flex items-center justify-center hover:bg-slate-100 border-none cursor-pointer">2</button>
-                <button className="w-8 h-8 rounded-full text-slate-600 font-bold text-[13px] flex items-center justify-center hover:bg-slate-100 border-none cursor-pointer">3</button>
-                <button className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 cursor-pointer bg-transparent border-none"><ChevronRight size={18} /></button>
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none"><ChevronLeft size={18} /></button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-full font-bold text-[13px] flex items-center justify-center border-none cursor-pointer transition-colors ${p === currentPage ? "bg-[#E91E63] text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"}`}>
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent border-none"><ChevronRight size={18} /></button>
               </div>
             )}
 
@@ -289,32 +316,33 @@ const MatchesPage = () => {
           {/* ── RIGHT COLUMN ── */}
           <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-6">
             
-            {/* Match Preferences */}
+            {/* Match Preferences — real values from Complete Profile step 5
+                (GET /api/profile/me), never a fabricated placeholder. Editing
+                these lives in the same wizard step that set them. */}
             <div className="bg-white rounded-[24px] p-6 border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-[15px] font-bold text-slate-800 m-0">Your Match Preferences</h3>
-                <button className="text-[13px] font-bold text-[#E91E63] cursor-pointer bg-transparent border-none hover:opacity-80">Edit</button>
+                <button onClick={() => navigate("/profile-setup")} className="text-[13px] font-bold text-[#E91E63] cursor-pointer bg-transparent border-none hover:opacity-80">Edit</button>
               </div>
-              
+
               <div className="flex flex-col gap-4 mb-5">
                 {[
-                  { icon: <Calendar size={16}/>, label: "Age", value: "22 - 28" },
-                  { icon: <MapPin size={16}/>, label: "Location", value: "Pakistan" },
-                  { icon: <GraduationCap size={16}/>, label: "Education", value: "Bachelor and above" },
-                  { icon: <Briefcase size={16}/>, label: "Profession", value: "Any" },
-                  { icon: <Book size={16}/>, label: "Sect", value: "Sunni" },
+                  { icon: <Calendar size={16}/>, label: "Age Range", value: profile?.partner_age_range || null },
+                  { icon: <MapPin size={16}/>, label: "Location", value: profile?.partner_countries?.length ? profile.partner_countries.map(c => c.name).join(", ") : null },
+                  { icon: <GraduationCap size={16}/>, label: "Education", value: profile?.partner_education || null },
+                  { icon: <Book size={16}/>, label: "Marital Status", value: profile?.partner_marital_status || null },
                 ].map(pref => (
-                  <div key={pref.label} className="flex items-center justify-between text-[13px]">
-                    <div className="flex items-center gap-2.5 text-slate-600">
+                  <div key={pref.label} className="flex items-center justify-between text-[13px] gap-3">
+                    <div className="flex items-center gap-2.5 text-slate-600 shrink-0">
                       <div className="text-slate-800">{pref.icon}</div>
                       {pref.label}
                     </div>
-                    <div className="text-slate-800 font-medium">{pref.value}</div>
+                    <div className={`font-medium text-right ${pref.value ? "text-slate-800" : "text-slate-400 italic"}`}>{pref.value || "Not set"}</div>
                   </div>
                 ))}
               </div>
 
-              <Link to="/preferences" className="text-[13px] font-bold text-[#E91E63] no-underline hover:opacity-80 flex items-center gap-1.5">
+              <Link to="/profile-setup" className="text-[13px] font-bold text-[#E91E63] no-underline hover:opacity-80 flex items-center gap-1.5">
                 View all preferences <ChevronRight size={14} />
               </Link>
             </div>

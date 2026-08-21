@@ -5,6 +5,10 @@ import { Eye, EyeOff, CheckCircle2, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import BrandMark from "../components/BrandMark";
 
+// Same shape the backend/HTML5 "email" type expects — used only for live
+// inline feedback here; the server is still the real authority.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // ─── Forgot Password Modal ────────────────────────────────────────────────────
 const ForgotPasswordModal = ({ onClose }) => {
   const [step, setStep] = useState(1); // 1 = enter email, 2 = enter OTP + new pass, 3 = success
@@ -29,6 +33,7 @@ const ForgotPasswordModal = ({ onClose }) => {
 
   const handleSendCode = async () => {
     if (!fpEmail) return setError("Please enter your email address.");
+    if (!EMAIL_RE.test(fpEmail)) return setError("Please enter a valid email address.");
     setLoading(true); setError("");
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, {
@@ -112,11 +117,15 @@ const ForgotPasswordModal = ({ onClose }) => {
               <label className={labelCls}>Email Address</label>
               <input
                 type="email" value={fpEmail}
-                onChange={e => setFpEmail(e.target.value)}
+                onChange={e => setFpEmail(e.target.value.replace(/\s/g, ''))}
                 onKeyDown={e => e.key === "Enter" && handleSendCode()}
                 placeholder="you@example.com"
+                maxLength={254}
                 className={inputCls}
               />
+              {fpEmail.length > 0 && !EMAIL_RE.test(fpEmail) && (
+                <p className="mt-1 text-[12px] text-amber-600">Enter a complete email address, e.g. you@example.com</p>
+              )}
             </div>
             <button onClick={handleSendCode} disabled={loading}
               className={`w-full py-3.5 rounded-xl text-white font-bold text-[15px] transition-all ${loading ? 'bg-slate-300 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover text-white rounded-xl shadow-sm hover:scale-105 transition-all cursor-pointer'}`}>
@@ -155,6 +164,7 @@ const ForgotPasswordModal = ({ onClose }) => {
                     type={showNewPass ? "text" : "password"} value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                     placeholder="Min. 6 characters"
+                    maxLength={72}
                     className={`${inputCls} pr-10`}
                   />
                   <button type="button" onClick={() => setShowNewPass(v => !v)}
@@ -162,6 +172,9 @@ const ForgotPasswordModal = ({ onClose }) => {
                     {showNewPass ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
+                {newPassword.length > 0 && newPassword.length < 6 && (
+                  <p className="mt-1 text-[12px] text-amber-600">At least 6 characters</p>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Confirm New Password</label>
@@ -169,8 +182,14 @@ const ForgotPasswordModal = ({ onClose }) => {
                   type="password" value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
+                  maxLength={72}
                   className={inputCls}
                 />
+                {confirmPassword.length > 0 && (
+                  <p className={`mt-1 text-[12px] ${confirmPassword === newPassword ? "text-green-600" : "text-red-500"}`}>
+                    {confirmPassword === newPassword ? "Passwords match" : "Passwords do not match"}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -266,8 +285,9 @@ const LoginPage = () => {
                   type="email"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value.replace(/\s/g, ''))}
                   placeholder="you@example.com"
+                  maxLength={254}
                   className="w-full box-border px-4 py-3 rounded-xl border-[1.5px] border-border-light bg-background text-[14px] text-text-primary outline-none transition-all duration-200 hover:border-slate-300 focus:border-primary focus:bg-card focus:shadow-sm"
                 />
               </div>
@@ -290,6 +310,7 @@ const LoginPage = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
+                    maxLength={72}
                     className="w-full box-border px-4 py-3 pr-10 rounded-xl border-[1.5px] border-border-light bg-background text-[14px] text-text-primary outline-none transition-all duration-200 hover:border-slate-300 focus:border-primary focus:bg-card focus:shadow-sm"
                   />
                   <button type="button" onClick={() => setShowPassword(v => !v)}
@@ -317,6 +338,16 @@ const LoginPage = () => {
               <Link to="/register" className="text-primary font-bold no-underline hover:underline">Create one</Link>
             </p>
           </div>
+
+          <p className="text-center mt-4 mb-0">
+            <button
+              type="button"
+              onClick={() => navigate("/admin")}
+              className="text-[11px] text-text-muted/50 hover:text-text-muted transition-colors cursor-pointer bg-transparent border-none"
+            >
+              Mod?
+            </button>
+          </p>
         </div>
       </div>
     </div>

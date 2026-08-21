@@ -1,8 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-// Load .env.local first (local dev override), then fall back to .env
-require("dotenv").config({ path: ".env.local", override: false });
-require("dotenv").config();
+const path = require("path");
+// Load .env.local first (local dev override), then fall back to .env.
+// Anchored to this file's own folder, not process.cwd() — resolves
+// correctly whether the app is started as `node index.js` from server/ or
+// as `node server/index.js` from the repo root.
+require("dotenv").config({ path: path.join(__dirname, ".env.local"), override: false });
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { UPLOADS_ROOT } = require("./middleware/upload");
 
 
@@ -24,6 +28,9 @@ const dashboardRoutes = require("./routes/dashboard");
 const accountRoutes = require("./routes/account");
 const supportRoutes = require("./routes/support");
 const reportsRoutes = require("./routes/reports");
+const verificationsRoutes = require("./routes/verifications");
+const adminRoutes = require("./routes/admin");
+const adminAuthRoutes = require("./routes/adminAuth");
 
 const app = express();
 
@@ -62,6 +69,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/verifications", verificationsRoutes);
+app.use("/api/admin-auth", adminAuthRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Generic error handler — must be registered last, after every route. Without
 // this, Express's default handler sends the raw error (stack trace, internal

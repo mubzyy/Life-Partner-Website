@@ -30,6 +30,38 @@ const steps = [
 const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5MB — must match server/middleware/upload.js
 
+// Mirrors server/lib/profileFields.js TEXT_LIMITS exactly — the backend is
+// still the real authority (it re-validates independently), this just stops
+// someone from typing 3000 characters only to have it rejected on save.
+const TEXT_LIMITS = {
+  motherTongue: 50,
+  state: 100,
+  city: 100,
+  address: 500,
+  aboutMe: 2000,
+  occupation: 100,
+  fatherOccupation: 100,
+  motherOccupation: 100,
+  partnerAbout: 2000,
+};
+
+// Place/language names (mother tongue, state, city) — letters, spaces,
+// hyphens, apostrophes and periods only (covers things like "St. Louis" or
+// "Cote d'Ivoire") without blocking real names the way a strict letters-only
+// filter would.
+const filterPlaceName = (v) => v.replace(/[^a-zA-Z\s\-'.]/g, "");
+
+// Bounds for the date-of-birth picker itself — the real 18+ check still
+// happens in validateStepClient below; this just stops the native picker
+// from ever offering an obviously-impossible date (in the future, or from
+// over a century ago) in the first place.
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const minDobStr = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 100);
+  return d.toISOString().slice(0, 10);
+};
+
 // ── Per-step payloads (frontend camelCase → backend column names) ──────────
 const buildStepPayload = (stepNum, form) => {
   switch (stepNum) {
@@ -512,7 +544,7 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Date of Birth</label>
-                    <input type="date" value={form.dob} onChange={(e) => update("dob", e.target.value)} className={inputClass} />
+                    <input type="date" value={form.dob} onChange={(e) => update("dob", e.target.value)} max={todayStr()} min={minDobStr()} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Marital Status</label>
@@ -544,7 +576,7 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Mother Tongue</label>
-                    <input type="text" value={form.motherTongue} onChange={(e) => update("motherTongue", e.target.value)} placeholder="e.g. Urdu, English" className={inputClass} />
+                    <input type="text" value={form.motherTongue} onChange={(e) => update("motherTongue", filterPlaceName(e.target.value))} placeholder="e.g. Urdu, English" maxLength={TEXT_LIMITS.motherTongue} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Height</label>
@@ -555,7 +587,13 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Weight (kg)</label>
-                    <input type="number" value={form.weight} onChange={(e) => update("weight", e.target.value)} placeholder="e.g. 70" className={inputClass} />
+                    <input
+                      type="number" min="30" max="300" step="1"
+                      value={form.weight}
+                      onChange={(e) => update("weight", e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                      placeholder="e.g. 70"
+                      className={inputClass}
+                    />
                   </div>
                 </div>
 
@@ -580,21 +618,22 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>State / Province</label>
-                    <input type="text" value={form.state} onChange={(e) => update("state", e.target.value)} placeholder="e.g. Punjab" className={inputClass} />
+                    <input type="text" value={form.state} onChange={(e) => update("state", filterPlaceName(e.target.value))} placeholder="e.g. Punjab" maxLength={TEXT_LIMITS.state} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>City</label>
-                    <input type="text" value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="e.g. Lahore" className={inputClass} />
+                    <input type="text" value={form.city} onChange={(e) => update("city", filterPlaceName(e.target.value))} placeholder="e.g. Lahore" maxLength={TEXT_LIMITS.city} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Address</label>
-                    <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Optional" className={inputClass} />
+                    <input type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Optional" maxLength={TEXT_LIMITS.address} className={inputClass} />
                   </div>
                 </div>
 
                 <div className="mt-4">
                   <label className={labelClass}>About Me</label>
-                  <textarea rows={4} value={form.aboutMe} onChange={(e) => update("aboutMe", e.target.value)} placeholder="Write a short, honest introduction about yourself..." className={`${inputClass} resize-none`} />
+                  <textarea rows={4} value={form.aboutMe} onChange={(e) => update("aboutMe", e.target.value)} placeholder="Write a short, honest introduction about yourself..." maxLength={TEXT_LIMITS.aboutMe} className={`${inputClass} resize-none`} />
+                  <p className="mt-1 text-[11px] text-text-muted text-right">{form.aboutMe.length}/{TEXT_LIMITS.aboutMe}</p>
                 </div>
               </div>
             )}
@@ -618,7 +657,7 @@ const ProfileSetupPage = () => {
                   </div>
                   <div>
                     <label className={labelClass}>Current Occupation</label>
-                    <input type="text" value={form.occupation} onChange={(e) => update("occupation", e.target.value)} placeholder="e.g. Software Engineer" className={inputClass} />
+                    <input type="text" value={form.occupation} onChange={(e) => update("occupation", e.target.value)} placeholder="e.g. Software Engineer" maxLength={TEXT_LIMITS.occupation} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Annual Income (Optional)</label>
@@ -643,15 +682,21 @@ const ProfileSetupPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   <div>
                     <label className={labelClass}>Father's Occupation</label>
-                    <input type="text" value={form.fatherOccupation} onChange={(e) => update("fatherOccupation", e.target.value)} placeholder="e.g. Retired" className={inputClass} />
+                    <input type="text" value={form.fatherOccupation} onChange={(e) => update("fatherOccupation", e.target.value)} placeholder="e.g. Retired" maxLength={TEXT_LIMITS.fatherOccupation} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Mother's Occupation</label>
-                    <input type="text" value={form.motherOccupation} onChange={(e) => update("motherOccupation", e.target.value)} placeholder="e.g. Housewife" className={inputClass} />
+                    <input type="text" value={form.motherOccupation} onChange={(e) => update("motherOccupation", e.target.value)} placeholder="e.g. Housewife" maxLength={TEXT_LIMITS.motherOccupation} className={inputClass} />
                   </div>
                   <div>
                     <label className={labelClass}>Number of Siblings</label>
-                    <input type="number" min="0" value={form.siblingsCount} onChange={(e) => update("siblingsCount", e.target.value)} placeholder="e.g. 2" className={inputClass} />
+                    <input
+                      type="number" min="0" max="30" step="1"
+                      value={form.siblingsCount}
+                      onChange={(e) => update("siblingsCount", e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                      placeholder="e.g. 2"
+                      className={inputClass}
+                    />
                   </div>
                   <div>
                     <label className={labelClass}>Family Type</label>
@@ -797,7 +842,8 @@ const ProfileSetupPage = () => {
                   </div>
                   <div className="md:col-span-2 lg:col-span-3 xl:col-span-4 mt-2">
                     <label className={labelClass}>What are you looking for in a partner?</label>
-                    <textarea rows={4} value={form.partnerAbout} onChange={(e) => update("partnerAbout", e.target.value)} placeholder="Describe the qualities you value most..." className={`${inputClass} resize-none`} />
+                    <textarea rows={4} value={form.partnerAbout} onChange={(e) => update("partnerAbout", e.target.value)} placeholder="Describe the qualities you value most..." maxLength={TEXT_LIMITS.partnerAbout} className={`${inputClass} resize-none`} />
+                    <p className="mt-1 text-[11px] text-text-muted text-right">{form.partnerAbout.length}/{TEXT_LIMITS.partnerAbout}</p>
                   </div>
                 </div>
               </div>
